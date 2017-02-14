@@ -438,6 +438,7 @@ elseif(BUILD_ENV_UNIXLIKE)
         pkg_check_modules(FREETYPE REQUIRED freetype2)
         pkg_check_modules(SDL_LIB REQUIRED sdl2)
     endif()
+    pkg_check_modules(MYPAINT_LIB REQUIRED libmypaint)
 endif()
 
 
