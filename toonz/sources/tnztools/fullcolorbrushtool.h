@@ -3,7 +3,11 @@
 #ifndef FULLCOLORBRUSHTOOL_H
 #define FULLCOLORBRUSHTOOL_H
 
+#include <ctime>
+
 #include "brushtool.h"
+#include "mypainttoonzbrush.h"
+#include <QElapsedTimer>
 
 //==============================================================
 
@@ -12,6 +16,7 @@
 class TTileSetFullColor;
 class TTileSaverFullColor;
 class BluredBrush;
+class MyPaintToonzBrush;
 class FullColorBrushToolNotifier;
 
 //==============================================================
@@ -20,10 +25,11 @@ class FullColorBrushToolNotifier;
 //    FullColor Brush Tool declaration
 //************************************************************************
 
-class FullColorBrushTool final : public TTool {
+class FullColorBrushTool final : public TTool, public RasterController {
   Q_DECLARE_TR_FUNCTIONS(FullColorBrushTool)
 
   void updateCurrentColor();
+  double restartBrushTimer();
 
 public:
   FullColorBrushTool(std::string name);
@@ -36,6 +42,9 @@ public:
 
   void onActivate() override;
   void onDeactivate() override;
+
+  bool askRead(const TRect &rect) override;
+  bool askWrite(const TRect &rect) override;
 
   bool preLeftButtonDown() override;
   void leftButtonDown(const TPointD &pos, const TMouseEvent &e) override;
@@ -76,21 +85,16 @@ protected:
   TPixel32 m_currentColor;
   int m_styleId, m_minThick, m_maxThick;
 
-  double m_oldOpacity;
-
-  TPointD m_dpiScale,
-      m_mousePos,  //!< Current mouse position, in world coordinates.
-      m_brushPos;  //!< World position the brush will be painted at.
+  TPointD m_mousePos,  //!< Current mouse position, in world coordinates.
+          m_brushPos;  //!< World position the brush will be painted at.
 
   TRasterP m_backUpRas;
   TRaster32P m_workRaster;
 
-  TRect m_strokeRect, m_lastRect;
+  TRect m_strokeRect, m_strokeSegmentRect, m_lastRect;
 
-  QRadialGradient m_brushPad;
-
-  std::vector<TThickPoint> m_points;
-  BluredBrush *m_brush;
+  MyPaintToonzBrush *m_mypaint_brush;
+  QElapsedTimer m_brushTimer;
 
   TTileSetFullColor *m_tileSet;
   TTileSaverFullColor *m_tileSaver;

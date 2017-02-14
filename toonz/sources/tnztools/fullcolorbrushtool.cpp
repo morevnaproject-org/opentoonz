@@ -10,6 +10,7 @@
 #include "tools/tooloptions.h"
 
 #include "bluredbrush.h"
+#include "mypainttoonzbrush.h"
 
 // TnzQt includes
 #include "toonzqt/dvdialog.h"
@@ -136,8 +137,9 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
     , m_hardness("Hardness:", 0, 100, 100)
     , m_preset("Preset:")
     , m_styleId(0)
-    , m_oldOpacity(1)
-    , m_brush(0)
+    , m_minThick(0)
+    , m_maxThick(0)
+    , m_mypaint_brush(0)
     , m_tileSet(0)
     , m_tileSaver(0)
     , m_notifier(0)
@@ -196,8 +198,6 @@ void FullColorBrushTool::onActivate() {
     m_hardness.setValue(FullcolorBrushHardness);
   }
 
-  m_brushPad = ToolUtils::getBrushPad(m_thickness.getValue().second,
-                                      m_hardness.getValue() * 0.01);
   setWorkAndBackupImages();
 }
 
@@ -212,27 +212,64 @@ void FullColorBrushTool::onDeactivate() {
 //--------------------------------------------------------------------------------------------------
 
 void FullColorBrushTool::updateWorkAndBackupRasters(const TRect &rect) {
+  if (rect.isEmpty()) return;
+
   TRasterImageP ri = TImageP(getImage(false, 1));
   if (!ri) return;
 
   TRasterP ras = ri->getRaster();
 
-  TRect _rect     = rect * ras->getBounds();
-  TRect _lastRect = m_lastRect * ras->getBounds();
-
-  if (_rect.isEmpty()) return;
+  const int denominator = 8;
+  TRect enlargedRect = rect + m_lastRect;
+  int dx = (enlargedRect.getLx()-1)/denominator+1;
+  int dy = (enlargedRect.getLy()-1)/denominator+1;
 
   if (m_lastRect.isEmpty()) {
+    enlargedRect.x0 -= dx;
+    enlargedRect.y0 -= dy;
+    enlargedRect.x1 += dx;
+    enlargedRect.y1 += dy;
+
+    TRect _rect = enlargedRect*ras->getBounds();
+    if (_rect.isEmpty()) return;
+
     m_workRaster->extract(_rect)->clear();
     m_backUpRas->extract(_rect)->copy(ras->extract(_rect));
-    return;
+  } else {
+    if (enlargedRect.x0 < m_lastRect.x0) enlargedRect.x0 -= dx;
+    if (enlargedRect.y0 < m_lastRect.y0) enlargedRect.y0 -= dy;
+    if (enlargedRect.x1 > m_lastRect.x1) enlargedRect.x1 += dx;
+    if (enlargedRect.y1 > m_lastRect.y1) enlargedRect.y1 += dy;
+
+    TRect _rect = enlargedRect*ras->getBounds();
+    if (_rect.isEmpty()) return;
+
+    TRect _lastRect = m_lastRect * ras->getBounds();
+    QList<TRect> rects = ToolUtils::splitRect(_rect, _lastRect);
+    for (int i = 0; i < rects.size(); i++) {
+      m_workRaster->extract(rects[i])->clear();
+      m_backUpRas->extract(rects[i])->copy(ras->extract(rects[i]));
+    }
   }
 
-  QList<TRect> rects = ToolUtils::splitRect(_rect, _lastRect);
-  for (int i = 0; i < rects.size(); i++) {
-    m_workRaster->extract(rects[i])->clear();
-    m_backUpRas->extract(rects[i])->copy(ras->extract(rects[i]));
-  }
+  m_lastRect = enlargedRect;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool FullColorBrushTool::askRead(const TRect &rect) {
+  return askWrite(rect);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool FullColorBrushTool::askWrite(const TRect &rect) {
+  if (rect.isEmpty()) return true;
+  m_strokeRect += rect;
+  m_strokeSegmentRect += rect;
+  updateWorkAndBackupRasters(rect);
+  m_tileSaver->save(rect);
+  return true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -264,45 +301,35 @@ void FullColorBrushTool::leftButtonDown(const TPointD &pos,
    * shortcut keys */
   updateCurrentColor();
 
-  TRasterP ras   = ri->getRaster();
-  TDimension dim = ras->getSize();
+  TRasterP ras = ri->getRaster();
 
   if (!(m_workRaster && m_backUpRas)) setWorkAndBackupImages();
 
   m_workRaster->lock();
 
-  double maxThick  = m_thickness.getValue().second;
-  double thickness = m_pressure.getValue()
-                         ? computeThickness(e.m_pressure, m_thickness)
-                         : maxThick;
-  double opacity =
-      (m_pressure.getValue() ? computeThickness(e.m_pressure, m_opacity)
-                             : m_opacity.getValue().second) *
-      0.01;
-  TPointD rasCenter = TPointD(dim.lx * 0.5, dim.ly * 0.5);
-  TThickPoint point(pos + rasCenter, thickness);
-  TPointD halfThick(maxThick * 0.5, maxThick * 0.5);
-  TRectD invalidateRect(pos - halfThick, pos + halfThick);
-
-  m_points.clear();
-  m_points.push_back(point);
+  TPointD rasCenter = ras->getCenterD();
+  TPointD point(pos + rasCenter);
+  double pressure = e.m_pressure/255.0;
 
   m_tileSet       = new TTileSetFullColor(ras->getSize());
   m_tileSaver     = new TTileSaverFullColor(ras, m_tileSet);
-  double hardness = m_hardness.getValue() * 0.01;
 
-  m_brush =
-      new BluredBrush(m_workRaster, maxThick, m_brushPad, hardness == 1.0);
-  m_strokeRect = m_brush->getBoundFromPoints(m_points);
-  updateWorkAndBackupRasters(m_strokeRect);
-  m_tileSaver->save(m_strokeRect);
-  m_brush->addPoint(point, opacity);
-  m_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeRect,
-                         m_opacity.getValue().second * 0.01);
-  m_oldOpacity = opacity;
-  m_lastRect   = m_strokeRect;
+  // TODO: set brush options
+  //m_brush =
+  //    new BluredBrush(m_workRaster, maxThick, m_brushPad, hardness == 1.0);
+  m_mypaint_brush =
+      new MyPaintToonzBrush(m_workRaster, *this, mypaint::Brush());
 
-  invalidate(invalidateRect.enlarge(2));
+  m_strokeRect.empty();
+  m_strokeSegmentRect.empty();
+  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
+  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
+
+  TRectD invalidateRect(m_strokeSegmentRect.x0,
+                        m_strokeSegmentRect.y0,
+                        m_strokeSegmentRect.x1,
+                        m_strokeSegmentRect.y1);
+  invalidate(invalidateRect.enlarge(2) - rasCenter);
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -314,58 +341,20 @@ void FullColorBrushTool::leftButtonDrag(const TPointD &pos,
   TRasterImageP ri        = (TRasterImageP)getImage(true);
   if (!ri) return;
 
-  double maxThickness = m_thickness.getValue().second;
-  double thickness    = m_pressure.getValue()
-                         ? computeThickness(e.m_pressure, m_thickness)
-                         : maxThickness;
-  double opacity =
-      (m_pressure.getValue() ? computeThickness(e.m_pressure, m_opacity)
-                             : m_opacity.getValue().second) *
-      0.01;
-  TDimension size   = m_workRaster->getSize();
-  TPointD rasCenter = TPointD(size.lx * 0.5, size.ly * 0.5);
-  TThickPoint point(pos + rasCenter, thickness);
+  TRasterP ras = ri->getRaster();
+  TPointD rasCenter = ras->getCenterD();
+  TPointD point(pos + rasCenter);
+  double pressure = e.m_pressure/255.0;
 
-  TThickPoint old = m_points.back();
-  if (norm2(point - old) < 4) return;
+  m_strokeSegmentRect.empty();
+  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
+  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
 
-  TThickPoint mid((old + point) * 0.5, (point.thick + old.thick) * 0.5);
-  m_points.push_back(mid);
-  m_points.push_back(point);
-
-  TRect bbox;
-  int m = m_points.size();
-  TRectD invalidateRect;
-  if (m == 3) {
-    // ho appena cominciato. devo disegnare un segmento
-    TThickPoint pa = m_points.front();
-    std::vector<TThickPoint> points;
-    points.push_back(pa);
-    points.push_back(mid);
-    invalidateRect = ToolUtils::getBounds(points, maxThickness);
-    bbox           = m_brush->getBoundFromPoints(points);
-    updateWorkAndBackupRasters(bbox + m_lastRect);
-    m_tileSaver->save(bbox);
-    m_brush->addArc(pa, (pa + mid) * 0.5, mid, m_oldOpacity, opacity);
-    m_lastRect += bbox;
-  } else {
-    // caso generale: disegno un arco
-    std::vector<TThickPoint> points;
-    points.push_back(m_points[m - 4]);
-    points.push_back(old);
-    points.push_back(mid);
-    invalidateRect = ToolUtils::getBounds(points, maxThickness);
-    bbox           = m_brush->getBoundFromPoints(points);
-    updateWorkAndBackupRasters(bbox + m_lastRect);
-    m_tileSaver->save(bbox);
-    m_brush->addArc(m_points[m - 4], old, mid, m_oldOpacity, opacity);
-    m_lastRect += bbox;
-  }
-  m_oldOpacity = opacity;
-  m_brush->updateDrawing(ri->getRaster(), m_backUpRas, m_currentColor, bbox,
-                         m_opacity.getValue().second * 0.01);
+  TRectD invalidateRect(m_strokeSegmentRect.x0,
+                        m_strokeSegmentRect.y0,
+                        m_strokeSegmentRect.x1,
+                        m_strokeSegmentRect.y1);
   invalidate(invalidateRect.enlarge(2) - rasCenter);
-  m_strokeRect += bbox;
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -377,40 +366,27 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
   TRasterImageP ri = (TRasterImageP)getImage(true);
   if (!ri) return;
 
-  if (m_points.size() != 1) {
-    double maxThickness = m_thickness.getValue().second;
-    double thickness    = m_pressure.getValue()
-                           ? computeThickness(e.m_pressure, m_thickness)
-                           : maxThickness;
-    double opacity =
-        (m_pressure.getValue() ? computeThickness(e.m_pressure, m_opacity)
-                               : m_opacity.getValue().second) *
-        0.01;
-    TPointD rasCenter = ri->getRaster()->getCenterD();
-    TThickPoint point(pos + rasCenter, thickness);
-    m_points.push_back(point);
-    int m = m_points.size();
-    std::vector<TThickPoint> points;
-    points.push_back(m_points[m - 3]);
-    points.push_back(m_points[m - 2]);
-    points.push_back(m_points[m - 1]);
-    TRect bbox = m_brush->getBoundFromPoints(points);
-    updateWorkAndBackupRasters(bbox);
-    m_tileSaver->save(bbox);
-    m_brush->addArc(points[0], points[1], points[2], m_oldOpacity, opacity);
-    m_brush->updateDrawing(ri->getRaster(), m_backUpRas, m_currentColor, bbox,
-                           m_opacity.getValue().second * 0.01);
-    TRectD invalidateRect = ToolUtils::getBounds(points, maxThickness);
-    invalidate(invalidateRect.enlarge(2) - rasCenter);
-    m_strokeRect += bbox;
-    m_lastRect.empty();
+  TRasterP ras = ri->getRaster();
+  TPointD rasCenter = ras->getCenterD();
+  TPointD point(pos + rasCenter);
+  double pressure = e.m_pressure/255.0;
+
+  m_strokeSegmentRect.empty();
+  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
+  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
+
+  TRectD invalidateRect(m_strokeSegmentRect.x0,
+                        m_strokeSegmentRect.y0,
+                        m_strokeSegmentRect.x1,
+                        m_strokeSegmentRect.y1);
+  invalidate(invalidateRect.enlarge(2) - rasCenter);
+
+  if (m_mypaint_brush) {
+    delete m_mypaint_brush;
+    m_mypaint_brush = 0;
   }
 
-  if (m_brush) {
-    delete m_brush;
-    m_brush = 0;
-  }
-
+  m_lastRect.empty();
   m_workRaster->unlock();
 
   if (m_tileSet->getTileCount() > 0) {
@@ -419,10 +395,10 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
     TXshLevel *level          = app->getCurrentLevel()->getLevel();
     TXshSimpleLevelP simLevel = level->getSimpleLevel();
     TFrameId frameId          = getCurrentFid();
-    TRasterP ras              = ri->getRaster()->extract(m_strokeRect)->clone();
+    TRasterP subras           = ras->extract(m_strokeRect)->clone();
     TUndoManager::manager()->add(
         new FullColorBrushUndo(m_tileSet, simLevel.getPointer(), frameId,
-                               m_isFrameCreated, ras, m_strokeRect.getP00()));
+                               m_isFrameCreated, subras, m_strokeRect.getP00()));
   }
 
   notifyImageChanged();
@@ -568,8 +544,6 @@ bool FullColorBrushTool::onPropertyChanged(std::string propertyName) {
   m_maxThick = m_thickness.getValue().second;
   if (propertyName == "Hardness:" || propertyName == "Thickness" ||
       propertyName == "Size") {
-    m_brushPad = ToolUtils::getBrushPad(m_thickness.getValue().second,
-                                        m_hardness.getValue() * 0.01);
     TRectD rect(m_brushPos - TPointD(m_maxThick + 2, m_maxThick + 2),
                 m_brushPos + TPointD(m_maxThick + 2, m_maxThick + 2));
     invalidate(rect);
@@ -631,7 +605,6 @@ void FullColorBrushTool::loadPreset() {
   {
     m_thickness.setValue(
         TIntPairProperty::Value(std::max((int)preset.m_min, 1), preset.m_max));
-    m_brushPad = ToolUtils::getBrushPad(preset.m_max, preset.m_hardness * 0.01);
     m_hardness.setValue(preset.m_hardness, true);
     m_opacity.setValue(
         TDoublePairProperty::Value(preset.m_opacityMin, preset.m_opacityMax));
@@ -690,6 +663,14 @@ void FullColorBrushTool::updateCurrentColor() {
   int style               = app->getCurrentLevelStyleIndex();
   TColorStyle *colorStyle = plt->getStyle(style);
   m_currentColor          = colorStyle->getMainColor();
+}
+
+//------------------------------------------------------------------
+
+double FullColorBrushTool::restartBrushTimer() {
+  double dtime = m_brushTimer.nsecsElapsed()*1e-9;
+  m_brushTimer.restart();
+  return dtime;
 }
 
 //==========================================================================================================
