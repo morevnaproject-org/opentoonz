@@ -286,6 +286,7 @@ bool FullColorBrushTool::preLeftButtonDown() {
 
 void FullColorBrushTool::leftButtonDown(const TPointD &pos,
                                         const TMouseEvent &e) {
+  TPointD previousBrushPos = m_brushPos;
   m_brushPos = m_mousePos = pos;
   m_mousePressed          = true;
   m_mouseEvent            = e;
@@ -325,17 +326,18 @@ void FullColorBrushTool::leftButtonDown(const TPointD &pos,
   m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
   m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
 
-  TRectD invalidateRect(m_strokeSegmentRect.x0,
-                        m_strokeSegmentRect.y0,
-                        m_strokeSegmentRect.x1,
-                        m_strokeSegmentRect.y1);
-  invalidate(invalidateRect.enlarge(2) - rasCenter);
+  TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
+  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
+  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
+  invalidateRect += TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
+  invalidate(invalidateRect.enlarge(2.0));
 }
 
 //-------------------------------------------------------------------------------------------------------------
 
 void FullColorBrushTool::leftButtonDrag(const TPointD &pos,
                                         const TMouseEvent &e) {
+  TPointD previousBrushPos = m_brushPos;
   m_brushPos = m_mousePos = pos;
   m_mouseEvent            = e;
   TRasterImageP ri        = (TRasterImageP)getImage(true);
@@ -350,17 +352,18 @@ void FullColorBrushTool::leftButtonDrag(const TPointD &pos,
   m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
   m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
 
-  TRectD invalidateRect(m_strokeSegmentRect.x0,
-                        m_strokeSegmentRect.y0,
-                        m_strokeSegmentRect.x1,
-                        m_strokeSegmentRect.y1);
-  invalidate(invalidateRect.enlarge(2) - rasCenter);
+  TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
+  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
+  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
+  invalidateRect += TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
+  invalidate(invalidateRect.enlarge(2.0));
 }
 
 //---------------------------------------------------------------------------------------------------------------
 
 void FullColorBrushTool::leftButtonUp(const TPointD &pos,
                                       const TMouseEvent &e) {
+  TPointD previousBrushPos = m_brushPos;
   m_brushPos = m_mousePos = pos;
 
   TRasterImageP ri = (TRasterImageP)getImage(true);
@@ -375,11 +378,11 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
   m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
   m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
 
-  TRectD invalidateRect(m_strokeSegmentRect.x0,
-                        m_strokeSegmentRect.y0,
-                        m_strokeSegmentRect.x1,
-                        m_strokeSegmentRect.y1);
-  invalidate(invalidateRect.enlarge(2) - rasCenter);
+  TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
+  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
+  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
+  invalidateRect += TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
+  invalidate(invalidateRect.enlarge(2.0));
 
   if (m_mypaint_brush) {
     delete m_mypaint_brush;
