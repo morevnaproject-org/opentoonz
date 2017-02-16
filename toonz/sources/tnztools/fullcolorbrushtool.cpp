@@ -686,8 +686,8 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaint_
   const double precision = 1e-5;
 
   bool   pressure     = m_pressure.getValue();
-  double minThickness = m_thickness.getValue().first;
-  double maxThickness = m_thickness.getValue().second;
+  double minThickness = 0.5*m_thickness.getValue().first;
+  double maxThickness = 0.5*m_thickness.getValue().second;
   double minOpacity   = 0.01*m_opacity.getValue().first;
   double maxOpacity   = 0.01*m_opacity.getValue().second;
   double hardness     = 0.01*m_hardness.getValue();

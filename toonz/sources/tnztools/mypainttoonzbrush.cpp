@@ -72,6 +72,24 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
                                       float colorize )
 {
   const float precision = 1e-5f;
+  const float antialiasing = 0.33f;
+  const float antialiasingAspectThreshold = 1.f/20.f;
+  const float minRadius = 1.f;
+
+  // check limits
+  colorR      = std::min(std::max(colorR,      0.f), 1.f);
+  colorG      = std::min(std::max(colorG,      0.f), 1.f);
+  colorB      = std::min(std::max(colorB,      0.f), 1.f);
+  opaque      = std::min(std::max(opaque,      0.f), 1.f);
+  alphaEraser = std::min(std::max(alphaEraser, 0.f), 1.f);
+  lockAlpha   = std::min(std::max(lockAlpha,   0.f), 1.f);
+  colorize    = std::min(std::max(colorize,    0.f), 1.f);
+
+  radius      = std::max(fabsf(radius), precision);
+  hardness    = std::min(std::max(hardness, precision), 1.f - precision);
+  aspectRatio = std::max(aspectRatio, 1.f);
+
+  // bounding rect
   int x0 = std::max(0, (int)floor(x - radius - 1.f + precision));
   int x1 = std::min(m_ras->getLx()-1, (int)ceil(x + radius + 1.f - precision));
   int y0 = std::max(0, (int)floor(y - radius - 1.f + precision));
@@ -81,25 +99,62 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
   if (controller && !controller->askWrite(TRect(x0, y0, x1, y1)))
     return false;
 
+  // antialiasing
+  float rx = radius;
+  float ry = radius/aspectRatio;
+  if (rx < minRadius) {
+    opaque *= rx/minRadius;
+    rx = minRadius;
+  }
+  if (ry < minRadius) {
+    opaque *= ry/minRadius;
+    ry = minRadius;
+  }
+  float aa = antialiasing*std::min(std::max(antialiasingAspectThreshold*rx/ry, 1.f), 8.f);
+  float rx0 = std::max(rx - antialiasing, precision);
+  float rx1 = std::max(rx + 4.f*antialiasing, precision);
+  float ry0 = std::max(ry - antialiasing, precision);
+  float ry1 = std::max(ry + 4.f*antialiasing, precision);
+  float krx0 = 1.f/(rx0*rx0);
+  float krx1 = 1.f/(rx1*rx1);
+  float kry0 = 1.f/(ry0*ry0);
+  float kry1 = 1.f/(ry1*ry1);
+
+  // hardness coefficients
+  float k00 = 0.5f*(hardness - 1.f)/hardness;
+  float k01 = 1.f;
+  float k02 = 0.f;
+  float k10 = 0.5f*hardness/(hardness - 1.f);
+  float k11 = -hardness/(hardness - 1.f);
+  float k12 = (k00*hardness + k01)*hardness + k02
+            - (k10*hardness + k11)*hardness;
+  float k20 = 0.f;
+  float k21 = 0.f;
+  float k22 = k10 + k11 + k12;
+
+  // process
   // TODO: optimizations
-  // TODO: antialiasing
-  float rr = radius*radius;
-  float s  = sinf(angle);
-  float c  = cosf(angle);
+  float s = sinf(angle);
+  float c = cosf(angle);
   for(int ix = x0; ix <= x1; ++ix) {
     for(int iy = y0; iy <= y1; ++iy) {
       float dx = x - (float)ix;
       float dy = y - (float)iy;
-      float ddx = -dx*c + dy*s;
-      float ddy = -dy*c - dx*s;
-      ddy /= aspectRatio;
+      float ddx = dx*c + dy*s;
+      float ddy = dy*c - dx*s;
+      ddx *= ddx;
+      ddy *= ddy;
 
-      float dd = (ddx*ddx + ddy*ddy)/rr;
-      float o = dd > 1.f      ? 0.f
-              : dd > hardness ? (1.f - dd)*hardness/(1.f - hardness)
-              :                 1.f + dd*(hardness - 1.f)/hardness;
-      o = std::min(std::max(o, 0.f), 1.f);
-      o *= opaque;
+      float dd0 = ddx*krx0 + ddy*kry0;
+      float dd1 = ddx*krx1 + ddy*kry1;
+      float o0 = dd0 < hardness ? (k00*dd0 + k01)*dd0 + k02
+               : dd0 < 1.0      ? (k10*dd0 + k11)*dd0 + k12
+               :                  k22;
+      float o1 = dd1 < hardness ? (k00*dd1 + k01)*dd1 + k02
+               : dd1 < 1.0      ? (k10*dd1 + k11)*dd1 + k12
+               :                  k22;
+      float o = (o1 - o0)/(dd1 - dd0)*opaque;
+      if (dd1 <= precision) o = opaque;
 
       // read pixel
       TPixel32 &pixel = m_ras->pixels(iy)[ix];
@@ -212,8 +267,6 @@ void MyPaintToonzBrush::reset() {
 //----------------------------------------------------------------------------------
 
 void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double dtime) {
-  m_ras->lock();
   brush.strokeTo(m_mypaint_surface, point.x, point.y, pressure, 0.f, 0.f, dtime);
-  m_ras->unlock();
 }
 
