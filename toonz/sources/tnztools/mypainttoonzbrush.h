@@ -54,11 +54,8 @@ public:
 
 class MyPaintToonzBrush {
   TRaster32P m_ras;
-  QImage m_rasImage;
   Raster32PMyPaintSurface m_mypaint_surface;
   mypaint::Brush brush;
-
-  double getNextPadPosition(const TThickQuadratic &q, double t) const;
 
 public:
   MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller, const mypaint::Brush &brush);
@@ -66,19 +63,6 @@ public:
 
   void reset();
   void strokeTo(const TPointD &p, double pressure, double dtime);
-
-  // colormapped
-  void updateDrawing(const TRasterCM32P rasCM, const TRasterCM32P rasBackupCM,
-                     const TRect &bbox, int styleId, bool selective) const;
-  void eraseDrawing(const TRasterCM32P rasCM, const TRasterCM32P rasBackupCM,
-                    const TRect &bbox, bool selective, int selectedStyleId,
-                    const std::wstring &mode) const;
-
-  // fullcolor
-  void updateDrawing(const TRasterP ras, const TRasterP rasBackup,
-                     const TPixel32 &color, const TRect &bbox) const;
-  void eraseDrawing(const TRasterP ras, const TRasterP rasBackup,
-                    const TRect &bbox, double opacity) const;
 };
 
 #endif  // T_BLUREDBRUSH

@@ -9,7 +9,6 @@
 #include "tools/toolhandle.h"
 #include "tools/tooloptions.h"
 
-#include "bluredbrush.h"
 #include "mypainttoonzbrush.h"
 
 // TnzQt includes
@@ -36,6 +35,7 @@
 #include "tstream.h"
 #include "tstroke.h"
 #include "timagecache.h"
+#include "tpixelutils.h"
 
 // Qt includes
 #include <QCoreApplication>  // Qt translation support
@@ -139,7 +139,7 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
     , m_styleId(0)
     , m_minThick(0)
     , m_maxThick(0)
-    , m_mypaint_brush(0)
+    , m_toonz_brush(0)
     , m_tileSet(0)
     , m_tileSaver(0)
     , m_notifier(0)
@@ -233,7 +233,7 @@ void FullColorBrushTool::updateWorkAndBackupRasters(const TRect &rect) {
     TRect _rect = enlargedRect*ras->getBounds();
     if (_rect.isEmpty()) return;
 
-    m_workRaster->extract(_rect)->clear();
+    m_workRaster->extract(_rect)->copy(ras->extract(_rect));
     m_backUpRas->extract(_rect)->copy(ras->extract(_rect));
   } else {
     if (enlargedRect.x0 < m_lastRect.x0) enlargedRect.x0 -= dx;
@@ -247,7 +247,7 @@ void FullColorBrushTool::updateWorkAndBackupRasters(const TRect &rect) {
     TRect _lastRect = m_lastRect * ras->getBounds();
     QList<TRect> rects = ToolUtils::splitRect(_rect, _lastRect);
     for (int i = 0; i < rects.size(); i++) {
-      m_workRaster->extract(rects[i])->clear();
+      m_workRaster->extract(rects[i])->copy(ras->extract(rects[i]));
       m_backUpRas->extract(rects[i])->copy(ras->extract(rects[i]));
     }
   }
@@ -315,16 +315,16 @@ void FullColorBrushTool::leftButtonDown(const TPointD &pos,
   m_tileSet       = new TTileSetFullColor(ras->getSize());
   m_tileSaver     = new TTileSaverFullColor(ras, m_tileSet);
 
-  // TODO: set brush options
-  //m_brush =
-  //    new BluredBrush(m_workRaster, maxThick, m_brushPad, hardness == 1.0);
-  m_mypaint_brush =
-      new MyPaintToonzBrush(m_workRaster, *this, mypaint::Brush());
+  mypaint::Brush mypaint_brush;
+  applyClassicToonzBrushSettings(mypaint_brush);
+  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaint_brush);
 
   m_strokeRect.empty();
   m_strokeSegmentRect.empty();
-  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
-  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
+  m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+  TRect updateRect = m_strokeSegmentRect*ras->getBounds();
+  if (!updateRect.isEmpty())
+    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
 
   TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
   TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
@@ -349,8 +349,10 @@ void FullColorBrushTool::leftButtonDrag(const TPointD &pos,
   double pressure = e.m_pressure/255.0;
 
   m_strokeSegmentRect.empty();
-  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
-  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
+  m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+  TRect updateRect = m_strokeSegmentRect*ras->getBounds();
+  if (!updateRect.isEmpty())
+    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
 
   TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
   TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
@@ -375,8 +377,10 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
   double pressure = e.m_pressure/255.0;
 
   m_strokeSegmentRect.empty();
-  m_mypaint_brush->strokeTo(point, pressure, restartBrushTimer());
-  m_mypaint_brush->updateDrawing(ras, m_backUpRas, m_currentColor, m_strokeSegmentRect);
+  m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+  TRect updateRect = m_strokeSegmentRect*ras->getBounds();
+  if (!updateRect.isEmpty())
+    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
 
   TPointD thickOffset(m_maxThick*0.5, m_maxThick*0.5);
   TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
@@ -384,9 +388,9 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
   invalidateRect += TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
   invalidate(invalidateRect.enlarge(2.0));
 
-  if (m_mypaint_brush) {
-    delete m_mypaint_brush;
-    m_mypaint_brush = 0;
+  if (m_toonz_brush) {
+    delete m_toonz_brush;
+    m_toonz_brush = 0;
   }
 
   m_lastRect.empty();
@@ -674,6 +678,88 @@ double FullColorBrushTool::restartBrushTimer() {
   double dtime = m_brushTimer.nsecsElapsed()*1e-9;
   m_brushTimer.restart();
   return dtime;
+}
+
+//------------------------------------------------------------------
+
+void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaint_brush) {
+  const double precision = 1e-5;
+
+  bool   pressure     = m_pressure.getValue();
+  double minThickness = m_thickness.getValue().first;
+  double maxThickness = m_thickness.getValue().second;
+  double minOpacity   = 0.01*m_opacity.getValue().first;
+  double maxOpacity   = 0.01*m_opacity.getValue().second;
+  double hardness     = 0.01*m_hardness.getValue();
+
+  TPixelD color  = PixelConverter<TPixelD>::from(m_currentColor);
+  double  colorH = 0.0;
+  double  colorS = 0.0;
+  double  colorV = 0.0;
+  RGB2HSV(color.r, color.g, color.b, &colorH, &colorS, &colorV);
+
+  if (!pressure) {
+    minThickness = maxThickness;
+    minOpacity = maxOpacity;
+  }
+
+  // avoid log(0)
+  if (minThickness < precision)
+    minThickness = precision;
+  if (maxThickness < precision)
+    maxThickness = precision;
+
+  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_HARDNESS, 0.5*hardness + 0.5);
+  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_H,  colorH);
+  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_S,  colorS);
+  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_V,  colorV);
+  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_ACTUAL_RADIUS, 3.0 + hardness*12.0);
+
+  // thickness may be dynamic
+  if (minThickness + precision >= maxThickness) {
+    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, log(maxThickness));
+    mypaint_brush.setMappingN(
+        MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        0 );
+  } else {
+    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, 0.0);
+    mypaint_brush.setMappingN(
+        MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        2 );
+    mypaint_brush.setMappingPoint(
+        MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        0, 0.0, log(minThickness));
+    mypaint_brush.setMappingPoint(
+        MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        1, 1.0, log(maxThickness));
+  }
+
+  // opacity may be dynamic
+  if (minOpacity + precision >= maxOpacity) {
+    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, maxOpacity);
+    mypaint_brush.setMappingN(
+        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        0 );
+  } else {
+    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 0.0);
+    mypaint_brush.setMappingN(
+        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        2 );
+    mypaint_brush.setMappingPoint(
+        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        0, 0.0, minOpacity);
+    mypaint_brush.setMappingPoint(
+        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_INPUT_PRESSURE,
+        1, 1.0, maxOpacity);
+  }
 }
 
 //==========================================================================================================

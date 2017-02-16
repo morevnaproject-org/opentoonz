@@ -8,129 +8,6 @@
 #include <QColor>
 
 
-namespace {
-
-static QVector<QRgb> colorTable;
-
-QImage rasterToQImage(const TRasterP &ras, bool premultiplied = false) {
-  QImage image;
-  if (TRaster32P ras32 = ras)
-    image = QImage(ras->getRawData(), ras->getLx(), ras->getLy(),
-                   premultiplied ? QImage::Format_ARGB32_Premultiplied
-                                 : QImage::Format_ARGB32);
-  else if (TRasterGR8P ras8 = ras) {
-    image = QImage(ras->getRawData(), ras->getLx(), ras->getLy(),
-                   ras->getWrap(), QImage::Format_Indexed8);
-    image.setColorTable(colorTable);
-  }
-  return image;
-}
-
-//----------------------------------------------------------------------------------
-
-void putOnRasterCM(const TRasterCM32P &out, const TRaster32P &in, int styleId,
-                   bool selective) {
-  if (!out.getPointer() || !in.getPointer()) return;
-  assert(out->getSize() == in->getSize());
-  int x, y;
-  if (!selective) {
-    for (y = 0; y < out->getLy(); y++) {
-      for (x = 0; x < out->getLx(); x++) {
-#ifdef _DEBUG
-        assert(x >= 0 && x < in->getLx());
-        assert(y >= 0 && y < in->getLy());
-        assert(x >= 0 && x < out->getLx());
-        assert(y >= 0 && y < out->getLy());
-#endif
-        TPixel32 *inPix = &in->pixels(y)[x];
-        if (inPix->m == 0) continue;
-        TPixelCM32 *outPix = &out->pixels(y)[x];
-        bool sameStyleId   = styleId == outPix->getInk();
-        int tone = sameStyleId ? outPix->getTone() * (255 - inPix->m) / 255
-                               : outPix->getTone();
-        int ink = !sameStyleId && outPix->getTone() < 255 - inPix->m
-                      ? outPix->getInk()
-                      : styleId;
-        *outPix =
-            TPixelCM32(ink, outPix->getPaint(), std::min(255 - inPix->m, tone));
-      }
-    }
-  } else {
-    for (y = 0; y < out->getLy(); y++) {
-      for (x = 0; x < out->getLx(); x++) {
-#ifdef _DEBUG
-        assert(x >= 0 && x < in->getLx());
-        assert(y >= 0 && y < in->getLy());
-        assert(x >= 0 && x < out->getLx());
-        assert(y >= 0 && y < out->getLy());
-#endif
-        TPixel32 *inPix = &in->pixels(y)[x];
-        if (inPix->m == 0) continue;
-        TPixelCM32 *outPix = &out->pixels(y)[x];
-        bool sameStyleId   = styleId == outPix->getInk();
-        int tone = sameStyleId ? outPix->getTone() * (255 - inPix->m) / 255
-                               : outPix->getTone();
-        int ink = outPix->getTone() < 255 && !sameStyleId &&
-                          outPix->getTone() <= 255 - inPix->m
-                      ? outPix->getInk()
-                      : styleId;
-        *outPix =
-            TPixelCM32(ink, outPix->getPaint(), std::min(255 - inPix->m, tone));
-      }
-    }
-  }
-}
-
-//----------------------------------------------------------------------------------
-
-void eraseFromRasterCM(const TRasterCM32P &out, const TRaster32P &in,
-                       bool selective, int selectedStyleId,
-                       const std::wstring &mode) {
-  if (!out.getPointer() || !in.getPointer()) return;
-  assert(out->getSize() == in->getSize());
-  bool eraseLine  = mode == L"Lines" || mode == L"Lines & Areas";
-  bool eraseAreas = mode == L"Areas" || mode == L"Lines & Areas";
-  int x, y;
-
-  for (y = 0; y < out->getLy(); y++) {
-    for (x = 0; x < out->getLx(); x++) {
-#ifdef _DEBUG
-      assert(y >= 0 && y < in->getLy());
-      assert(y >= 0 && y < out->getLy());
-#endif
-      TPixel32 *inPix = &in->pixels(y)[x];
-      if (inPix->m == 0) continue;
-      TPixelCM32 *outPix = &out->pixels(y)[x];
-      bool eraseInk =
-          !selective || (selective && selectedStyleId == outPix->getInk());
-      bool erasePaint =
-          !selective || (selective && selectedStyleId == outPix->getPaint());
-      int paint = eraseAreas && erasePaint ? 0 : outPix->getPaint();
-      int tone  = inPix->m > 0 && eraseLine && eraseInk
-                     ? std::max(outPix->getTone(), (int)inPix->m)
-                     : outPix->getTone();
-      *outPix = TPixelCM32(outPix->getInk(), paint, tone);
-    }
-  }
-}
-
-//----------------------------------------------------------------------------------
-
-TRasterP rasterFromQImage(
-    const QImage &image)  // no need of const& - Qt uses implicit sharing...
-{
-  QImage::Format format = image.format();
-  if (format == QImage::Format_ARGB32 ||
-      format == QImage::Format_ARGB32_Premultiplied)
-    return TRaster32P(image.width(), image.height(), image.width(),
-                      (TPixelRGBM32 *)image.bits(), false);
-  if (format == QImage::Format_Indexed8)
-    return TRasterGR8P(image.width(), image.height(), image.bytesPerLine(),
-                       (TPixelGR8 *)image.bits(), false);
-  return TRasterP();
-}
-}
-
 //=======================================================
 //
 // Raster32PMyPaintSurface
@@ -213,14 +90,15 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
     for(int iy = y0; iy <= y1; ++iy) {
       float dx = x - (float)ix;
       float dy = y - (float)iy;
-      float ddx = dx*c + dy*s;
-      float ddy = dy*c - dx*s;
+      float ddx = -dx*c + dy*s;
+      float ddy = -dy*c - dx*s;
       ddy /= aspectRatio;
 
       float dd = (ddx*ddx + ddy*ddy)/rr;
-      float o = dd <= hardness
-              ? 1.f + dd*(hardness - 1.f)/hardness
-              : hardness + (hardness - dd)/hardness;
+      float o = dd > 1.f      ? 0.f
+              : dd > hardness ? (1.f - dd)*hardness/(1.f - hardness)
+              :                 1.f + dd*(hardness - 1.f)/hardness;
+      o = std::min(std::max(o, 0.f), 1.f);
       o *= opaque;
 
       // read pixel
@@ -230,9 +108,13 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
       float destB = (float)pixel.b/(float)TPixel32::maxChannelValue;
       float destA = (float)pixel.m/(float)TPixel32::maxChannelValue;
 
+      //destR *= destA;
+      //destG *= destA;
+      //destB *= destA;
+
       { // blend normal and eraze
         float blendNormal = 1.f*(1.f - lockAlpha)*(1.f - colorize);
-        float oa = blendNormal*opaque*o;
+        float oa = blendNormal*o;
         float ob = 1.f - oa;
         oa *= alphaEraser;
         destR = oa*colorR + ob*destR;
@@ -242,7 +124,7 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
       }
 
       { // blend lock alpha
-        float oa = lockAlpha*opaque*o;
+        float oa = lockAlpha*o;
         float ob = 1.f - oa;
         oa *= destA;
         destR = oa*colorR + ob*destR;
@@ -276,7 +158,7 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
             b = lum + (b - lum)*(1.f-lum)/(cmax - lum);
         }
 
-        float oa = colorize*opaque*o;
+        float oa = colorize*o;
         float ob = 1.f - oa;
         destR = oa*r + ob*destR;
         destG = oa*g + ob*destG;
@@ -288,6 +170,12 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
       destG = std::min(std::max(destG, 0.f), 1.f);
       destB = std::min(std::max(destB, 0.f), 1.f);
       destA = std::min(std::max(destA, 0.f), 1.f);
+
+      if (destA > precision) {
+        //destR /= destA;
+        //destG /= destA;
+        //destB /= destA;
+      }
 
       pixel.r = (TPixel32::Channel)roundf(destR * TPixel32::maxChannelValue);
       pixel.g = (TPixel32::Channel)roundf(destG * TPixel32::maxChannelValue);
@@ -307,14 +195,9 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
 
 MyPaintToonzBrush::MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller, const mypaint::Brush &brush):
   m_ras(ras),
-  m_rasImage(rasterToQImage(m_ras, false)),
   m_mypaint_surface(m_ras, controller),
   brush(brush)
-{
-  if (colorTable.isEmpty())
-    for(int i = 0; i < 256; ++i)
-      colorTable.append(QColor(i, i, i).rgb());
-}
+{ }
 
 //----------------------------------------------------------------------------------
 
@@ -334,128 +217,3 @@ void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double d
   m_ras->unlock();
 }
 
-//----------------------------------------------------------------------------------
-
-void MyPaintToonzBrush::updateDrawing(const TRasterP ras, const TRasterP rasBackup,
-                                      const TPixel32 &color, const TRect &bbox) const {
-  TRect rasRect    = ras->getBounds();
-  TRect targetRect = bbox * rasRect;
-  if (targetRect.isEmpty()) return;
-  QImage image = rasterToQImage(ras, true);
-  QRect qTargetRect(targetRect.x0, targetRect.y0, targetRect.getLx(),
-                    targetRect.getLy());
-
-  QImage app(qTargetRect.size(), QImage::Format_ARGB32_Premultiplied);
-  QPainter p2(&app);
-  p2.setBrush(QColor(color.r, color.g, color.b));
-  p2.drawRect(app.rect().adjusted(-1, -1, 0, 0));
-  p2.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-  p2.drawImage(QPoint(), m_rasImage, qTargetRect);
-  p2.end();
-
-  if (ras->getPixelSize() == 4) {
-    QPainter p(&image);
-    p.setClipRect(qTargetRect);
-    p.setCompositionMode(QPainter::CompositionMode_Source);
-    p.drawImage(qTargetRect, rasterToQImage(rasBackup, true), qTargetRect);
-    p.end();
-
-    p.begin(&image);
-    p.drawImage(qTargetRect, app, app.rect());
-    p.end();
-  } else {
-    QImage targetImage = rasterToQImage(rasBackup).copy(qTargetRect);
-    targetImage        = targetImage.convertToFormat(
-        QImage::Format_ARGB32_Premultiplied, colorTable);
-
-    QPainter p(&targetImage);
-    p.drawImage(QPoint(), app, app.rect());
-    p.end();
-    targetImage =
-        targetImage.convertToFormat(QImage::Format_Indexed8, colorTable);
-
-    TRasterGR8P targetRas = rasterFromQImage(targetImage);
-    ras->copy(targetRas, targetRect.getP00());
-  }
-}
-
-//----------------------------------------------------------------------------------
-
-void MyPaintToonzBrush::eraseDrawing(const TRasterP ras, const TRasterP rasBackup,
-                                     const TRect &bbox, double opacity) const {
-  if (!ras) return;
-
-  TRect rasRect    = ras->getBounds();
-  TRect targetRect = bbox * rasRect;
-  if (targetRect.isEmpty()) return;
-  QRect qTargetRect(targetRect.x0, targetRect.y0, targetRect.getLx(),
-                    targetRect.getLy());
-  if (ras->getPixelSize() == 4) {
-    QImage image = rasterToQImage(ras, true);
-    QPainter p(&image);
-    p.setClipRect(qTargetRect);
-    p.setCompositionMode(QPainter::CompositionMode_Source);
-    p.drawImage(qTargetRect, rasterToQImage(rasBackup, true), qTargetRect);
-    p.setCompositionMode(QPainter::CompositionMode_DestinationOut);
-    p.setOpacity(opacity);
-    p.drawImage(qTargetRect, m_rasImage, qTargetRect);
-    p.end();
-  } else if (ras->getPixelSize() != 4) {
-    QImage targetImage = rasterToQImage(rasBackup).copy(qTargetRect);
-    targetImage        = targetImage.convertToFormat(
-        QImage::Format_ARGB32_Premultiplied, colorTable);
-
-    QImage app(qTargetRect.size(), QImage::Format_ARGB32_Premultiplied);
-    QPainter p2(&app);
-    p2.setBrush(QColor(255, 255, 255));
-    p2.drawRect(app.rect().adjusted(-1, -1, 0, 0));
-    p2.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-    p2.drawImage(QPoint(), m_rasImage, qTargetRect);
-    p2.end();
-
-    QPainter p(&targetImage);
-    p.setOpacity(opacity);
-    p.drawImage(QPoint(), app, app.rect());
-    p.end();
-    targetImage =
-        targetImage.convertToFormat(QImage::Format_Indexed8, colorTable);
-
-    TRasterGR8P targetRas = rasterFromQImage(targetImage);
-    ras->copy(targetRas, targetRect.getP00());
-  }
-}
-
-//----------------------------------------------------------------------------------
-
-void MyPaintToonzBrush::updateDrawing(const TRasterCM32P rasCM,
-                                      const TRasterCM32P rasBackupCM,
-                                      const TRect &bbox, int styleId,
-                                      bool selective) const {
-  if (!rasCM) return;
-
-  TRect rasRect    = rasCM->getBounds();
-  TRect targetRect = bbox * rasRect;
-  if (targetRect.isEmpty()) return;
-
-  rasCM->copy(rasBackupCM->extract(targetRect), targetRect.getP00());
-  putOnRasterCM(rasCM->extract(targetRect), m_ras->extract(targetRect), styleId,
-                selective);
-}
-
-//----------------------------------------------------------------------------------
-
-void MyPaintToonzBrush::eraseDrawing(const TRasterCM32P rasCM,
-                                     const TRasterCM32P rasBackupCM,
-                                     const TRect &bbox, bool selective,
-                                     int selectedStyleId,
-                                     const std::wstring &mode) const {
-  if (!rasCM) return;
-
-  TRect rasRect    = rasCM->getBounds();
-  TRect targetRect = bbox * rasRect;
-  if (targetRect.isEmpty()) return;
-
-  rasCM->extract(targetRect)->copy(rasBackupCM->extract(targetRect));
-  eraseFromRasterCM(rasCM->extract(targetRect), m_ras->extract(targetRect),
-                    selective, selectedStyleId, mode);
-}

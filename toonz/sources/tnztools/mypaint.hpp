@@ -161,14 +161,10 @@ namespace mypaint {
     { mypaint_brush_set_print_inputs(m_brush, enabled); }
 
     void fromDefaults() {
-      reset();
-      newStroke();
       mypaint_brush_from_defaults(m_brush);
     }
 
     void fromBrush(const Brush &other) {
-      reset();
-      newStroke();
       for(int i = 0; i < MYPAINT_BRUSH_SETTINGS_COUNT; ++i) {
         MyPaintBrushSetting id = (MyPaintBrushSetting)i;
         setBaseValue(id, other.getBaseValue(id));
@@ -186,8 +182,6 @@ namespace mypaint {
     }
 
     bool fromString(const std::string &s) {
-      reset();
-      newStroke();
       return mypaint_brush_from_string(m_brush, s.c_str());
     }
   };

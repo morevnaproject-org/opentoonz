@@ -15,9 +15,9 @@
 
 class TTileSetFullColor;
 class TTileSaverFullColor;
-class BluredBrush;
 class MyPaintToonzBrush;
 class FullColorBrushToolNotifier;
+namespace mypaint { class Brush; }
 
 //==============================================================
 
@@ -30,6 +30,7 @@ class FullColorBrushTool final : public TTool, public RasterController {
 
   void updateCurrentColor();
   double restartBrushTimer();
+  void applyClassicToonzBrushSettings(mypaint::Brush &mypaint_brush);
 
 public:
   FullColorBrushTool(std::string name);
@@ -93,7 +94,7 @@ protected:
 
   TRect m_strokeRect, m_strokeSegmentRect, m_lastRect;
 
-  MyPaintToonzBrush *m_mypaint_brush;
+  MyPaintToonzBrush *m_toonz_brush;
   QElapsedTimer m_brushTimer;
 
   TTileSetFullColor *m_tileSet;
