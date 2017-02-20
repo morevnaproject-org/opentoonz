@@ -3,13 +3,13 @@
 #ifndef MYPAINTTOONZBRUSH_H
 #define MYPAINTTOONZBRUSH_H
 
+#include <toonz/mypaint.h>
 #include "traster.h"
 #include "trastercm.h"
 #include "tcurves.h"
 #include <QPainter>
 #include <QImage>
 
-#include "mypaint.hpp"
 
 class RasterController {
 public:

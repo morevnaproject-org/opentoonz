@@ -30,7 +30,8 @@ class FullColorBrushTool final : public TTool, public RasterController {
 
   void updateCurrentColor();
   double restartBrushTimer();
-  void applyClassicToonzBrushSettings(mypaint::Brush &mypaint_brush);
+  void applyClassicToonzBrushSettings(mypaint::Brush &mypaintBrush);
+  void applyToonzBrushSettings(mypaint::Brush &mypaintBrush);
 
 public:
   FullColorBrushTool(std::string name);

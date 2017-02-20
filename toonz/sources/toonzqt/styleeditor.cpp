@@ -17,6 +17,7 @@
 #include "toonz/imagestyles.h"
 #include "toonz/txshsimplelevel.h"  //iwsw
 #include "toonz/levelproperties.h"  //iwsw
+#include "toonz/mypaintbrushstyle.h"
 
 // TnzCore includes
 #include "tconvert.h"
@@ -2181,6 +2182,92 @@ bool TextureStyleChooserPage::event(QEvent *e) {
 }
 
 //*****************************************************************************
+//    MyPaintBrushStyleChooserPage definition
+//*****************************************************************************
+
+class MyPaintBrushStyleChooserPage final : public StyleChooserPage {
+public:
+  struct Brush {
+    TRasterP m_raster;
+    QString m_name;
+  };
+
+private:
+  static std::vector<TMyPaintBrushStyle> m_brushes;
+  static bool m_loaded;
+
+public:
+  MyPaintBrushStyleChooserPage(QWidget *parent = 0) : StyleChooserPage(parent) {}
+
+  bool loadIfNeeded() override {
+    if (!m_loaded) {
+      loadItems();
+      m_loaded = true;
+      return true;
+    } else
+      return false;
+  }
+
+  int getChipCount() const override
+    { return m_brushes.size(); }
+
+  static void loadItems();
+
+  void drawChip(QPainter &p, QRect rect, int index) override {
+    assert(0 <= index && index < getChipCount());
+    p.drawImage(rect, rasterToQImage(m_brushes[index].getPreview()));
+  }
+
+  void onSelect(int index) override {
+    assert(0 <= index && index < (int)m_brushes.size());
+    emit styleSelected(m_brushes[index]);
+  }
+
+  bool event(QEvent *e) override {
+    if (e->type() == QEvent::ToolTip) {
+      QHelpEvent *helpEvent = dynamic_cast<QHelpEvent *>(e);
+      QString toolTip;
+      QPoint pos = helpEvent->pos();
+      int index  = posToIndex(pos);
+      if (index >= 0 && index < (int)m_brushes.size()) {
+        toolTip = m_brushes[index].getPath().getQString();
+        QToolTip::showText(helpEvent->globalPos(), toolTip);
+      }
+      e->accept();
+    }
+    return StyleChooserPage::event(e);
+  }
+};
+
+//-----------------------------------------------------------------------------
+
+std::vector<TMyPaintBrushStyle> MyPaintBrushStyleChooserPage::m_brushes;
+bool MyPaintBrushStyleChooserPage::m_loaded = false;
+
+//-----------------------------------------------------------------------------
+
+void MyPaintBrushStyleChooserPage::loadItems() {
+  m_brushes.clear();
+  std::set<TFilePath> brushFiles;
+
+  TFilePathSet dirs = TMyPaintBrushStyle::getBrushesDirs();
+  for(TFilePathSet::iterator i = dirs.begin(); i != dirs.end(); ++i) {
+    TFileStatus fs(*i);
+    if (fs.doesExist() && fs.isDirectory()) {
+      TFilePathSet files = TSystem::readDirectoryTree(*i, false, true);
+      for(TFilePathSet::iterator j = files.begin(); j != files.end(); ++j)
+        if (j->getType() == TMyPaintBrushStyle::getBrushType())
+          brushFiles.insert(*j - *i);
+    }
+  }
+
+  // reserve memory to avoid reallocation
+  m_brushes.reserve(brushFiles.size());
+  for(std::set<TFilePath>::iterator i = brushFiles.begin(); i != brushFiles.end(); ++i)
+    m_brushes.push_back(TMyPaintBrushStyle(*i));
+}
+
+//*****************************************************************************
 //    SpecialStyleChooser  definition
 //*****************************************************************************
 
@@ -2232,7 +2319,8 @@ void SpecialStyleChooserPage::loadItems() {
         tagId == 2800 ||  // imagepattern
         tagId == 2001 ||  // cleanup
         tagId == 2002 ||  // ??
-        tagId == 3000     // vector brush
+        tagId == 3000 ||  // vector brush
+        tagId == 4001     // mypaint brush
         )
       continue;
 
@@ -2790,12 +2878,13 @@ StyleEditor::StyleEditor(PaletteController *paletteController, QWidget *parent)
   m_tabBarContainer        = new TabBarContainter(this);
   m_colorParameterSelector = new ColorParameterSelector(this);
 
-  m_plainColorPage         = new PlainColorPage(0);
-  m_textureStylePage       = new TextureStyleChooserPage(0);
-  m_specialStylePage       = new SpecialStyleChooserPage(0);
-  m_customStylePage        = new CustomStyleChooserPage(0);
-  m_vectorBrushesStylePage = new VectorBrushStyleChooserPage(0);
-  m_settingsPage           = new SettingsPage(0);
+  m_plainColorPage          = new PlainColorPage(0);
+  m_textureStylePage        = new TextureStyleChooserPage(0);
+  m_specialStylePage        = new SpecialStyleChooserPage(0);
+  m_customStylePage         = new CustomStyleChooserPage(0);
+  m_vectorBrushesStylePage  = new VectorBrushStyleChooserPage(0);
+  m_mypaintBrushesStylePage = new MyPaintBrushStyleChooserPage(0);
+  m_settingsPage            = new SettingsPage(0);
 
   QWidget *emptyPage = new StyleEditorPage(0);
 
@@ -2806,10 +2895,11 @@ StyleEditor::StyleEditor(PaletteController *paletteController, QWidget *parent)
   // in order to use the styleSheet to stylish its background
   QScrollArea *plainArea = makeChooserPageWithoutScrollBar(m_plainColorPage);
 
-  QScrollArea *textureArea       = makeChooserPage(m_textureStylePage);
-  QScrollArea *specialArea       = makeChooserPage(m_specialStylePage);
-  QScrollArea *customArea        = makeChooserPage(m_customStylePage);
-  QScrollArea *vectorBrushesArea = makeChooserPage(m_vectorBrushesStylePage);
+  QScrollArea *textureArea        = makeChooserPage(m_textureStylePage);
+  QScrollArea *specialArea        = makeChooserPage(m_specialStylePage);
+  QScrollArea *customArea         = makeChooserPage(m_customStylePage);
+  QScrollArea *vectorBrushesArea  = makeChooserPage(m_vectorBrushesStylePage);
+  QScrollArea *mypaintBrushesArea = makeChooserPage(m_mypaintBrushesStylePage);
   QScrollArea *settingsArea = makeChooserPageWithoutScrollBar(m_settingsPage);
 
   m_styleChooser = new QStackedWidget(this);
@@ -2818,6 +2908,7 @@ StyleEditor::StyleEditor(PaletteController *paletteController, QWidget *parent)
   m_styleChooser->addWidget(specialArea);
   m_styleChooser->addWidget(customArea);
   m_styleChooser->addWidget(vectorBrushesArea);
+  m_styleChooser->addWidget(mypaintBrushesArea);
   m_styleChooser->addWidget(settingsArea);
   m_styleChooser->addWidget(makeChooserPageWithoutScrollBar(emptyPage));
   m_styleChooser->setFocusPolicy(Qt::NoFocus);
@@ -2857,33 +2948,48 @@ StyleEditor::StyleEditor(PaletteController *paletteController, QWidget *parent)
   /* ------- signal-slot connections ------- */
 
   bool ret = true;
-  ret      = ret && connect(m_styleBar, SIGNAL(currentChanged(int)), this,
-                       SLOT(setPage(int)));
-  ret = ret && connect(m_colorParameterSelector, SIGNAL(colorParamChanged()),
-                       this, SLOT(onColorParamChanged()));
-  ret = ret &&
-        connect(m_textureStylePage, SIGNAL(styleSelected(const TColorStyle &)),
-                this, SLOT(selectStyle(const TColorStyle &)));
-  ret = ret &&
-        connect(m_specialStylePage, SIGNAL(styleSelected(const TColorStyle &)),
-                this, SLOT(selectStyle(const TColorStyle &)));
-  ret = ret &&
-        connect(m_customStylePage, SIGNAL(styleSelected(const TColorStyle &)),
-                this, SLOT(selectStyle(const TColorStyle &)));
-  ret = ret && connect(m_vectorBrushesStylePage,
-                       SIGNAL(styleSelected(const TColorStyle &)), this,
-                       SLOT(selectStyle(const TColorStyle &)));
-  ret = ret && connect(m_settingsPage, SIGNAL(paramStyleChanged(bool)), this,
-                       SLOT(onParamStyleChanged(bool)));
-  ret = ret && connect(m_plainColorPage,
-                       SIGNAL(colorChanged(const ColorModel &, bool)), this,
-                       SLOT(onColorChanged(const ColorModel &, bool)));
+  ret = ret && connect( m_styleBar,
+                        SIGNAL(currentChanged(int)),
+                        this,
+                        SLOT(setPage(int)) );
+  ret = ret && connect( m_colorParameterSelector,
+                        SIGNAL(colorParamChanged()),
+                        this,
+                        SLOT(onColorParamChanged()) );
+  ret = ret && connect( m_textureStylePage,
+                        SIGNAL(styleSelected(const TColorStyle &)),
+                        this,
+                        SLOT(selectStyle(const TColorStyle &)));
+  ret = ret && connect( m_specialStylePage,
+                        SIGNAL(styleSelected(const TColorStyle &)),
+                        this,
+                        SLOT(selectStyle(const TColorStyle &)) );
+  ret = ret && connect( m_customStylePage,
+                        SIGNAL(styleSelected(const TColorStyle &)),
+                        this,
+                        SLOT(selectStyle(const TColorStyle &)) );
+  ret = ret && connect( m_vectorBrushesStylePage,
+                        SIGNAL(styleSelected(const TColorStyle &)),
+                        this,
+                        SLOT(selectStyle(const TColorStyle &)) );
+  ret = ret && connect( m_mypaintBrushesStylePage,
+                        SIGNAL(styleSelected(const TColorStyle &)),
+                        this,
+                        SLOT(selectStyle(const TColorStyle &)) );
+  ret = ret && connect( m_settingsPage,
+                        SIGNAL(paramStyleChanged(bool)),
+                        this,
+                        SLOT(onParamStyleChanged(bool)) );
+  ret = ret && connect( m_plainColorPage,
+                        SIGNAL(colorChanged(const ColorModel &, bool)),
+                        this,
+                        SLOT(onColorChanged(const ColorModel &, bool)) );
   assert(ret);
 
   /* ------- initial conditions ------- */
   enable(false, false, false);
   // set to the empty page
-  m_styleChooser->setCurrentIndex(6);
+  m_styleChooser->setCurrentIndex(7);
 }
 
 //-----------------------------------------------------------------------------
@@ -2973,6 +3079,7 @@ void StyleEditor::updateTabBar() {
     m_styleBar->addSimpleTab(tr("Special"));
     m_styleBar->addSimpleTab(tr("Custom"));
     m_styleBar->addSimpleTab(tr("Vector Brush"));
+    m_styleBar->addSimpleTab(tr("MyPaint Brush"));
     m_styleBar->addSimpleTab(tr("Settings"));
   } else if (m_enabled && m_enabledOnlyFirstTab && !m_enabledFirstAndLastTab)
     m_styleBar->addSimpleTab(tr("Plain"));
@@ -2980,7 +3087,7 @@ void StyleEditor::updateTabBar() {
     m_styleBar->addSimpleTab(tr("Plain"));
     m_styleBar->addSimpleTab(tr("Settings"));
   } else {
-    m_styleChooser->setCurrentIndex(6);
+    m_styleChooser->setCurrentIndex(7);
     return;
   }
   m_tabBarContainer->layout()->update();
@@ -3027,7 +3134,7 @@ void StyleEditor::onStyleSwitched() {
 
   if (!palette) {
     // set the current page to empty
-    m_styleChooser->setCurrentIndex(6);
+    m_styleChooser->setCurrentIndex(7);
     enable(false);
     m_colorParameterSelector->clear();
     m_oldStyle    = TColorStyleP();

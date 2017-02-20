@@ -614,6 +614,7 @@ class DVAPI StyleEditor final : public QWidget {
   StyleEditorPage *m_specialStylePage;
   StyleChooserPage *m_customStylePage;
   StyleChooserPage *m_vectorBrushesStylePage;
+  StyleChooserPage *m_mypaintBrushesStylePage;
   SettingsPage *m_settingsPage;
 
   TColorStyleP

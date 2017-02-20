@@ -24,6 +24,7 @@
 #include "toonz/strokegenerator.h"
 #include "toonz/tstageobject.h"
 #include "toonz/palettecontroller.h"
+#include "toonz/mypaintbrushstyle.h"
 
 // TnzCore includes
 #include "tgl.h"
@@ -56,31 +57,6 @@ TEnv::DoubleVar FullcolorMaxOpacity("FullcolorMaxOpacity", 100);
 //----------------------------------------------------------------------------------
 
 namespace {
-
-int computeThickness(int pressure, const TIntPairProperty &property,
-                     bool isPath = false) {
-  if (isPath) return 0.0;
-  double p   = pressure / 255.0;
-  double t   = p * p * p;
-  int thick0 = property.getValue().first;
-  int thick1 = property.getValue().second;
-  return tround(thick0 + (thick1 - thick0) * t);
-}
-
-//----------------------------------------------------------------------------------
-
-double computeThickness(int pressure, const TDoublePairProperty &property,
-                        bool isPath = false) {
-  if (isPath) return 0.0;
-  double p                    = pressure / 255.0;
-  double t                    = p * p * p;
-  double thick0               = property.getValue().first;
-  double thick1               = property.getValue().second;
-  if (thick1 < 0.0001) thick0 = thick1 = 0.0;
-  return (thick0 + (thick1 - thick0) * t);
-}
-
-//----------------------------------------------------------------------------------
 
 class FullColorBrushUndo final : public ToolUtils::TFullColorRasterUndo {
   TPoint m_offset;
@@ -315,9 +291,9 @@ void FullColorBrushTool::leftButtonDown(const TPointD &pos,
   m_tileSet       = new TTileSetFullColor(ras->getSize());
   m_tileSaver     = new TTileSaverFullColor(ras, m_tileSet);
 
-  mypaint::Brush mypaint_brush;
-  applyClassicToonzBrushSettings(mypaint_brush);
-  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaint_brush);
+  mypaint::Brush mypaintBrush;
+  applyToonzBrushSettings(mypaintBrush);
+  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaintBrush);
 
   m_strokeRect.empty();
   m_strokeSegmentRect.empty();
@@ -682,7 +658,7 @@ double FullColorBrushTool::restartBrushTimer() {
 
 //------------------------------------------------------------------
 
-void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaint_brush) {
+void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintBrush) {
   const double precision = 1e-5;
 
   bool   pressure     = m_pressure.getValue();
@@ -709,30 +685,30 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaint_
   if (maxThickness < precision)
     maxThickness = precision;
 
-  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_HARDNESS, 0.5*hardness + 0.5);
-  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_H,  colorH);
-  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_S,  colorS);
-  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_V,  colorV);
-  mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_ACTUAL_RADIUS, 3.0 + hardness*12.0);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_HARDNESS, 0.5*hardness + 0.5);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_H,  colorH/360.0);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_S,  colorS);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_V,  colorV);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_ACTUAL_RADIUS, 3.0 + hardness*12.0);
 
   // thickness may be dynamic
   if (minThickness + precision >= maxThickness) {
-    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, log(maxThickness));
-    mypaint_brush.setMappingN(
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, log(maxThickness));
+    mypaintBrush.setMappingN(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0 );
   } else {
-    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, 0.0);
-    mypaint_brush.setMappingN(
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, 0.0);
+    mypaintBrush.setMappingN(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         2 );
-    mypaint_brush.setMappingPoint(
+    mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0, 0.0, log(minThickness));
-    mypaint_brush.setMappingPoint(
+    mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         1, 1.0, log(maxThickness));
@@ -740,27 +716,63 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaint_
 
   // opacity may be dynamic
   if (minOpacity + precision >= maxOpacity) {
-    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, maxOpacity);
-    mypaint_brush.setMappingN(
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, maxOpacity);
+    mypaintBrush.setMappingN(
         MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0 );
   } else {
-    mypaint_brush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 0.0);
-    mypaint_brush.setMappingN(
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 0.0);
+    mypaintBrush.setMappingN(
         MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         2 );
-    mypaint_brush.setMappingPoint(
+    mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0, 0.0, minOpacity);
-    mypaint_brush.setMappingPoint(
+    mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         1, 1.0, maxOpacity);
   }
 }
+
+void FullColorBrushTool::applyToonzBrushSettings(mypaint::Brush &mypaintBrush) {
+  TTool::Application *app = getApplication();
+  int styleIndex = app->getCurrentLevelStyleIndex();
+  TPalette *plt = app->getCurrentPalette()->getPalette();
+  TColorStyle *colorStyle = plt ? plt->getStyle(styleIndex) : 0;
+  TMyPaintBrushStyle *mypaintStyle = dynamic_cast<TMyPaintBrushStyle*>(colorStyle);
+
+  if (mypaintStyle) {
+    const double precision = 1e-5;
+
+    double maxThickness = 0.5*m_thickness.getValue().second;
+    double maxOpacity   = 0.01*m_opacity.getValue().second;
+
+    TPixelD color  = PixelConverter<TPixelD>::from(m_currentColor);
+    double  colorH = 0.0;
+    double  colorS = 0.0;
+    double  colorV = 0.0;
+    RGB2HSV(color.r, color.g, color.b, &colorH, &colorS, &colorV);
+
+    // avoid log(0)
+    if (maxThickness < precision)
+      maxThickness = precision;
+
+    mypaintBrush.fromBrush(mypaintStyle->getBrush());
+
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, log(maxThickness));
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE, maxOpacity);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_H,  colorH/360.0);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_S,  colorS);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_V,  colorV);
+  } else {
+    applyClassicToonzBrushSettings(mypaintBrush);
+  }
+}
+
 
 //==========================================================================================================
 

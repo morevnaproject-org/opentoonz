@@ -33,7 +33,6 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/toolcommandids.h
     ../include/tools/toolutils.h
     ../include/tools/RGBpicker.h
-    mypaint.hpp
     mypainttoonzbrush.h
 )
 
@@ -120,16 +119,11 @@ message("Bin: " ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(
     SYSTEM
     ${SDKROOT}/superlu/SupperLU_4.1/SRC
-    ${MYPAINT_LIB_INCLUDE_DIRS}
 )
 include_directories(
     ../include/tools
 )
 
 _find_toonz_library(EXTRA_LIBS "tnzcore;tnzbase;tnzext;toonzlib;toonzqt")
-
-set(EXTRA_LIBS ${EXTRA_LIBS}
-    ${MYPAINT_LIB_LDFLAGS}
-)
 
 target_link_libraries(tnztools Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network Qt5::OpenGL ${GLUT_LIB} ${EXTRA_LIBS} ${GL_LIB})
