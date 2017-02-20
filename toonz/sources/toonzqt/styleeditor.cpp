@@ -2197,7 +2197,8 @@ private:
   static bool m_loaded;
 
 public:
-  MyPaintBrushStyleChooserPage(QWidget *parent = 0) : StyleChooserPage(parent) {}
+  MyPaintBrushStyleChooserPage(QWidget *parent = 0) : StyleChooserPage(parent)
+    { m_chipSize = QSize(64, 64); }
 
   bool loadIfNeeded() override {
     if (!m_loaded) {

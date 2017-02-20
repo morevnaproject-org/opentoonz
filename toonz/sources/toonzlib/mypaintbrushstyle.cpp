@@ -135,8 +135,9 @@ void TMyPaintBrushStyle::makeIcon(const TDimension &d) {
     m_icon = m_preview;
   } else {
     m_icon = TRaster32P(d);
-    TRop::resample( m_icon, m_preview,
-                    TScale((double)d.lx/(double)m_preview->getLx(), (double)d.ly/(double)m_preview->getLy()) );
+    double sx = (double)d.lx/(double)m_preview->getLx();
+    double sy = (double)d.ly/(double)m_preview->getLy();
+    TRop::resample(m_icon, m_preview, TScale(sx, sy));
   }
 }
 
