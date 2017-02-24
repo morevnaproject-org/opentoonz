@@ -37,13 +37,7 @@ public:
   void getColor(float x, float y, float radius,
                 float &colorR, float &colorG, float &colorB, float &colorA) override;
 
-  bool drawDab(float x, float y, float radius,
-               float colorR, float colorG, float colorB,
-               float opaque, float hardness,
-               float alphaEraser,
-               float aspectRatio, float angle,
-               float lockAlpha,
-               float colorize) override;
+  bool drawDab(const mypaint::Dab &dab) override;
 };
 
 //=======================================================

@@ -3,6 +3,8 @@
 #ifndef MYPAINT_HPP
 #define MYPAINT_HPP
 
+#include <cmath>
+#include <algorithm>
 #include <string>
 
 extern "C" {
@@ -12,6 +14,68 @@ extern "C" {
 
 namespace mypaint {
   class Brush;
+
+  //=======================================================
+  //
+  // Dab
+  //
+  //=======================================================
+
+  class Dab {
+  public:
+    float x;
+    float y;
+    float radius;
+    float colorR;
+    float colorG;
+    float colorB;
+    float opaque;
+    float hardness;
+    float alphaEraser;
+    float aspectRatio;
+    float angle;
+    float lockAlpha;
+    float colorize;
+
+    Dab():
+      x(), y(), radius(),
+      colorR(), colorG(), colorB(),
+      opaque(), hardness(), alphaEraser(),
+      aspectRatio(), angle(),
+      lockAlpha(), colorize()
+      { }
+
+    Dab(
+      float x, float y, float radius,
+      float colorR, float colorG, float colorB,
+      float opaque, float hardness, float alphaEraser,
+      float aspectRatio, float angle,
+      float lockAlpha, float colorize
+    ):
+      x(x), y(y), radius(radius),
+      colorR(colorR), colorG(colorG), colorB(colorB),
+      opaque(opaque), hardness(hardness), alphaEraser(alphaEraser),
+      aspectRatio(aspectRatio), angle(angle),
+      lockAlpha(lockAlpha), colorize(lockAlpha)
+      { }
+
+    void clamp() {
+      radius      = fabsf(radius);
+      colorR      = std::min(std::max(colorR,      0.f), 1.f);
+      colorG      = std::min(std::max(colorG,      0.f), 1.f);
+      colorB      = std::min(std::max(colorB,      0.f), 1.f);
+      opaque      = std::min(std::max(opaque,      0.f), 1.f);
+      hardness    = std::min(std::max(hardness,    0.f), 1.f);
+      alphaEraser = std::min(std::max(alphaEraser, 0.f), 1.f);
+      aspectRatio = std::max(aspectRatio, 1.f);
+      lockAlpha   = std::min(std::max(lockAlpha,   0.f), 1.f);
+      colorize    = std::min(std::max(colorize,    0.f), 1.f);
+    }
+
+    Dab getClamped() const
+      { Dab dab(*this); dab.clamp(); return dab; }
+  };
+
 
   //=======================================================
   //
@@ -32,21 +96,16 @@ namespace mypaint {
         MyPaintSurface *self,
         float x, float y, float radius,
         float colorR, float colorG, float colorB,
-        float opaque, float hardness,
-        float alphaEraser,
+        float opaque, float hardness, float alphaEraser,
         float aspectRatio, float angle,
-        float lockAlpha,
-        float colorize )
+        float lockAlpha, float colorize )
     {
-      return static_cast<InternalSurface*>(self)->m_owner->drawDab(
+      return static_cast<InternalSurface*>(self)->m_owner->drawDab( Dab(
         x, y, radius,
         colorR, colorG, colorB,
-        opaque, hardness,
-        alphaEraser,
-        aspectRatio,
-        angle,
-        lockAlpha,
-        colorize );
+        opaque, hardness, alphaEraser,
+        aspectRatio, angle,
+        lockAlpha, colorize ));
     }
 
     static void internalGetColor(
@@ -75,14 +134,7 @@ namespace mypaint {
         float x, float y, float radius,
         float &colorR, float &colorG, float &colorB, float &colorA ) = 0;
 
-    virtual bool drawDab(
-        float x, float y, float radius,
-        float colorR, float colorG, float colorB,
-        float opaque, float hardness,
-        float alphaEraser,
-        float aspectRatio, float angle,
-        float lockAlpha,
-        float colorize ) = 0;
+    virtual bool drawDab(const Dab &dab) = 0;
   };
 
   //=======================================================

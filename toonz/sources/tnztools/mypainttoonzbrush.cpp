@@ -63,31 +63,68 @@ void Raster32PMyPaintSurface::getColor(float x, float y, float radius,
 
 //----------------------------------------------------------------------------------
 
-bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
-                                      float colorR, float colorG, float colorB,
-                                      float opaque, float hardness,
-                                      float alphaEraser,
-                                      float aspectRatio, float angle,
-                                      float lockAlpha,
-                                      float colorize )
-{
-  const float precision = 1e-5f;
-  const float antialiasing = 0.33f;
-  const float antialiasingAspectThreshold = 1.f/20.f;
-  const float minRadius = 1.f;
+bool Raster32PMyPaintSurface::drawDab(const mypaint::Dab &dab) {
+  const float precision = 1e-4f;
+  const float antialiasing = 0.66f;
+  const float minRadiusX = antialiasing;
+  const float minRadiusY = 3.f*minRadiusX;
+  const float maxAspect = 10.f;
+  const float minOpaque = 1.f/256.f;
 
   // check limits
-  colorR      = std::min(std::max(colorR,      0.f), 1.f);
-  colorG      = std::min(std::max(colorG,      0.f), 1.f);
-  colorB      = std::min(std::max(colorB,      0.f), 1.f);
-  opaque      = std::min(std::max(opaque,      0.f), 1.f);
-  alphaEraser = std::min(std::max(alphaEraser, 0.f), 1.f);
-  lockAlpha   = std::min(std::max(lockAlpha,   0.f), 1.f);
-  colorize    = std::min(std::max(colorize,    0.f), 1.f);
+  float x = dab.x;
+  float y = dab.y;
+  float radius      = std::max(fabsf(dab.radius), precision);
+  float colorR      = std::min(std::max(dab.colorR,      0.f), 1.f);
+  float colorG      = std::min(std::max(dab.colorG,      0.f), 1.f);
+  float colorB      = std::min(std::max(dab.colorB,      0.f), 1.f);
+  float opaque      = std::min(std::max(dab.opaque,      0.f), 1.f);
+  float hardness    = std::min(std::max(dab.hardness, precision), 1.f - precision);
+  float alphaEraser = std::min(std::max(dab.alphaEraser, 0.f), 1.f);
+  float aspectRatio = std::max(dab.aspectRatio, 1.f);
+  float angle       = dab.angle;
+  float lockAlpha   = std::min(std::max(dab.lockAlpha,   0.f), 1.f);
+  float colorize    = std::min(std::max(dab.colorize,    0.f), 1.f);
 
-  radius      = std::max(fabsf(radius), precision);
-  hardness    = std::min(std::max(hardness, precision), 1.f - precision);
-  aspectRatio = std::max(aspectRatio, 1.f);
+  // fix aspect
+  if (aspectRatio > maxAspect) {
+    opaque *= maxAspect/aspectRatio;
+    aspectRatio = maxAspect;
+  }
+
+  // fix radius
+  float radiusX = radius;
+  if (radiusX < minRadiusX) {
+    opaque *= radiusX/minRadiusX;
+    radiusX = minRadiusX;
+  }
+  if (hardness < 0.5f) {
+    float radiusXh = radiusX*sqrtf(hardness/(1.f - hardness));
+    if (radiusXh < minRadiusX) {
+      opaque *= sqrtf(hardness/(1.f - hardness));
+      hardness = 0.5f;
+    } else
+    if (hardness*opaque < minOpaque) {
+      radiusX = radiusXh;
+      hardness = 0.5f;
+    }
+  }
+  radius = radiusX;
+
+  float radiusY = radiusX/aspectRatio;
+  float radiusYh = radiusY*sqrtf(hardness/(1.f - hardness));
+  float actualMinRadiusY = std::min(radiusX, minRadiusY);
+  if (radiusYh < actualMinRadiusY) {
+    float newRadiusY = std::min(radiusX, radiusY*actualMinRadiusY/radiusYh);
+    opaque *= radiusY/newRadiusY;
+    radiusY = newRadiusY;
+  }
+  aspectRatio = radiusX/radiusY;
+  float aspectRatioSqr = aspectRatio*aspectRatio;
+
+  // check opaque
+  if (opaque < minOpaque)
+    return false;
 
   // bounding rect
   int x0 = std::max(0, (int)floor(x - radius - 1.f + precision));
@@ -99,62 +136,44 @@ bool Raster32PMyPaintSurface::drawDab(float x, float y, float radius,
   if (controller && !controller->askWrite(TRect(x0, y0, x1, y1)))
     return false;
 
-  // antialiasing
-  float rx = radius;
-  float ry = radius/aspectRatio;
-  if (rx < minRadius) {
-    opaque *= rx/minRadius;
-    rx = minRadius;
-  }
-  if (ry < minRadius) {
-    opaque *= ry/minRadius;
-    ry = minRadius;
-  }
-  float aa = antialiasing*std::min(std::max(antialiasingAspectThreshold*rx/ry, 1.f), 8.f);
-  float rx0 = std::max(rx - antialiasing, precision);
-  float rx1 = std::max(rx + 4.f*antialiasing, precision);
-  float ry0 = std::max(ry - antialiasing, precision);
-  float ry1 = std::max(ry + 4.f*antialiasing, precision);
-  float krx0 = 1.f/(rx0*rx0);
-  float krx1 = 1.f/(rx1*rx1);
-  float kry0 = 1.f/(ry0*ry0);
-  float kry1 = 1.f/(ry1*ry1);
-
   // hardness coefficients
-  float k00 = 0.5f*(hardness - 1.f)/hardness;
-  float k01 = 1.f;
-  float k02 = 0.f;
-  float k10 = 0.5f*hardness/(hardness - 1.f);
-  float k11 = -hardness/(hardness - 1.f);
-  float k12 = (k00*hardness + k01)*hardness + k02
-            - (k10*hardness + k11)*hardness;
-  float k20 = 0.f;
-  float k21 = 0.f;
-  float k22 = k10 + k11 + k12;
+  float ka0 = (hardness - 1.f)/hardness/2.f;
+  float kb0 = 1.f;
+  float kc0 = 0.f;
+  float ka1 = hardness/(hardness - 1.f)/2.f;
+  float kb1 = -hardness/(hardness - 1.f);
+  float kc1 = (ka0*hardness + kb0)*hardness + kc0
+            - (ka1*hardness + kb1)*hardness;
+  float kc2 = ka1 + kb1 + kc1;
 
   // process
   // TODO: optimizations
-  float s = sinf(angle);
-  float c = cosf(angle);
+  float s = sinf(angle/180.f*M_PI);
+  float c = cosf(angle/180.f*M_PI);
+  float aa = antialiasing/radius;
+  float ddyMin = 0.5f*aa*aspectRatio;
   for(int ix = x0; ix <= x1; ++ix) {
     for(int iy = y0; iy <= y1; ++iy) {
       float dx = x - (float)ix;
       float dy = y - (float)iy;
-      float ddx = dx*c + dy*s;
-      float ddy = dy*c - dx*s;
-      ddx *= ddx;
-      ddy *= ddy;
+      float ddx = fabsf(dx*c + dy*s)/radius;
+      float ddy = std::max(ddyMin, fabsf(dy*c - dx*s)*aspectRatio/radius);
 
-      float dd0 = ddx*krx0 + ddy*kry0;
-      float dd1 = ddx*krx1 + ddy*kry1;
-      float o0 = dd0 < hardness ? (k00*dd0 + k01)*dd0 + k02
-               : dd0 < 1.0      ? (k10*dd0 + k11)*dd0 + k12
-               :                  k22;
-      float o1 = dd1 < hardness ? (k00*dd1 + k01)*dd1 + k02
-               : dd1 < 1.0      ? (k10*dd1 + k11)*dd1 + k12
-               :                  k22;
-      float o = (o1 - o0)/(dd1 - dd0)*opaque;
-      if (dd1 <= precision) o = opaque;
+      float dd = ddx*ddx + ddy*ddy;
+      float k = aa*sqrtf(ddx*ddx + ddy*ddy*aspectRatioSqr);
+      float dr = k*(2.f + k/dd);
+      float dd0 = dd - dr;
+      float dd1 = dd + dr;
+      float o0 = dd0 < -1.f      ? -kc2
+               : dd0 < -hardness ? (-ka1*dd0 + kb1)*dd0 - kc1
+               : dd0 <  0.f      ? (-ka0*dd0 + kb0)*dd0 - kc0
+               : dd0 <  hardness ? (ka0*dd0 + kb0)*dd0 + kc0
+               : dd0 <  1.f      ? (ka1*dd0 + kb1)*dd0 + kc1
+               :                   kc2;
+      float o1 = dd1 < hardness ? (ka0*dd1 + kb0)*dd1 + kc0
+               : dd1 < 1.f      ? (ka1*dd1 + kb1)*dd1 + kc1
+               :                   kc2;
+      float o = 0.5f*(o1 - o0)/dr*opaque;
 
       // read pixel
       TPixel32 &pixel = m_ras->pixels(iy)[ix];
