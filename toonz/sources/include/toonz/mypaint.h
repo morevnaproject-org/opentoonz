@@ -47,10 +47,10 @@ namespace mypaint {
 
     Dab(
       float x, float y, float radius,
-      float colorR, float colorG, float colorB,
-      float opaque, float hardness, float alphaEraser,
-      float aspectRatio, float angle,
-      float lockAlpha, float colorize
+      float colorR = 0.f, float colorG = 0.f, float colorB = 0.f,
+      float opaque = 1.f, float hardness = 0.5f, float alphaEraser = 1.f,
+      float aspectRatio = 1.f, float angle = 0.f,
+      float lockAlpha = 0.f, float colorize = 0.f
     ):
       x(x), y(y), radius(radius),
       colorR(colorR), colorG(colorG), colorB(colorB),

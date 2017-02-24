@@ -36,6 +36,7 @@ set(MOC_HEADERS
     ../include/toonz/movierenderer.h
     ../include/toonz/multimediarenderer.h
     ../include/toonz/mypaint.h
+    ../include/toonz/mypainthelpers.hpp
     ../include/toonz/mypaintbrushstyle.h
     ../include/toonz/namebuilder.h
     ../include/toonz/Naa2TlvConverter.h
