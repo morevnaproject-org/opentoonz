@@ -130,7 +130,7 @@ namespace mypaint {
 
     virtual ~Surface() { }
 
-    virtual void getColor(
+    virtual bool getColor(
         float x, float y, float radius,
         float &colorR, float &colorG, float &colorB, float &colorA ) = 0;
 

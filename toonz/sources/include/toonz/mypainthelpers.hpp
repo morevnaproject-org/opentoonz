@@ -4,11 +4,14 @@
 #define MYPAINTHELPERS_H
 
 #include <cmath>
+#include <cassert>
 
 #include "mypaint.h"
 
 namespace mypaint {
   namespace helpers {
+    const float precision = 1e-4f;
+
     typedef void ReadPixelFunc(
         const void *pixel,
         float &colorR,
@@ -21,7 +24,7 @@ namespace mypaint {
         float colorG,
         float colorB,
         float colorA );
-    typedef void AskAccessFunc(
+    typedef bool AskAccessFunc(
         void *surfaceController,
         const void *surfacePointer,
         int x0,
@@ -33,8 +36,7 @@ namespace mypaint {
     inline void dummyWritePixel(void*, float, float, float, float) { }
     inline bool dummyAskAccess(void*, const void*, int, int, int, int) { return true; }
 
-    template< int            pixelSize,
-              ReadPixelFunc  read     = dummyReadPixel,
+    template< ReadPixelFunc  read     = dummyReadPixel,
               WritePixelFunc write    = dummyWritePixel,
               AskAccessFunc  askRead  = dummyAskAccess,
               AskAccessFunc  askWrite = dummyAskAccess >
@@ -43,30 +45,35 @@ namespace mypaint {
       void *pointer;
       int width;
       int height;
+      int pixelSize;
       int rowSize;
       void *controller;
 
       SurfaceCustom():
-        pointer(), width(), height(), rowSize(), controller()
+        pointer(), width(), height(), pixelSize(), rowSize(), controller()
         { }
 
-      SurfaceCustom(void *pointer, int width, int height, int rowSize = 0, void *controller = 0):
-        pointer(pointer), width(width), height(height), rowSize(rowSize ? rowSize : width*pixelSize), controller(controller)
+      SurfaceCustom(void *pointer, int width, int height, int pixelSize, int rowSize = 0, void *controller = 0):
+        pointer(pointer),
+        width(width),
+        height(height),
+        pixelSize(pixelSize),
+        rowSize(rowSize ? rowSize : width*pixelSize),
+        controller(controller)
         { }
 
     private:
       template< bool enableAspect,         // 2 variants
-                bool enableAntialiasing,   // 2 variants
+                bool enableAntialiasing,   // 1 variants (true)
                 bool enableHardnessOne,    // 3 variants
                 bool enableHardnessHalf,   //   --
                 bool enablePremult,        // 1 variant  (false)
                 bool enableBlendNormal,    // 2 variants
                 bool enableBlendLockAlpha, // 2 variants
                 bool enableBlendColorize,  // 2 variants
-                bool enableSummary >       // 1 variants (false)  Total: 96 copies of function
+                bool enableSummary >       // 1 variants (false)  Total: 48 copies of function
       bool drawDabCustom(const Dab &dab, float *colorSummary) {
-        const float precision = 1e-4f;
-        const float antialiasing = 0.66f;
+        const float antialiasing = 0.66f; // equals to drawDab::minRadiusX
         const float lr = 0.30f;
         const float lg = 0.59f;
         const float lb = 0.11f;
@@ -95,22 +102,26 @@ namespace mypaint {
         int y1 = std::min(height-1, (int)ceil(dab.y + dab.radius + 1.f - precision));
         if (x0 > x1 || y0 > y1)
           return false;
-        if (askRead(x0, y0, x1, y1))
+
+        if (controller && !askRead(controller, pointer, x0, y0, x1, y1))
           return false;
         if (enableBlendNormal || enableBlendLockAlpha || enableBlendColorize)
-          if (askWrite(x0, y0, x1, y1))
+          if (controller && !askWrite(controller, pointer, x0, y0, x1, y1))
             return false;
+
+        assert(pointer);
 
         // prepare pixel iterator
         int w = x1 - x0 + 1;
         int h = y1 - y0 + 1;
         char *pixel = (char*)pointer + rowSize*y0 + pixelSize*x0;
+        int pixelNextCol = pixelSize;
         int pixelNextRow = rowSize - w*pixelSize;
 
         // prepare geometry iterators
         float radiusInv = 1.f/dab.radius;
-        float dx = dab.x - (float)x0;
-        float dy = dab.y - (float)y0;
+        float dx = (float)x0 - dab.x;
+        float dy = (float)y0 - dab.y;
         float ddx, ddxNextCol, ddxNextRow;
         float ddy, ddyNextCol, ddyNextRow;
         if (enableAspect) {
@@ -203,7 +214,7 @@ namespace mypaint {
 
         // process
         for(int iy = h; iy; --iy, ddx += ddxNextRow, ddy += ddyNextRow, pixel += pixelNextRow)
-        for(int ix = w; ix; --ix, ddx += ddxNextCol, ddy += ddyNextCol, pixel += pixelSize) {
+        for(int ix = w; ix; --ix, ddx += ddxNextCol, ddy += ddyNextCol, pixel += pixelNextCol) {
           float o;
           if (enableAntialiasing) {
             float dd, dr;
@@ -223,29 +234,28 @@ namespace mypaint {
               continue;
             float dd1 = dd + dr;
 
-            float o;
             float o0, o1;
             if (enableHardnessOne) {
-              float o0 = dd0 < -1.f      ?  -0.5f
-                       :                     0.5f*dd0;
-              float o1 = dd1 <  1.f      ?   0.5f*dd1
-                       :                     0.5f;
+              o0 = dd0 < -1.f      ?  -0.5f
+                 :                     0.5f*dd0;
+              o1 = dd1 <  1.f      ?   0.5f*dd1
+                 :                     0.5f;
             } else
             if (enableHardnessHalf) {
-              float o0 = dd0 < -1.f      ?  -0.75f
-                       : dd0 <  0.f      ? (-0.25f*dd0 + 0.5f )*dd0
-                       :                   ( 0.25f*dd0 + 0.5f )*dd0;
-              float o1 = dd1 <  1.f      ? ( 0.25f*dd1 + 0.5f )*dd1
-                       :                     0.75f;
+              o0 = dd0 < -1.f      ?  -0.75f
+                 : dd0 <  0.f      ? (-0.25f*dd0 + 0.5f )*dd0
+                 :                   ( 0.25f*dd0 + 0.5f )*dd0;
+              o1 = dd1 <  1.f      ? ( 0.25f*dd1 + 0.5f )*dd1
+                 :                     0.75f;
             } else {
-              float o0 = dd0 < -1.f      ?  -kc2
-                       : dd0 < -hardness ? (-ka1*dd0   + kb1  )*dd0 - kc1
-                       : dd0 <  0.f      ? (-ka0*dd0   + 0.5f )*dd0
-                       : dd0 <  hardness ? ( ka0*dd0   + 0.5f )*dd0
-                       :                   ( ka1*dd0   + kb1  )*dd0 + kc1;
-              float o1 = dd1 <  hardness ? ( ka0*dd1   + 0.5f )*dd1
-                       : dd1 <  1.f      ? ( ka1*dd1   + kb1  )*dd1 + kc1
-                       :                     kc2;
+              o0 = dd0 < -1.f      ?  -kc2
+                 : dd0 < -hardness ? (-ka1*dd0   + kb1  )*dd0 - kc1
+                 : dd0 <  0.f      ? (-ka0*dd0   + 0.5f )*dd0
+                 : dd0 <  hardness ? ( ka0*dd0   + 0.5f )*dd0
+                 :                   ( ka1*dd0   + kb1  )*dd0 + kc1;
+              o1 = dd1 <  hardness ? ( ka0*dd1   + 0.5f )*dd1
+                 : dd1 <  1.f      ? ( ka1*dd1   + kb1  )*dd1 + kc1
+                 :                     kc2;
             }
             o = opaque*(o1 - o0)/dr;
           } else {
@@ -372,7 +382,6 @@ namespace mypaint {
                 bool enableBlendNormal,
                 bool enableBlendLockAlpha >
       inline bool drawDabCheckBlendColorize(const Dab &dab) {
-        const float precision = 1e-4f;
         if (dab.colorize > precision) {
           return drawDabCustom<
               enableAspect,
@@ -406,7 +415,6 @@ namespace mypaint {
                 bool enableHardnessHalf,
                 bool enableBlendNormal >
       inline bool drawDabCheckBlendLockAlpha(const Dab &dab) {
-        const float precision = 1e-4f;
         if (dab.lockAlpha > precision) {
             return drawDabCheckBlendColorize<
                 enableAspect,
@@ -433,7 +441,6 @@ namespace mypaint {
                 bool enableHardnessOne,
                 bool enableHardnessHalf >
       inline bool drawDabCheckBlendNormal(const Dab &dab) {
-        const float precision = 1e-4f;
         if ((1.f - dab.lockAlpha)*(1.f - dab.colorize) > precision) {
             return drawDabCheckBlendLockAlpha<
                 enableAspect,
@@ -456,7 +463,6 @@ namespace mypaint {
       template< bool enableAspect,
                 bool enableAntialiasing >
       inline bool drawDabCheckHardness(const Dab &dab) {
-        const float precision = 1e-4f;
         if (dab.hardness >= 1.f - precision) {
           return drawDabCheckBlendNormal<
               enableAspect,
@@ -484,24 +490,13 @@ namespace mypaint {
 
       template< bool enableAspect >
       inline bool drawDabCheckAntialiasing(const Dab &dab) {
-        const float precision = 1e-4f;
-        if ( fabsf(dab.hardness - 0.5f) < 0.25f
-          && dab.radius*sqrtf(dab.hardness/(1.f - dab.hardness))/dab.aspectRatio > 5.f )
-        {
-          return drawDabCheckHardness<
-              enableAspect,
-              false  // enableAntialiasing
-              >(dab);
-        } else {
-          return drawDabCheckHardness<
-              enableAspect,
-              true   // enableAntialiasing
-              >(dab);
-        }
+        return drawDabCheckHardness<
+            enableAspect,
+            true   // enableAntialiasing
+            >(dab);
       }
 
       inline bool drawDabCheckAspect(const Dab &dab) {
-        const float precision = 1e-4f;
         if (dab.aspectRatio > 1.f + precision) {
           return drawDabCheckAntialiasing<
               true   // enableAspect
@@ -518,7 +513,7 @@ namespace mypaint {
           float &colorR, float &colorG, float &colorB, float &colorA)
       {
         float color[4];
-        return drawDabCustom<
+        bool done = drawDabCustom<
             false, // enableAspect
             false, // enableAntialiasing
             false, // enableHardnessOne
@@ -533,65 +528,64 @@ namespace mypaint {
         colorG = color[1];
         colorB = color[2];
         colorA = color[3];
+        return done;
       }
 
-      bool drawDab(const Dab &dabSrc) {
-        const float precision = 1e-4f;
-        const float antialiasing = 0.66f;
-        const float minRadiusX = antialiasing;
+      bool drawDab(const Dab &dab) {
+        const float minRadiusX = 0.66f; // equals to drawDabCustom::antialiasing
         const float minRadiusY = 3.f*minRadiusX;
         const float maxAspect = 10.f;
         const float minOpaque = 1.f/256.f;
 
         // check limits
-        Dab dab = dabSrc.getClamped();
-        if (dab.radius <= precision)
+        Dab d = dab.getClamped();
+        if (d.radius <= precision)
           return true;
-        if (dab.hardness <= precision)
+        if (d.hardness <= precision)
           return true;
 
         // fix aspect
-        if (dab.aspectRatio > maxAspect) {
-          dab.opaque *= maxAspect/dab.aspectRatio;
-          dab.aspectRatio = maxAspect;
+        if (d.aspectRatio > maxAspect) {
+          d.opaque *= maxAspect/d.aspectRatio;
+          d.aspectRatio = maxAspect;
         }
 
         // fix radius
         float hardnessSize = 1.f;
-        if (dab.radius < minRadiusX) {
-          dab.opaque *= dab.radius/minRadiusX;
-          dab.radius = minRadiusX;
+        if (d.radius < minRadiusX) {
+          d.opaque *= d.radius/minRadiusX;
+          d.radius = minRadiusX;
         }
-        if (dab.hardness < 0.5f) {
-          hardnessSize = sqrtf(dab.hardness/(1.f - dab.hardness));
-          float radiusH = dab.radius*hardnessSize;
+        if (d.hardness < 0.5f) {
+          hardnessSize = sqrtf(d.hardness/(1.f - d.hardness));
+          float radiusH = d.radius*hardnessSize;
           if (radiusH < minRadiusX) {
-            dab.opaque *= radiusH/minRadiusX;
-            hardnessSize = minRadiusX/dab.radius;
+            d.opaque *= radiusH/minRadiusX;
+            hardnessSize = minRadiusX/d.radius;
             float hardnessSizeSqr = hardnessSize*hardnessSize;
-            dab.hardness = hardnessSizeSqr/(1.f + hardnessSizeSqr);
+            d.hardness = hardnessSizeSqr/(1.f + hardnessSizeSqr);
             radiusH = minRadiusX;
           }
-          if (dab.hardness*dab.opaque < minOpaque) {
-            dab.radius = radiusH;
-            dab.hardness = 0.5f;
+          if (d.hardness*d.opaque < minOpaque) {
+            d.radius = radiusH;
+            d.hardness = 0.5f;
             hardnessSize = 1.f;
           }
         }
 
-        float radiusYh = dab.radius*hardnessSize/dab.aspectRatio;
-        float actualMinRadiusY = std::min(dab.radius, minRadiusY);
+        float radiusYh = d.radius*hardnessSize/d.aspectRatio;
+        float actualMinRadiusY = std::min(d.radius, minRadiusY);
         if (radiusYh < actualMinRadiusY) {
           float k = radiusYh/actualMinRadiusY;
-          dab.opaque *= k;
-          dab.aspectRatio *= k;
+          d.opaque *= k;
+          d.aspectRatio *= k;
         }
 
         // check opaque
-        if (dab.opaque < minOpaque)
+        if (d.opaque < minOpaque)
           return false;
 
-        return drawDabCheckAspect(dab);
+        return drawDabCheckAspect(d);
       }
     }; // SurfaceCustom
   } // helpers
