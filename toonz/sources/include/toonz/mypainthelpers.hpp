@@ -67,7 +67,7 @@ namespace mypaint {
                 bool enableAntialiasing,   // 1 variants (true)
                 bool enableHardnessOne,    // 3 variants
                 bool enableHardnessHalf,   //   --
-                bool enablePremult,        // 1 variant  (false)
+                bool enablePremult,        // 1 variant  (true)
                 bool enableBlendNormal,    // 2 variants
                 bool enableBlendLockAlpha, // 2 variants
                 bool enableBlendColorize,  // 2 variants
@@ -82,17 +82,17 @@ namespace mypaint {
           return false;
 
         // prepare summary
-        float colorSumR, colorSumG, colorSumB, colorSumA, colorSumW;
+        double colorSumR, colorSumG, colorSumB, colorSumA, colorSumW;
         if (enableSummary) {
           colorSummary[0] = 0.f;
           colorSummary[1] = 0.f;
           colorSummary[2] = 0.f;
           colorSummary[3] = 0.f;
-          colorSumR = 0.f;
-          colorSumG = 0.f;
-          colorSumB = 0.f;
-          colorSumA = 0.f;
-          colorSumW = 0.f;
+          colorSumR = 0.0;
+          colorSumG = 0.0;
+          colorSumB = 0.0;
+          colorSumA = 0.0;
+          colorSumW = 0.0;
         }
 
         // bounding rect
@@ -282,11 +282,11 @@ namespace mypaint {
 
           if (enableSummary) {
             float k = o*destA;
-            colorSumR += k*destR;
-            colorSumG += k*destG;
-            colorSumB += k*destB;
-            colorSumA += k;
-            colorSumW += o;
+            colorSumR += (double)(k*destR);
+            colorSumG += (double)(k*destG);
+            colorSumB += (double)(k*destB);
+            colorSumA += (double)k;
+            colorSumW += (double)o;
           }
 
           if (!enableBlendNormal && !enableBlendLockAlpha && !enableBlendColorize)
@@ -365,11 +365,11 @@ namespace mypaint {
         }
 
         if (enableSummary) {
-          float k = colorSumA/colorSumW;
-          colorSummary[0] = k*colorSumR;
-          colorSummary[1] = k*colorSumG;
-          colorSummary[2] = k*colorSumB;
-          colorSummary[3] = k;
+          double k = colorSumA > precision ? 1.0/colorSumA : 0.0;
+          colorSummary[0] = (float)(k*colorSumR);
+          colorSummary[1] = (float)(k*colorSumG);
+          colorSummary[2] = (float)(k*colorSumB);
+          colorSummary[3] = (float)(colorSumW > precision ? colorSumA/colorSumW : 0.0);
         }
 
         return true;
@@ -388,7 +388,7 @@ namespace mypaint {
               enableAntialiasing,
               enableHardnessOne,
               enableHardnessHalf,
-              false, // enablePremult
+              true,  // enablePremult
               enableBlendNormal,
               enableBlendLockAlpha,
               true,  // enableBlendColorize,
@@ -400,7 +400,7 @@ namespace mypaint {
               enableAntialiasing,
               enableHardnessOne,
               enableHardnessHalf,
-              false, // enablePremult
+              true,  // enablePremult
               enableBlendNormal,
               enableBlendLockAlpha,
               false, // enableBlendColorize,
@@ -482,7 +482,7 @@ namespace mypaint {
           return drawDabCheckBlendNormal<
               enableAspect,
               enableAntialiasing,
-              true,  // enableHardnessOne
+              false, // enableHardnessOne
               false  // enableHardnessHalf
               >(dab);
         }
