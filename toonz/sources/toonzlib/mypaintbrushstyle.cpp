@@ -72,7 +72,7 @@ std::string TMyPaintBrushStyle::getBrushType()
 
 TFilePathSet TMyPaintBrushStyle::getBrushesDirs() {
   TFilePathSet paths;
-  paths.push_back(m_libraryDir + "brushes");
+  paths.push_back(m_libraryDir + "mypaint brushes");
   QStringList genericLocations = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
   for(QStringList::iterator i = genericLocations.begin(); i != genericLocations.end(); ++i)
     paths.push_back(TFilePath(*i) + "mypaint" + "brushes");
