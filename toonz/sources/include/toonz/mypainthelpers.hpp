@@ -280,23 +280,22 @@ namespace mypaint {
           float destR, destG, destB, destA;
           read(pixel, destR, destG, destB, destA);
 
-          if (enableSummary) {
-            float k = o*destA;
-            colorSumR += (double)(k*destR);
-            colorSumG += (double)(k*destG);
-            colorSumB += (double)(k*destB);
-            colorSumA += (double)k;
-            colorSumW += (double)o;
-          }
-
-          if (!enableBlendNormal && !enableBlendLockAlpha && !enableBlendColorize)
-            continue;
-
           if (enablePremult) {
             destR *= destA;
             destG *= destA;
             destB *= destA;
           }
+
+          if (enableSummary) {
+            colorSumR += (double)(o*destR);
+            colorSumG += (double)(o*destG);
+            colorSumB += (double)(o*destB);
+            colorSumA += (double)(o*destA);
+            colorSumW += (double)o;
+          }
+
+          if (!enableBlendNormal && !enableBlendLockAlpha && !enableBlendColorize)
+            continue;
 
           if (enableBlendNormal) {
             float oa = blendNormal*o;
@@ -346,12 +345,6 @@ namespace mypaint {
             destB = oa*b + ob*destB;
           }
 
-          // clamp
-          //destR = std::min(std::max(destR, 0.f), 1.f);
-          //destG = std::min(std::max(destG, 0.f), 1.f);
-          //destB = std::min(std::max(destB, 0.f), 1.f);
-          //destA = std::min(std::max(destA, 0.f), 1.f);
-
           if (enablePremult) {
             if (destA > precision) {
               float oneDivA = 1.f/destA;
@@ -360,6 +353,12 @@ namespace mypaint {
               destB *= oneDivA;
             }
           }
+
+          // clamp
+          destR = std::min(std::max(destR, 0.f), 1.f);
+          destG = std::min(std::max(destG, 0.f), 1.f);
+          destB = std::min(std::max(destB, 0.f), 1.f);
+          destA = std::min(std::max(destA, 0.f), 1.f);
 
           write(pixel, destR, destG, destB, destA);
         }
@@ -388,7 +387,7 @@ namespace mypaint {
               enableAntialiasing,
               enableHardnessOne,
               enableHardnessHalf,
-              true,  // enablePremult
+              false, // enablePremult
               enableBlendNormal,
               enableBlendLockAlpha,
               true,  // enableBlendColorize,
@@ -400,7 +399,7 @@ namespace mypaint {
               enableAntialiasing,
               enableHardnessOne,
               enableHardnessHalf,
-              true,  // enablePremult
+              false, // enablePremult
               enableBlendNormal,
               enableBlendLockAlpha,
               false, // enableBlendColorize,
