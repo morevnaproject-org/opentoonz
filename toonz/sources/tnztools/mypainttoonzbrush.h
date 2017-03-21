@@ -76,12 +76,37 @@ public:
 //=======================================================
 
 class MyPaintToonzBrush {
+private:
+  struct Params {
+    union {
+      struct { double x, y, pressure, dtime; };
+      struct { double values[4]; };
+    };
+
+    inline explicit Params(double x = 0.0, double y = 0.0, double pressure = 0.0, double dtime = 0.0):
+        x(x), y(y), pressure(pressure), dtime(dtime) { }
+
+    inline void setMedian(Params &a, Params &b) {
+      for(int i = 0; i < (int)sizeof(values)/sizeof(values[0]); ++i)
+        values[i] = 0.5*(a.values[i] + b.values[i]);
+    }
+  };
+
+  struct Segment {
+    Params p1, p2;
+  };
+
   TRaster32P m_ras;
   Raster32PMyPaintSurface m_mypaintSurface;
   mypaint::Brush brush;
+
+  bool reset;
+  Params previous, current;
+
 public:
   MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller, const mypaint::Brush &brush);
-  void reset();
+  void beginStroke();
+  void endStroke();
   void strokeTo(const TPointD &p, double pressure, double dtime);
 };
 

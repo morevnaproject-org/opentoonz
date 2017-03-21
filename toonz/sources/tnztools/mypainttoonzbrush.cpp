@@ -73,12 +73,69 @@ bool Raster32PMyPaintSurface::drawDab(const mypaint::Dab &dab)
 MyPaintToonzBrush::MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller, const mypaint::Brush &brush):
   m_ras(ras),
   m_mypaintSurface(m_ras, controller),
-  brush(brush)
+  brush(brush),
+  reset(true)
 { }
 
-void MyPaintToonzBrush::reset()
-  { brush.reset(); }
+void MyPaintToonzBrush::beginStroke() {
+  brush.reset();
+  brush.newStroke();
+  reset = true;
+}
 
-void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double dtime)
-  { brush.strokeTo(m_mypaintSurface, point.x, point.y, pressure, 0.f, 0.f, dtime); }
+void MyPaintToonzBrush::endStroke() {
+  if (!reset) {
+    strokeTo(TPointD(current.x, current.y), current.pressure, current.dtime);
+    beginStroke();
+  }
+}
+
+void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double dtime) {
+  Params next(point.x, point.y, pressure, dtime);
+  next.x = point.x;
+  next.y = point.y;
+
+  if (reset) {
+    previous = current = next;
+    reset = false;
+    brush.strokeTo(m_mypaintSurface, current.x, current.y, current.pressure, 0.f, 0.f, current.dtime);
+    return;
+  }
+
+  // accuracy
+  const double threshold = 1.0;
+  const double thresholdSqr = threshold*threshold;
+  const int maxLevel = 16;
+
+  // set initial segment
+  Segment stack[maxLevel+1];
+  Params p0;
+  Segment *segment = stack;
+  Segment *maxSegment = segment + maxLevel;
+  p0.setMedian(previous, current);
+  segment->p1 = current;
+  segment->p2.setMedian(current, next);
+
+  // process
+  while(true) {
+    double dx = segment->p2.x - p0.x;
+    double dy = segment->p2.y - p0.y;
+    if (dx*dx + dy*dy > thresholdSqr && segment != maxSegment) {
+      Segment *sub = segment + 1;
+      sub->p1.setMedian(p0, segment->p1);
+      segment->p1.setMedian(segment->p1, segment->p2);
+      sub->p2.setMedian(sub->p1, segment->p1);
+      segment = sub;
+    } else {
+      brush.strokeTo(m_mypaintSurface, segment->p2.x, segment->p2.y, segment->p2.pressure, 0.f, 0.f, segment->p2.dtime);
+      if (segment == stack) break;
+      p0 = segment->p2;
+      --segment;
+    }
+  }
+
+  // keep parameters for future interpolation
+  previous = current;
+  current  = next;
+}
 

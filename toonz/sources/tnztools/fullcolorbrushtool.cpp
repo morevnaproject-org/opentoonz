@@ -297,6 +297,7 @@ void FullColorBrushTool::leftButtonDown(const TPointD &pos,
 
   m_strokeRect.empty();
   m_strokeSegmentRect.empty();
+  m_toonz_brush->beginStroke();
   m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
   TRect updateRect = m_strokeSegmentRect*ras->getBounds();
   if (!updateRect.isEmpty())
@@ -354,6 +355,7 @@ void FullColorBrushTool::leftButtonUp(const TPointD &pos,
 
   m_strokeSegmentRect.empty();
   m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+  m_toonz_brush->endStroke();
   TRect updateRect = m_strokeSegmentRect*ras->getBounds();
   if (!updateRect.isEmpty())
     ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
