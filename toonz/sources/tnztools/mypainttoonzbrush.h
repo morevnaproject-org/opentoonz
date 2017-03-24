@@ -79,12 +79,12 @@ class MyPaintToonzBrush {
 private:
   struct Params {
     union {
-      struct { double x, y, pressure, dtime; };
+      struct { double x, y, pressure, time; };
       struct { double values[4]; };
     };
 
-    inline explicit Params(double x = 0.0, double y = 0.0, double pressure = 0.0, double dtime = 0.0):
-        x(x), y(y), pressure(pressure), dtime(dtime) { }
+    inline explicit Params(double x = 0.0, double y = 0.0, double pressure = 0.0, double time = 0.0):
+        x(x), y(y), pressure(pressure), time(time) { }
 
     inline void setMedian(Params &a, Params &b) {
       for(int i = 0; i < (int)sizeof(values)/sizeof(values[0]); ++i)

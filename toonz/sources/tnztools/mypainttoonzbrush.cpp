@@ -85,21 +85,26 @@ void MyPaintToonzBrush::beginStroke() {
 
 void MyPaintToonzBrush::endStroke() {
   if (!reset) {
-    strokeTo(TPointD(current.x, current.y), current.pressure, current.dtime);
+    strokeTo(TPointD(current.x, current.y), current.pressure, 0.f);
     beginStroke();
   }
 }
 
 void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double dtime) {
-  Params next(point.x, point.y, pressure, dtime);
-  next.x = point.x;
-  next.y = point.y;
+  Params next(point.x, point.y, pressure, 0.0);
 
   if (reset) {
-    previous = current = next;
+    current = next;
+    previous = current;
     reset = false;
-    brush.strokeTo(m_mypaintSurface, current.x, current.y, current.pressure, 0.f, 0.f, current.dtime);
+    // we need to jump to initial point (heuristic)
+    brush.setState(MYPAINT_BRUSH_STATE_X, current.x);
+    brush.setState(MYPAINT_BRUSH_STATE_Y, current.y);
+    brush.setState(MYPAINT_BRUSH_STATE_ACTUAL_X, current.x);
+    brush.setState(MYPAINT_BRUSH_STATE_ACTUAL_Y, current.y);
     return;
+  } else {
+    next.time = current.time + dtime;
   }
 
   // accuracy
@@ -127,7 +132,7 @@ void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double d
       sub->p2.setMedian(sub->p1, segment->p1);
       segment = sub;
     } else {
-      brush.strokeTo(m_mypaintSurface, segment->p2.x, segment->p2.y, segment->p2.pressure, 0.f, 0.f, segment->p2.dtime);
+      brush.strokeTo(m_mypaintSurface, segment->p2.x, segment->p2.y, segment->p2.pressure, 0.f, 0.f, segment->p2.time - p0.time);
       if (segment == stack) break;
       p0 = segment->p2;
       --segment;
@@ -137,5 +142,9 @@ void MyPaintToonzBrush::strokeTo(const TPointD &point, double pressure, double d
   // keep parameters for future interpolation
   previous = current;
   current  = next;
+
+  // shift time
+  previous.time = 0.0;
+  current.time = dtime;
 }
 

@@ -129,6 +129,8 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
   m_prop.bind(m_pressure);
   m_prop.bind(m_preset);
   m_preset.setId("BrushPreset");
+
+  m_brushTimer.start();
 }
 
 //---------------------------------------------------------------------------------------------------
