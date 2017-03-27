@@ -703,7 +703,7 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintB
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0 );
   } else {
-    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, 0.0);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC, log(minThickness));
     mypaintBrush.setMappingN(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
@@ -711,34 +711,34 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintB
     mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
-        0, 0.0, log(minThickness));
+        0, 0.0, 0.0);
     mypaintBrush.setMappingPoint(
         MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
         MYPAINT_BRUSH_INPUT_PRESSURE,
-        1, 1.0, log(maxThickness));
+        1, 1.0, log(maxThickness) - log(minThickness));
   }
 
   // opacity may be dynamic
   if (minOpacity + precision >= maxOpacity) {
-    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, maxOpacity);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE, maxOpacity);
     mypaintBrush.setMappingN(
-        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_SETTING_OPAQUE,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         0 );
   } else {
-    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 0.0);
+    mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE, minOpacity);
     mypaintBrush.setMappingN(
-        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_SETTING_OPAQUE,
         MYPAINT_BRUSH_INPUT_PRESSURE,
         2 );
     mypaintBrush.setMappingPoint(
-        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_SETTING_OPAQUE,
         MYPAINT_BRUSH_INPUT_PRESSURE,
-        0, 0.0, minOpacity);
+        0, 0.0, 0.0);
     mypaintBrush.setMappingPoint(
-        MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY,
+        MYPAINT_BRUSH_SETTING_OPAQUE,
         MYPAINT_BRUSH_INPUT_PRESSURE,
-        1, 1.0, maxOpacity);
+        1, 1.0, maxOpacity-minOpacity);
   }
 }
 

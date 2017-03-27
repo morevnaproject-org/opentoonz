@@ -64,6 +64,12 @@ bool Raster32PMyPaintSurface::getColor(float x, float y, float radius,
 bool Raster32PMyPaintSurface::drawDab(const mypaint::Dab &dab)
   { return internal->drawDab(dab); }
 
+bool Raster32PMyPaintSurface::getAntialiasing() const
+  { return internal->antialiasing; }
+
+void Raster32PMyPaintSurface::setAntialiasing(bool value)
+  { internal->antialiasing = value; }
+
 //=======================================================
 //
 // MyPaintToonzBrush
@@ -75,7 +81,16 @@ MyPaintToonzBrush::MyPaintToonzBrush(const TRaster32P &ras, RasterController &co
   m_mypaintSurface(m_ras, controller),
   brush(brush),
   reset(true)
-{ }
+{
+  // read brush antialiasing settings
+  float aa = this->brush.getBaseValue(MYPAINT_BRUSH_SETTING_ANTI_ALIASING);
+  m_mypaintSurface.setAntialiasing(aa > 0.5f);
+
+  // reset brush antialiasing to zero to avoid radius and hardness correction
+  this->brush.setBaseValue(MYPAINT_BRUSH_SETTING_ANTI_ALIASING, 0.f);
+  for(int i = 0; i < MYPAINT_BRUSH_INPUTS_COUNT; ++i)
+    this->brush.setMappingN(MYPAINT_BRUSH_SETTING_ANTI_ALIASING, (MyPaintBrushInput)i, 0);
+}
 
 void MyPaintToonzBrush::beginStroke() {
   brush.reset();

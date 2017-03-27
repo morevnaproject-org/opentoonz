@@ -48,18 +48,20 @@ namespace mypaint {
       int pixelSize;
       int rowSize;
       void *controller;
+      bool antialiasing;
 
       SurfaceCustom():
-        pointer(), width(), height(), pixelSize(), rowSize(), controller()
+        pointer(), width(), height(), pixelSize(), rowSize(), controller(), antialiasing(true)
         { }
 
-      SurfaceCustom(void *pointer, int width, int height, int pixelSize, int rowSize = 0, void *controller = 0):
+      SurfaceCustom(void *pointer, int width, int height, int pixelSize, int rowSize = 0, void *controller = 0, bool antialiasing = true):
         pointer(pointer),
         width(width),
         height(height),
         pixelSize(pixelSize),
         rowSize(rowSize ? rowSize : width*pixelSize),
-        controller(controller)
+        controller(controller),
+        antialiasing(antialiasing)
         { }
 
     private:
@@ -120,8 +122,8 @@ namespace mypaint {
 
         // prepare geometry iterators
         float radiusInv = 1.f/dab.radius;
-        float dx = (float)x0 - dab.x;
-        float dy = (float)y0 - dab.y;
+        float dx = (float)x0 - dab.x + 0.5f;
+        float dy = (float)y0 - dab.y + 0.5f;
         float ddx, ddxNextCol, ddxNextRow;
         float ddy, ddyNextCol, ddyNextRow;
         if (enableAspect) {
@@ -183,8 +185,8 @@ namespace mypaint {
           } else {
             hardness = std::min(dab.hardness, 1.f - precision);
             float hk = hardness/(hardness - 1.f);
-            ka0 = hk;
-            ka1 = 1.f/hk;
+            ka0 = 1.f/hk;
+            ka1 = hk;
             kb1 = -hk;
           }
         }
@@ -263,13 +265,12 @@ namespace mypaint {
             if (dd > 1.f)
               continue;
             if (enableHardnessOne) {
-              o = 1.f;
+              o = opaque;
             } else
             if (enableHardnessHalf) {
-              o = 1.f - dd;
+              o = opaque*(1.f - dd);
             } else {
-              o = dd <  hardness ? ka0*dd + 1.f
-                :                  ka1*dd + kb1;
+              o = opaque*(dd <  hardness ? ka0*dd + 1.f : ka1*dd + kb1);
             }
           }
 
@@ -474,8 +475,8 @@ namespace mypaint {
           return drawDabCheckBlendNormal<
               enableAspect,
               enableAntialiasing,
-              true,  // enableHardnessOne
-              false  // enableHardnessHalf
+              false, // enableHardnessOne
+              true   // enableHardnessHalf
               >(dab);
         } else {
           return drawDabCheckBlendNormal<
@@ -488,22 +489,29 @@ namespace mypaint {
       }
 
       template< bool enableAspect >
-      inline bool drawDabCheckAntialiasing(const Dab &dab) {
-        return drawDabCheckHardness<
-            enableAspect,
-            true   // enableAntialiasing
-            >(dab);
+      inline bool drawDabCheckAntialiasing(const Dab &dab, bool antialiasing) {
+        if (antialiasing) {
+          return drawDabCheckHardness<
+              enableAspect,
+              true   // enableAntialiasing
+              >(dab);
+        } else {
+          return drawDabCheckHardness<
+              enableAspect,
+              false  // enableAntialiasing
+              >(dab);
+        }
       }
 
-      inline bool drawDabCheckAspect(const Dab &dab) {
+      inline bool drawDabCheckAspect(const Dab &dab, bool antialiasing) {
         if (dab.aspectRatio > 1.f + precision) {
           return drawDabCheckAntialiasing<
               true   // enableAspect
-              >(dab);
+              >(dab, antialiasing);
         } else {
           return drawDabCheckAntialiasing<
               false  // enableAspect
-              >(dab);
+              >(dab, antialiasing);
         }
       }
 
@@ -584,7 +592,7 @@ namespace mypaint {
         if (d.opaque < minOpaque)
           return false;
 
-        return drawDabCheckAspect(d);
+        return drawDabCheckAspect(d, antialiasing);
       }
     }; // SurfaceCustom
   } // helpers

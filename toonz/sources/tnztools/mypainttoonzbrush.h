@@ -67,6 +67,9 @@ public:
                 float &colorR, float &colorG, float &colorB, float &colorA) override;
 
   bool drawDab(const mypaint::Dab &dab) override;
+
+  bool getAntialiasing() const;
+  void setAntialiasing(bool value);
 };
 
 //=======================================================
