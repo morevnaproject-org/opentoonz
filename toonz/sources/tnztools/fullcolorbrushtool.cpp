@@ -704,6 +704,7 @@ TMyPaintBrushStyle* FullColorBrushTool::getBrushStyle() {
 
 void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintBrush) {
   const double precision = 1e-5;
+  const double hardnessOpacity = 0.1;
 
   double minThickness = 0.5*m_thickness.getValue().first;
   double maxThickness = 0.5*m_thickness.getValue().second;
@@ -723,6 +724,12 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintB
   if (maxThickness < precision)
     maxThickness = precision;
 
+  // tune hardness opacity for better visual softness
+  hardness *= hardness;
+  double opacityAmplifier = 1.0 - hardnessOpacity + hardness*hardnessOpacity;
+  minOpacity *= opacityAmplifier;
+  maxOpacity *= opacityAmplifier;
+
   // reset
   mypaintBrush.fromDefaults();
   mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 1.0);
@@ -735,7 +742,9 @@ void FullColorBrushTool::applyClassicToonzBrushSettings(mypaint::Brush &mypaintB
   mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_H,  colorH/360.0);
   mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_S,  colorS);
   mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_COLOR_V,  colorV);
-  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_ACTUAL_RADIUS, 3.0 + hardness*12.0);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_ACTUAL_RADIUS, 5.0 + hardness*10.0);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_BASIC_RADIUS, 0.0);
+  mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_DABS_PER_SECOND, 0.0);
 
   // thickness may be dynamic
   if (minThickness + precision >= maxThickness) {
