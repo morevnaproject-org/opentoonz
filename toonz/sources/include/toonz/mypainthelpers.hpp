@@ -244,11 +244,11 @@ namespace mypaint {
                  :                     0.5f;
             } else
             if (enableHardnessHalf) {
-              o0 = dd0 < -1.f      ?  -0.75f
-                 : dd0 <  0.f      ? (-0.25f*dd0 + 0.5f )*dd0
-                 :                   ( 0.25f*dd0 + 0.5f )*dd0;
-              o1 = dd1 <  1.f      ? ( 0.25f*dd1 + 0.5f )*dd1
-                 :                     0.75f;
+              o0 = dd0 < -1.f      ?  -0.25f
+                 : dd0 <  0.f      ? ( 0.25f*dd0 + 0.5f )*dd0
+                 :                   (-0.25f*dd0 + 0.5f )*dd0;
+              o1 = dd1 <  1.f      ? (-0.25f*dd1 + 0.5f )*dd1
+                 :                     0.25f;
             } else {
               o0 = dd0 < -1.f      ?  -kc2
                  : dd0 < -hardness ? (-ka1*dd0   + kb1  )*dd0 - kc1
