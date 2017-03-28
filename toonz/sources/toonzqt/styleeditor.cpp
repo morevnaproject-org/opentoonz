@@ -2194,13 +2194,13 @@ public:
 
 private:
   static std::vector<TMyPaintBrushStyle> m_brushes;
-  static bool m_loaded;
 
 public:
   MyPaintBrushStyleChooserPage(QWidget *parent = 0) : StyleChooserPage(parent)
     { m_chipSize = QSize(64, 64); }
 
   bool loadIfNeeded() override {
+    static bool m_loaded = false;
     if (!m_loaded) {
       loadItems();
       m_loaded = true;
@@ -2210,30 +2210,40 @@ public:
   }
 
   int getChipCount() const override
-    { return m_brushes.size(); }
+    { return m_brushes.size() + 1; }
 
   static void loadItems();
 
   void drawChip(QPainter &p, QRect rect, int index) override {
-    assert(0 <= index && index < getChipCount());
-    p.drawImage(rect, rasterToQImage(m_brushes[index].getPreview()));
+    assert(0 <= index && index <= (int)m_brushes.size());
+    static QImage noStyleImage(":Resources/no_mypaintbrush.png");
+    p.drawImage(rect, index == 0 ? noStyleImage : rasterToQImage(m_brushes[index-1].getPreview()));
   }
 
   void onSelect(int index) override {
-    assert(0 <= index && index < (int)m_brushes.size());
-    emit styleSelected(m_brushes[index]);
+    assert(0 <= index && index <= (int)m_brushes.size());
+    static TSolidColorStyle noStyle(TPixel32::Black);
+    if (index == 0) {
+      emit styleSelected(noStyle);
+    } else {
+      emit styleSelected(m_brushes[index-1]);
+    }
   }
 
   bool event(QEvent *e) override {
+    static TSolidColorStyle noStyle(TPixel32::Black);
     if (e->type() == QEvent::ToolTip) {
       QHelpEvent *helpEvent = dynamic_cast<QHelpEvent *>(e);
       QString toolTip;
       QPoint pos = helpEvent->pos();
       int index  = posToIndex(pos);
-      if (index >= 0 && index < (int)m_brushes.size()) {
-        toolTip = m_brushes[index].getPath().getQString();
-        QToolTip::showText(helpEvent->globalPos(), toolTip);
+      if (index == 0) {
+        toolTip = tr("Plain color");
+      } else
+      if (index > 0 && index <= (int)m_brushes.size()) {
+        toolTip = m_brushes[index-1].getPath().getQString();
       }
+      QToolTip::showText(helpEvent->globalPos(), toolTip);
       e->accept();
     }
     return StyleChooserPage::event(e);
@@ -2243,7 +2253,6 @@ public:
 //-----------------------------------------------------------------------------
 
 std::vector<TMyPaintBrushStyle> MyPaintBrushStyleChooserPage::m_brushes;
-bool MyPaintBrushStyleChooserPage::m_loaded = false;
 
 //-----------------------------------------------------------------------------
 
