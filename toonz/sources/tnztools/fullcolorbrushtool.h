@@ -7,6 +7,7 @@
 
 #include "brushtool.h"
 #include "mypainttoonzbrush.h"
+#include "toonz/mypaintbrushstyle.h"
 #include <QElapsedTimer>
 
 //==============================================================
@@ -28,7 +29,7 @@ namespace mypaint { class Brush; }
 class FullColorBrushTool final : public TTool, public RasterController {
   Q_DECLARE_TR_FUNCTIONS(FullColorBrushTool)
 
-  void updateCurrentColor();
+  void updateCurrentStyle();
   double restartBrushTimer();
   void applyClassicToonzBrushSettings(mypaint::Brush &mypaintBrush);
   void applyToonzBrushSettings(mypaint::Brush &mypaintBrush);
@@ -74,6 +75,9 @@ public:
   void removePreset();
 
   void onCanvasSizeChanged();
+  void onColorStyleChanged();
+
+  TMyPaintBrushStyle* getBrushStyle();
 
 protected:
   TPropertyGroup m_prop;
@@ -82,10 +86,13 @@ protected:
   TBoolProperty m_pressure;
   TDoublePairProperty m_opacity;
   TDoubleProperty m_hardness;
+  TDoubleProperty m_modifierSize;
+  TDoubleProperty m_modifierOpacity;
   TEnumProperty m_preset;
 
   TPixel32 m_currentColor;
-  int m_styleId, m_minThick, m_maxThick;
+  bool m_enabledPressure;
+  int m_minCursorThick, m_maxCursorThick;
 
   TPointD m_mousePos,  //!< Current mouse position, in world coordinates.
           m_brushPos;  //!< World position the brush will be painted at.
@@ -122,8 +129,8 @@ public:
   FullColorBrushToolNotifier(FullColorBrushTool *tool);
 
 protected slots:
-
   void onCanvasSizeChanged() { m_tool->onCanvasSizeChanged(); }
+  void onColorStyleChanged() { m_tool->onColorStyleChanged(); }
 };
 
 #endif  // FULLCOLORBRUSHTOOL_H
