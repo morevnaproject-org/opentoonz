@@ -10,6 +10,7 @@
 extern "C" {
   #include <mypaint-brush.h>
   #include <mypaint-surface.h>
+  #include <mypaint-brush-settings.h>
 }
 
 namespace mypaint {
@@ -235,6 +236,115 @@ namespace mypaint {
 
     bool fromString(const std::string &s) {
       return mypaint_brush_from_string(m_brush, s.c_str());
+    }
+  };
+
+  //=======================================================
+  //
+  // Setting
+  //
+  //=======================================================
+
+  class Setting final {
+  public:
+    MyPaintBrushSetting id;
+    std::string key;
+    std::string name;
+    std::string tooltip;
+    bool constant;
+    float min;
+    float def;
+    float max;
+
+  private:
+    Setting():               id(), constant(), min(), def(), max() { }
+    Setting(const Setting&): id(), constant(), min(), def(), max() { }
+
+  public:
+    static const Setting* all() {
+      static bool initialized = false;
+      static Setting settings[MYPAINT_BRUSH_SETTINGS_COUNT];
+      if (!initialized) {
+        for(int i = 0; i < MYPAINT_BRUSH_SETTINGS_COUNT; ++i) {
+          const MyPaintBrushSettingInfo *info = mypaint_brush_setting_info((MyPaintBrushSetting)i);
+          settings[i].id       = (MyPaintBrushSetting)i;
+          settings[i].key      = info->cname;
+          settings[i].name     = mypaint_brush_setting_info_get_name(info);
+          settings[i].tooltip  = mypaint_brush_setting_info_get_tooltip(info);
+          settings[i].constant = info->constant;
+          settings[i].min      = info->min;
+          settings[i].def      = info->def;
+          settings[i].max      = info->max;
+        }
+      }
+      return settings;
+    }
+
+    static const Setting& byId(MyPaintBrushSetting id)
+      { return all()[id]; }
+
+    static const Setting* findByKey(const std::string &key) {
+      const Setting* settings = all();
+      for(int i = 0; i < MYPAINT_BRUSH_SETTINGS_COUNT; ++i)
+        if (settings[i].key == key)
+          return &settings[i];
+      return 0;
+    }
+  };
+
+  //=======================================================
+  //
+  // Input
+  //
+  //=======================================================
+
+  class Input final {
+  public:
+    MyPaintBrushInput id;
+    std::string key;
+    std::string name;
+    std::string tooltip;
+    float hardMin;
+    float softMin;
+    float normal;
+    float softMax;
+    float hardMax;
+
+  private:
+    Input():             id(), hardMin(), softMin(), normal(), softMax(), hardMax() { }
+    Input(const Input&): id(), hardMin(), softMin(), normal(), softMax(), hardMax() { }
+
+  public:
+    static const Input* all() {
+      static bool initialized = false;
+      static Input inputs[MYPAINT_BRUSH_INPUTS_COUNT];
+      if (!initialized) {
+        for(int i = 0; i < MYPAINT_BRUSH_INPUTS_COUNT; ++i) {
+          const MyPaintBrushInputInfo *info = mypaint_brush_input_info((MyPaintBrushInput)i);
+          inputs[i].id       = (MyPaintBrushInput)i;
+          inputs[i].key      = info->cname;
+          inputs[i].name     = mypaint_brush_input_info_get_name(info);
+          inputs[i].tooltip  = mypaint_brush_input_info_get_tooltip(info);
+          inputs[i].hardMin = info->hard_min;
+          inputs[i].softMin = info->soft_min;
+          inputs[i].normal  = info->normal;
+          inputs[i].softMax = info->soft_max;
+          inputs[i].hardMax = info->hard_max;
+        }
+      }
+      return inputs;
+    }
+
+    static const Input& byId(MyPaintBrushInput id) {
+      return all()[id];
+    }
+
+    static const Input* findByKey(const std::string &key) {
+      const Input* inputs = all();
+      for(int i = 0; i < MYPAINT_BRUSH_INPUTS_COUNT; ++i)
+        if (inputs[i].key == key)
+          return &inputs[i];
+      return 0;
     }
   };
 }
