@@ -548,6 +548,9 @@ class SettingsPage final : public QScrollArea {
   bool
       m_updating;  //!< Whether the page is copying style content to its widget,
                    //!  to be displayed.
+private:
+  int getParamIndex(const QWidget *widget);
+
 public:
   SettingsPage(QWidget *parent);
 
@@ -565,6 +568,7 @@ private slots:
 
   void onAutofillChanged();
   void onValueChanged(bool isDragging = false);
+  void onValueReset();
 };
 
 //=============================================================================

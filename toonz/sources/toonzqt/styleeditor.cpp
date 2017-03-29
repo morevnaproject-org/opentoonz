@@ -2687,6 +2687,17 @@ void SettingsPage::setStyle(const TColorStyleP &editedStyle) {
       }
       }
 
+      // "reset to default" button
+      if (m_editedStyle->hasParamDefault(p)) {
+        QPushButton *pushButton = new QPushButton;
+        pushButton->setToolTip(tr("Reset to default"));
+        pushButton->setIcon(createQIconPNG("delete"));
+        m_paramsLayout->addWidget(pushButton, p, 2);
+        ret = QObject::connect(pushButton, SIGNAL(clicked(bool)), this,
+                               SLOT(onValueReset())) &&
+              ret;
+      }
+
       assert(ret);
     }
   }
@@ -2711,6 +2722,13 @@ void SettingsPage::updateValues() {
 
   int p, pCount = m_editedStyle->getParamCount();
   for (p = 0; p != pCount; ++p) {
+    // Update state of "reset to default" button
+    if (m_editedStyle->hasParamDefault(p)) {
+      QPushButton *pushButton = static_cast<QPushButton *>(
+          m_paramsLayout->itemAtPosition(p, 2)->widget());
+      pushButton->setEnabled(m_editedStyle->isParamDefault(p));
+    }
+
     // Update editor values
     switch (m_editedStyle->getParamType(p)) {
     case TColorStyle::BOOL: {
@@ -2778,26 +2796,40 @@ void SettingsPage::onAutofillChanged() {
 
 //-----------------------------------------------------------------------------
 
-void SettingsPage::onValueChanged(bool isDragging) {
-  struct Locals {
-    SettingsPage *m_this;
+int SettingsPage::getParamIndex(const QWidget *widget) {
+  int p, pCount = m_paramsLayout->rowCount();
+  for (p = 0; p != pCount; ++p)
+    for(int c = 0; c < 3; ++c)
+      if (QLayoutItem *item = m_paramsLayout->itemAtPosition(p, c))
+        if (item->widget() == widget)
+          return p;
+  return -1;
+}
 
-    int paramIndex(const QWidget *widget) {
-      int p, pCount = m_this->m_paramsLayout->rowCount();
-      for (p = 0; p != pCount; ++p)
-        if (m_this->m_paramsLayout->itemAtPosition(p, 1)->widget() == widget)
-          break;
+//-----------------------------------------------------------------------------
 
-      return p;
-    }
-
-  } locals = {this};
-
+void SettingsPage::onValueReset() {
   assert(m_editedStyle);
 
   // Extract the parameter index
   QWidget *senderWidget = static_cast<QWidget *>(sender());
-  int p                 = locals.paramIndex(senderWidget);
+  int p                 = getParamIndex(senderWidget);
+
+  assert(0 <= p && p < m_editedStyle->getParamCount());
+  m_editedStyle->setParamDefault(p);
+
+  // Forward the signal to the style editor
+  if (!m_updating) emit paramStyleChanged(false);
+}
+
+//-----------------------------------------------------------------------------
+
+void SettingsPage::onValueChanged(bool isDragging) {
+  assert(m_editedStyle);
+
+  // Extract the parameter index
+  QWidget *senderWidget = static_cast<QWidget *>(sender());
+  int p                 = getParamIndex(senderWidget);
 
   assert(0 <= p && p < m_editedStyle->getParamCount());
 
