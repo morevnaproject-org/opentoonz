@@ -106,9 +106,10 @@ public:
   int getParamCount() const override;
   QString getParamNames(int index) const override;
   ParamType getParamType(int index) const override;
+  bool hasParamDefault(int index) const override;
+  void setParamDefault(int index) override;
+  bool isParamDefault(int index) const override;
   void getParamRange(int index, double &min, double &max) const override;
-  void setParamValue(int index, bool value) override;
-  bool getParamValue(bool_tag, int index) const override;
   void setParamValue(int index, double value) override;
   double getParamValue(double_tag, int index) const override;
 

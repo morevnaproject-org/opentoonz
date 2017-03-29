@@ -210,66 +210,51 @@ void TMyPaintBrushStyle::saveData(TOutputStreamInterface &os) const {
 
 //-----------------------------------------------------------------------------
 
-int TMyPaintBrushStyle::getParamCount() const {
-  return 2*MYPAINT_BRUSH_SETTINGS_COUNT;
-}
+int TMyPaintBrushStyle::getParamCount() const
+  { return MYPAINT_BRUSH_SETTINGS_COUNT; }
 
 //-----------------------------------------------------------------------------
 
-QString TMyPaintBrushStyle::getParamNames(int index) const {
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  QString name = QString::fromUtf8(mypaint::Setting::byId(id).name.c_str());
-  return (index % 2) == 0
-       ? QCoreApplication::translate("TMyPaintBrushStyle", "Override %1").arg(name)
-       : name;
-}
+QString TMyPaintBrushStyle::getParamNames(int index) const
+  { return QString::fromUtf8(mypaint::Setting::byId((MyPaintBrushSetting)index).name.c_str()); }
 
 //-----------------------------------------------------------------------------
 
-TColorStyle::ParamType TMyPaintBrushStyle::getParamType(int index) const {
-  return (index % 2) == 0
-       ? BOOL
-       : DOUBLE;
-}
+TColorStyle::ParamType TMyPaintBrushStyle::getParamType(int index) const
+  { return DOUBLE; }
+
+//-----------------------------------------------------------------------------
+
+bool TMyPaintBrushStyle::hasParamDefault(int index) const
+  { return true; }
+
+//-----------------------------------------------------------------------------
+
+void TMyPaintBrushStyle::setParamDefault(int index)
+  { setBaseValueEnabled((MyPaintBrushSetting)index, false); }
+
+//-----------------------------------------------------------------------------
+
+bool TMyPaintBrushStyle::isParamDefault(int index) const
+  { return getBaseValueEnabled((MyPaintBrushSetting)index); }
 
 //-----------------------------------------------------------------------------
 
 void TMyPaintBrushStyle::getParamRange(int index, double &min, double &max) const {
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  const mypaint::Setting &setting = mypaint::Setting::byId(id);
+  const mypaint::Setting &setting = mypaint::Setting::byId((MyPaintBrushSetting)index);
   min = setting.min;
   max = setting.max;
 }
 
 //-----------------------------------------------------------------------------
 
-void TMyPaintBrushStyle::setParamValue(int index, bool value) {
-  assert((index % 2) == 0);
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  setBaseValueEnabled(id, value);
-}
+void TMyPaintBrushStyle::setParamValue(int index, double value)
+  { setBaseValue((MyPaintBrushSetting)index, value); }
 
 //-----------------------------------------------------------------------------
 
-bool TMyPaintBrushStyle::getParamValue(bool_tag, int index) const {
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  return getBaseValueEnabled(id);
-}
-
-//-----------------------------------------------------------------------------
-
-void TMyPaintBrushStyle::setParamValue(int index, double value) {
-  assert((index % 2) == 1);
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  setBaseValue(id, value);
-}
-
-//-----------------------------------------------------------------------------
-
-double TMyPaintBrushStyle::getParamValue(double_tag, int index) const {
-  MyPaintBrushSetting id = (MyPaintBrushSetting)(index/2);
-  return getBaseValue(id);
-}
+double TMyPaintBrushStyle::getParamValue(double_tag, int index) const
+  { return getBaseValue((MyPaintBrushSetting)index); }
 
 //-----------------------------------------------------------------------------
 
