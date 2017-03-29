@@ -27,9 +27,12 @@ class DVAPI TMyPaintBrushStyle final : public TColorStyle, TImageStyle {
 private:
   TFilePath m_path;
   TFilePath m_fullpath;
-  mypaint::Brush m_brush;
+  mypaint::Brush m_brushOriginal;
+  mypaint::Brush m_brushModified;
   TRasterP m_preview;
   TPixel32 m_color;
+
+  std::map<MyPaintBrushSetting, float> m_baseValues;
 
   TFilePath decodePath(const TFilePath &path) const;
   void loadBrush(const TFilePath &path);
@@ -51,7 +54,7 @@ public:
   const TFilePath& getPath() const
     { return m_path; }
   const mypaint::Brush& getBrush() const
-    { return m_brush; }
+    { return m_brushModified; }
   const TRasterP& getPreview() const
     { return m_preview; }
 
@@ -75,6 +78,39 @@ public:
     { return 4001; }
 
   QString getDescription() const override;
+
+  void setBaseValue(MyPaintBrushSetting id, bool enable, float value);
+  void resetBaseValues();
+
+  void setBaseValue(MyPaintBrushSetting id, float value)
+    { setBaseValue(id, true, value); }
+
+  void setBaseValueEnabled(MyPaintBrushSetting id, bool enable)
+    { setBaseValue(id, enable, getBaseValue(id)); }
+
+  const std::map<MyPaintBrushSetting, float> getBaseValues() const
+    { return m_baseValues; }
+
+  float getBaseValue(MyPaintBrushSetting id) const {
+    std::map<MyPaintBrushSetting, float>::const_iterator i = m_baseValues.find(id);
+    return i == m_baseValues.end()
+         ? m_brushOriginal.getBaseValue(id)
+         : i->second;
+  }
+
+  bool getBaseValueEnabled(MyPaintBrushSetting id) const {
+    std::map<MyPaintBrushSetting, float>::const_iterator i = m_baseValues.find(id);
+    return i != m_baseValues.end();
+  }
+
+  int getParamCount() const override;
+  QString getParamNames(int index) const override;
+  ParamType getParamType(int index) const override;
+  void getParamRange(int index, double &min, double &max) const override;
+  void setParamValue(int index, bool value) override;
+  bool getParamValue(bool_tag, int index) const override;
+  void setParamValue(int index, double value) override;
+  double getParamValue(double_tag, int index) const override;
 
 protected:
   void makeIcon(const TDimension &d) override;
