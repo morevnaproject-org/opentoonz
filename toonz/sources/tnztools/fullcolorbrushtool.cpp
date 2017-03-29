@@ -194,6 +194,7 @@ void FullColorBrushTool::onActivate() {
   }
 
   setWorkAndBackupImages();
+  onColorStyleChanged();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -694,9 +695,7 @@ double FullColorBrushTool::restartBrushTimer() {
 
 TMyPaintBrushStyle* FullColorBrushTool::getBrushStyle() {
   if (TTool::Application *app = getApplication())
-    if (TPalette *plt = app->getCurrentPalette()->getPalette())
-      return dynamic_cast<TMyPaintBrushStyle*>(
-        plt->getStyle( app->getCurrentLevelStyleIndex() ));
+      return dynamic_cast<TMyPaintBrushStyle*>( app->getCurrentLevelStyle() );
   return 0;
 }
 
@@ -838,8 +837,12 @@ FullColorBrushToolNotifier::FullColorBrushToolNotifier(FullColorBrushTool *tool)
       assert(ret);
     }
     if (TPaletteHandle *paletteHandle = app->getCurrentPalette()) {
-      bool ret = connect(paletteHandle, SIGNAL(colorStyleChanged()), this,
-                         SLOT(onColorStyleChanged()));
+      bool ret;
+      ret = connect(paletteHandle, SIGNAL(colorStyleChanged()), this,
+                    SLOT(onColorStyleChanged()));
+      assert(ret);
+      ret = connect(paletteHandle, SIGNAL(colorStyleSwitched()), this,
+                    SLOT(onColorStyleChanged()));
       assert(ret);
     }
   }
