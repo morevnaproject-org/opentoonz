@@ -478,10 +478,34 @@ void FullColorBrushTool::draw() {
   if (TRasterImageP ri = TRasterImageP(getImage(false))) {
     TRasterP ras = ri->getRaster();
 
-    glColor3d(1.0, 0.0, 0.0);
+    double alpha = 1.0;
+    double alphaRadius = 3.0;
+    double pixelSize = sqrt(tglGetPixelSize2());
 
-    tglDrawCircle(m_brushPos, (m_minCursorThick + 1) * 0.5);
-    tglDrawCircle(m_brushPos, (m_maxCursorThick + 1) * 0.5);
+    // circles with lesser radius looks more bold
+    // to avoid these effect we'll reduce alpha for small radiuses
+    double minX = m_minCursorThick/(alphaRadius*pixelSize);
+    double maxX = m_maxCursorThick/(alphaRadius*pixelSize);
+    double minAlpha = alpha*(1.0 - 1.0/(1.0 + minX));
+    double maxAlpha = alpha*(1.0 - 1.0/(1.0 + maxX));
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    tglEnableBlending();
+    tglEnableLineSmooth(true, 0.5);
+
+    if (m_minCursorThick < m_maxCursorThick - pixelSize) {
+      glColor4d(1.0, 1.0, 1.0, minAlpha);
+      tglDrawCircle(m_brushPos, (m_minCursorThick + 1)*0.5 - pixelSize);
+      glColor4d(0.0, 0.0, 0.0, minAlpha);
+      tglDrawCircle(m_brushPos, (m_minCursorThick + 1)*0.5);
+    }
+
+    glColor4d(1.0, 1.0, 1.0, maxAlpha);
+    tglDrawCircle(m_brushPos, (m_maxCursorThick + 1)*0.5 - pixelSize);
+    glColor4d(0.0, 0.0, 0.0, maxAlpha);
+    tglDrawCircle(m_brushPos, (m_maxCursorThick + 1)*0.5);
+
+    glPopAttrib();
   }
 }
 
