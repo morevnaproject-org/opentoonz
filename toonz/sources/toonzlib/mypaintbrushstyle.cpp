@@ -8,6 +8,7 @@
 #include "trop.h"
 #include "tsystem.h"
 #include "tvectorimage.h"
+#include "tpixelutils.h"
 #include "toonz/toonzscene.h"
 
 #include "toonz/mypaintbrushstyle.h"
@@ -168,6 +169,20 @@ void TMyPaintBrushStyle::makeIcon(const TDimension &d) {
     double sx = (double)d.lx/(double)m_preview->getLx();
     double sy = (double)d.ly/(double)m_preview->getLy();
     TRop::resample(m_icon, m_preview, TScale(sx, sy));
+  }
+
+  // paint color marker
+  if (d.lx > 0 && d.ly > 0) {
+    int size = std::min( 1 + std::min(d.lx, d.ly)*2/3,
+                         1 + std::max(d.lx, d.ly)/2 );
+    TPixel32 color = getMainColor();
+    for(int y = 0; y < size; ++y) {
+      TPixel32 *p = m_icon->pixels(d.ly - y - 1);
+      TPixel32 *endp = p + size - y - 1;
+      for( ;p != endp; ++p)
+        *p = color;
+      *p = blend(*p, color, 0.5);
+    }
   }
 }
 
