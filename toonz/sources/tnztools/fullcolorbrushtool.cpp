@@ -661,7 +661,8 @@ void FullColorBrushTool::updateCurrentStyle() {
 
   m_enabledPressure = m_pressure.getValue();
   if (TMyPaintBrushStyle *brushStyle = getBrushStyle()) {
-    double radiusLog = brushStyle->getBrush().getBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC);
+    double radiusLog = brushStyle->getBrush().getBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC)
+                     + m_modifierSize.getValue()*log(2.0);
     double radius = exp(radiusLog);
     m_minCursorThick = m_maxCursorThick = (int)round(2.0*radius);
   } else {
