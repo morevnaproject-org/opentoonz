@@ -378,9 +378,6 @@ elseif(BUILD_ENV_APPLE)
 
 elseif(BUILD_ENV_UNIXLIKE)
     if(BUILD_TARGET_WIN)
-        if(PLATFORM EQUAL 32)
-            set(QT_LIB ${SDKROOT}/quicktime/QT73SDK/Libraries/QTMLClient.lib)
-        endif()
         find_library(GL_LIB opengl32)
         find_library(GLU_LIB glu32)
         find_library(GLUT_LIB NAMES glut freeglut)
@@ -583,7 +580,7 @@ if(BUILD_ENV_APPLE)
     add_subdirectory(mousedragfilter)
 endif()
 
-if((PLATFORM EQUAL 32) AND (BUILD_TARGET_WIN OR BUILD_TARGET_APPLE))
+if((PLATFORM EQUAL 32) AND ((BUILD_TARGET_WIN AND BUILD_ENV_MSVC) OR BUILD_TARGET_APPLE))
     add_subdirectory(t32bitsrv)
 endif()
 
