@@ -376,6 +376,7 @@ elseif(BUILD_ENV_APPLE)
     find_package(LZO REQUIRED)
     message("LZO:" ${LZO_INCLUDE_DIR})
 
+    pkg_check_modules(MYPAINT_LIB REQUIRED libmypaint)
 elseif(BUILD_ENV_UNIXLIKE)
     if(BUILD_TARGET_WIN)
         find_library(GL_LIB opengl32)
