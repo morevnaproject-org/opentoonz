@@ -113,7 +113,7 @@ TEnv::IntVar EnvSoftwareCurrentFontSize("SoftwareCurrentFontSize", 12);
 TEnv::StringVar EnvSoftwareCurrentFontWeight("SoftwareCurrentFontWeightIsBold",
                                              "Yes");
 
-const char *applicationFullName = "OpenToonz 1.1.3";
+const char *applicationFullName = "OpenToonz 1.1.3 (Morevna Edition)";
 const char *rootVarName         = "TOONZROOT";
 const char *systemVarPrefix     = "TOONZ";
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
   font.setPixelSize(13);
   a.setFont(font);
 
-  QString offsetStr("\n\n\n\n\n\n\n\n");
+  QString offsetStr("\n\n\n\n\n\n\n\n\n\n\n");
 
   TSystem::hasMainLoop(true);
 
