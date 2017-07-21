@@ -98,7 +98,7 @@ const char *dllRelativePath     = "./toonz6.app/Contents/Frameworks";
 
 TEnv::IntVar EnvSoftwareCurrentFontSize("SoftwareCurrentFontSize", 12);
 
-const char *applicationFullName = "OpenToonz 1.2";  // to be 1.2.n from 1.2.1
+const char *applicationFullName = "OpenToonz 1.2.0.1 (Morevna Edition)";
 const char *rootVarName         = "TOONZROOT";
 const char *systemVarPrefix     = "TOONZ";
 
@@ -375,7 +375,7 @@ int main(int argc, char *argv[]) {
   font.setWeight(50);
   a.setFont(font);
 
-  QString offsetStr("\n\n\n\n\n\n\n\n");
+  QString offsetStr("\n\n\n\n\n\n\n\n\n\n\n");
 
   TSystem::hasMainLoop(true);
 
