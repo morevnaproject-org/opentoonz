@@ -1081,7 +1081,7 @@ void MainWindow::onAbout() {
   dialog->setTopMargin(0);
   dialog->addWidget(label);
 
-  QString name = QString::fromStdString(TEnv::getApplicationFullName());
+  QString name = QString::fromStdString(applicationFullName);
   name += " (built " __DATE__ " " __TIME__ ")";
   dialog->addWidget(new QLabel(name));
 
