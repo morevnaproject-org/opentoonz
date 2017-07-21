@@ -20,7 +20,7 @@ private:
   const char *applicationName     = "OpenToonz";
   const float applicationVersion  = 1.4;
   const float applicationRevision = 0;
-  const char *applicationNote     = "";
+  const char *applicationNote     = "(Morevna Edition)";
 };
 
 std::string ToonzVersion::getAppName(void) {

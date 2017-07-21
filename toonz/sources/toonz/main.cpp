@@ -445,7 +445,7 @@ int main(int argc, char *argv[]) {
   font.setWeight(50);
   a.setFont(font);
 
-  QString offsetStr("\n\n\n\n\n\n\n\n");
+  QString offsetStr("\n\n\n\n\n\n\n\n\n\n\n");
 
   TSystem::hasMainLoop(true);
 
