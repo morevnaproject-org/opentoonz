@@ -1,4 +1,4 @@
-﻿set(VERSION 1.3)
+﻿﻿set(VERSION 1.3)
 
 set(MOC_HEADERS
     addfilmstripframespopup.h
@@ -330,13 +330,14 @@ set(SOURCES
     audiorecordingpopup.cpp
     locatorpopup.cpp
     styleshortcutswitchablepanel.cpp
-	cameracapturelevelcontrol.cpp
-	reframepopup.cpp
-	autoinputcellnumberpopup.cpp
-	colormodelbehaviorpopup.cpp
-	boardsettingspopup.cpp
-	separatecolorsswatch.cpp
-	separatecolorspopup.cpp
+    cameracapturelevelcontrol.cpp
+    reframepopup.cpp
+    autoinputcellnumberpopup.cpp
+    colormodelbehaviorpopup.cpp
+    boardsettingspopup.cpp
+    separatecolorsswatch.cpp
+    separatecolorspopup.cpp
+    advanced_color_selector.cpp
 # Tracker file
     dummyprocessor.cpp
     metnum.cpp
@@ -412,6 +413,8 @@ if(BUILD_TARGET_WIN)
         )
     endif()
 endif()
+
+target_link_libraries(OpenToonz ColorWidgets-qt5)
 
 if(BUILD_ENV_MSVC)
     target_link_libraries(OpenToonz
