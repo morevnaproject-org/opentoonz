@@ -1358,6 +1358,7 @@ QMenuBar *StackedMenuBar::createFullMenuBar() {
   addMenuItem(windowsMenu, MI_OpenSchematic);
   addMenuItem(windowsMenu, MI_OpenStudioPalette);
   addMenuItem(windowsMenu, MI_OpenStyleControl);
+  addMenuItem(windowsMenu, MI_OpenAdvancedColorSelector);
   addMenuItem(windowsMenu, MI_OpenTasks);
   addMenuItem(windowsMenu, MI_OpenTMessage);
   addMenuItem(windowsMenu, MI_OpenToolbar);
