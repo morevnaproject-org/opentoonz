@@ -117,6 +117,7 @@
 #define MI_OpenColorModel "MI_OpenColorModel"
 #define MI_OpenStudioPalette "MI_OpenStudioPalette"
 #define MI_OpenSchematic "MI_OpenSchematic"
+#define MI_OpenAdvancedColorSelector "MI_OpenAdvancedColorSelector"
 
 #define MI_Export "MI_Export"
 #define MI_TestAnimation "MI_TestAnimation"
