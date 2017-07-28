@@ -442,6 +442,8 @@ if(BUILD_TARGET_WIN)
     endif()
 endif()
 
+target_link_libraries(OpenToonz ColorWidgets-qt5)
+
 if(BUILD_ENV_MSVC AND WITH_STOPMOTION)
     target_link_libraries(OpenToonz
         Qt5::WinMain Qt5::Core Qt5::Gui Qt5::Network Qt5::OpenGL Qt5::Svg Qt5::Xml
