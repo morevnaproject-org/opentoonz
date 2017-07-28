@@ -1407,6 +1407,7 @@ QMenuBar *StackedMenuBar::createFullMenuBar() {
   addMenuItem(windowsMenu, MI_OpenPalette);
   addMenuItem(windowsMenu, MI_OpenStudioPalette);
   addMenuItem(windowsMenu, MI_OpenColorModel);
+  addMenuItem(windowsMenu, MI_OpenAdvancedColorSelector);
   windowsMenu->addSeparator();
   addMenuItem(windowsMenu, MI_OpenComboViewer);
   addMenuItem(windowsMenu, MI_OpenLevelView);
