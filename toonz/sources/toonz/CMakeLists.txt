@@ -327,6 +327,7 @@ set(SOURCES
 	cameracapturelevelcontrol.cpp
 	reframepopup.cpp
 	autoinputcellnumberpopup.cpp
+    advanced_color_selector.cpp
 # Tracker file
     dummyprocessor.cpp
     metnum.cpp
@@ -402,6 +403,8 @@ if(BUILD_TARGET_WIN)
         )
     endif()
 endif()
+
+target_link_libraries(OpenToonz_${VERSION} ColorWidgets-qt5)
 
 if(BUILD_ENV_MSVC)
     target_link_libraries(OpenToonz_${VERSION}
