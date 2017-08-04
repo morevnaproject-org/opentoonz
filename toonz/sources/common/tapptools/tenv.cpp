@@ -75,17 +75,11 @@ public:
 #else
     QString settingsPath;
 
-#ifdef MACOSX
-    settingsPath = QString::fromStdString(getApplicationFileName()) +
-                   QString(".app") +
-                   QString("/Contents/Resources/SystemVar.ini");
-#else /* Generic Unix */
     // TODO: use QStandardPaths::ConfigLocation when we drop Qt4
     settingsPath = QDir::homePath();
     settingsPath.append("/.config/");
     settingsPath.append(getApplicationName().c_str());
     settingsPath.append("/SystemVar.ini");
-#endif
 
     QSettings settings(settingsPath, QSettings::IniFormat);
     QString qStr      = QString::fromStdString(varName);
