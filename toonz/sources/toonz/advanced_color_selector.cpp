@@ -35,6 +35,8 @@ public:
         auto styleIndex = palette_handle->getStyleIndex();
         if (!palette || styleIndex < 0)
           return;
+        if (palette->getStyle(styleIndex)->getMainColor() == qColorToTPixel(c))
+            return;
         palette->setStyle(styleIndex, qColorToTPixel(c)); 
 //             if (palette->getPaletteName() != L"EmptyColorFieldPalette")
 //               TUndoManager::manager()->add(new UndoPaletteChange(
