@@ -61,6 +61,7 @@ public:
       if (!palette || styleIndex < 0)
         return;
       wheel->setColor(tPixelToQColor(palette->getStyle(styleIndex)->getMainColor()));
+      wheel->saveToHistory();
     };
     QObject::connect(
       palette_handle,
