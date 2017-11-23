@@ -580,6 +580,7 @@ elseif(BUILD_ENV_UNIXLIKE AND BUILD_TARGET_WIN)
             "$<TARGET_FILE:tnztools>"
             "$<TARGET_FILE:tnzstdfx>"
             "$<TARGET_FILE:tfarm>"
+            "$<TARGET_FILE:ColorWidgets-qt5>"
         DESTINATION bin
     )
     
