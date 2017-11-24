@@ -467,6 +467,8 @@ elseif(BUILD_ENV_APPLE)
     # 変なところにライブラリ生成するカスども
     set(EXTRA_LIBS ${EXTRA_LIBS} "$<TARGET_FILE:tnzstdfx>" "$<TARGET_FILE:tfarm>")
 
+    set(EXTRA_LIBS ${EXTRA_LIBS} ${CMAKE_CURRENT_BINARY_DIR}/../qt-color-widgets/libColorWidgets-qt5.dylib)
+
     add_dependencies(OpenToonz tnzcore tnzbase toonzlib colorfx tnzext image sound toonzqt tnztools tnzstdfx tfarm)
 
     target_link_libraries(OpenToonz
