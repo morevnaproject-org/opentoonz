@@ -559,7 +559,7 @@ if(BUILD_ENV_APPLE)
 
     # copy Qt
     add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -rf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Qt*.framework)
-    foreach(qtfw QtCore QtGui QtMultimedia QtNetwork QtOpenGL QtPrintSupport QtScript QtSvg QtWidgets QtXml)
+    foreach(qtfw QtCore QtGui QtMultimedia QtNetwork QtOpenGL QtPrintSupport QtScript QtSvg QtWidgets QtMultimediaWidgets QtXml)
         add_custom_command(TARGET OpenToonz POST_BUILD COMMAND cp -RPf ${Qt5_DIR}/../../${qtfw}.framework ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     endforeach()
     # uncomment to copy whole Qt:
