@@ -32,10 +32,14 @@ public:
       wheel,
       &AdvancedColorSelector::colorChanged,
       [palette_handle](QColor c){
-        auto style = palette_handle->getStyle();
-        if (style && style->getMainColor() != qColorToTPixel(c)) {
-          style->setMainColor(qColorToTPixel(c));
-          palette_handle->notifyColorStyleChanged(true);
+        if (TColorStyle *style = palette_handle->getStyle()) {
+          TPixel32 oldColor = style->getMainColor();
+          TPixel32 newColor = qColorToTPixel(c);
+          newColor.m = oldColor.m;
+          if (oldColor != newColor) {
+            style->setMainColor(newColor);
+            palette_handle->notifyColorStyleChanged(true);
+          }
         }
       }
     );
