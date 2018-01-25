@@ -106,7 +106,7 @@ const char *dllRelativePath     = "./toonz6.app/Contents/Frameworks";
 
 TEnv::IntVar EnvSoftwareCurrentFontSize("SoftwareCurrentFontSize", 12);
 
-const char *applicationFullName = "OpenToonz 1.2.0.1 (Morevna Edition)";
+const char *applicationFullName = "OpenToonz 1.2.0.3 (Morevna Edition)";
 const char *rootVarName         = "TOONZROOT";
 const char *systemVarPrefix     = "TOONZ";
 
