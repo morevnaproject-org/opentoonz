@@ -40,6 +40,9 @@ set(HEADERS
     ../include/tools/tool.h
     ../include/tools/toolcommandids.h
     ../include/tools/toolutils.h
+    ../include/tools/tooltimer.h
+    ../include/tools/keyhistory.h
+    ../include/tools/track.h
 )
 
 set(SOURCES
@@ -102,7 +105,10 @@ set(SOURCES
     mypainttoonzbrush.cpp
     shifttracetool.cpp
     toonzrasterbrushtool.cpp
-	toonzvectorbrushtool.cpp
+    toonzvectorbrushtool.cpp
+    tooltimer.cpp
+    keyhistory.cpp
+    track.cpp
 )
 
 set(RESOURCES tnztools.qrc)
