@@ -36,6 +36,9 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/toolutils.h
     ../include/tools/RGBpicker.h
     mypainttoonzbrush.h
+    ../include/tools/tooltimer.h
+    ../include/tools/keyhistory.h
+    ../include/tools/track.h
 )
 
 set(SOURCES
@@ -96,6 +99,9 @@ set(SOURCES
     fingertool.cpp
     rulertool.cpp
     mypainttoonzbrush.cpp
+    tooltimer.cpp
+    keyhistory.cpp
+    track.cpp
 )
 
 set(RESOURCES tnztools.qrc)
