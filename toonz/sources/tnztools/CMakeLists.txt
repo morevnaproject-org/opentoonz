@@ -38,6 +38,7 @@ set(HEADERS ${MOC_HEADERS}
     mypainttoonzbrush.h
     ../include/tools/tooltimer.h
     ../include/tools/keyhistory.h
+    ../include/tools/inputstate.h
     ../include/tools/track.h
 )
 
@@ -101,6 +102,7 @@ set(SOURCES
     mypainttoonzbrush.cpp
     tooltimer.cpp
     keyhistory.cpp
+    inputstate.cpp
     track.cpp
 )
 
