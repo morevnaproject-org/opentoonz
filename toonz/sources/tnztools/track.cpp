@@ -32,10 +32,10 @@ TTrackModifier::calcPoint(double originalIndex) {
 //*****************************************************************************************
 
 TTrack::TTrack(
-  DeviceId deviceId,
+  TInputState::DeviceId deviceId,
   TouchId touchId,
-  const TKeyHistoryT<Qt::Key>::Holder &keyHistory,
-  const TKeyHistoryT<Qt::MouseButton>::Holder &buttonHistory
+  const TInputState::KeyHistory::Holder &keyHistory,
+  const TInputState::ButtonHistory::Holder &buttonHistory
 ):
   id(++lastId),
   deviceId(deviceId),

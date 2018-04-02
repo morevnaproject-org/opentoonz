@@ -4,8 +4,9 @@
 #define TRACK_INCLUDED
 
 // TnzTools includes
-#include <tools/keyhistory.h>
-#include <tools/tooltimer.h>
+#include <tools/inputstate.h>
+
+// TnzCore includes
 #include <tcommon.h>
 #include <tgeometry.h>
 
@@ -120,7 +121,6 @@ class DVAPI TTrack : public TSmartObject {
 public:
   typedef long long Id;
   typedef long long TouchId;
-  typedef qint64 DeviceId;
 
   static const double epsilon;
 
@@ -129,10 +129,10 @@ private:
 
 public:
   const Id id;
-  const DeviceId deviceId;
+  const TInputState::DeviceId deviceId;
   const TouchId touchId;
-  const TKeyHistoryT<Qt::Key>::Holder keyHistory;
-  const TKeyHistoryT<Qt::MouseButton>::Holder buttonHistory;
+  const TInputState::KeyHistory::Holder keyHistory;
+  const TInputState::ButtonHistory::Holder buttonHistory;
   const TTrackModifierP modifier;
 
   TTrackHandlerP handler;
@@ -146,10 +146,10 @@ private:
 public:
 
   explicit TTrack(
-    DeviceId deviceId = 0,
-    TouchId touchId = 0,
-    const TKeyHistoryT<Qt::Key>::Holder &keyHistory = TKeyHistoryT<Qt::Key>::Holder(),
-    const TKeyHistoryT<Qt::MouseButton>::Holder &buttonHistory = TKeyHistoryT<Qt::MouseButton>::Holder()
+    TInputState::DeviceId deviceId = TInputState::DeviceId(),
+    TouchId touchId = TouchId(),
+    const TInputState::KeyHistory::Holder &keyHistory = TInputState::KeyHistory::Holder(),
+    const TInputState::ButtonHistory::Holder &buttonHistory = TInputState::ButtonHistory::Holder()
   );
 
   explicit TTrack(const TTrackModifierP &modifier);
