@@ -61,7 +61,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class SceneViewer final : public GLWidgetForHighDpi,
-                          public TTool::Viewer,
+                          public TToolViewer,
                           public Previewer::Listener {
   Q_OBJECT
 

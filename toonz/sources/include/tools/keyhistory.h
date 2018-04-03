@@ -72,7 +72,9 @@ public:
       { return howLongPressed(find(value), ticks, timeOffset); }
 
     static double howLongPressed(const Pointer &state, long ticks, double timeOffset) {
-      return state ? std::max(TToolTimer::step, (ticks - state.ticks)*TToolTimer::step + timeOffset) : 0.0;
+      return state
+           ? std::max(TToolTimer::step, (ticks - state->ticks)*TToolTimer::step + timeOffset)
+           : 0.0;
     }
   };
 
@@ -232,15 +234,15 @@ private:
 
 public:
   TKeyHistoryT()
-    { states.insert(StatePointer(new State())); }
+    { states[TTimerTicks()] = StatePointer(new State()); }
 
   StatePointer current() const
-    { return states.back(); }
+    { return states.rbegin()->second; }
 
   StatePointer change(bool press, Type value, TTimerTicks ticks)  {
     StatePointer state = current()->change(press, value, ticks);
-    if (state != current() && state.ticks > states.rbegin()->first)
-      states.insert(state.ticks, state);
+    if (state != current() && state->ticks > states.rbegin()->first)
+      states[state->ticks] = state;
     autoRemove();
     return current();
   }

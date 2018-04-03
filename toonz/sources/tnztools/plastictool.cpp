@@ -925,7 +925,7 @@ void PlasticTool::onChange() {
   }
 
   // Passing through Qt's event system to compress repaints in a single one
-  TTool::Viewer *viewer = getViewer();
+  TToolViewer *viewer = getViewer();
   if (viewer)                 // This goes through paintEvent(),
     viewer->invalidateAll();  // \a unlike TTool::invalidate()
 }
@@ -941,7 +941,7 @@ void PlasticTool::onChange(const TParamChange &pc) {
 //------------------------------------------------------------------------
 
 void PlasticTool::onSetViewer() {
-  Viewer *viewer = getViewer();
+  TToolViewer *viewer = getViewer();
   if (viewer) {
     PlasticVisualSettings &pvs =
         viewer->visualSettings().m_plasticVisualSettings;
@@ -996,7 +996,7 @@ void PlasticTool::onDeactivate() {
                    SIGNAL(xsheetSwitched()), this, SLOT(onXsheetChanged())),
   assert(ret);
 
-  Viewer *viewer = getViewer();
+  TToolViewer *viewer = getViewer();
   if (viewer)
     viewer->visualSettings().m_plasticVisualSettings = PlasticVisualSettings();
 

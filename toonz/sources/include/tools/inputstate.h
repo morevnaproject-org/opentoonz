@@ -39,6 +39,7 @@
 class TInputState {
 public:
   typedef qint64 DeviceId;
+  typedef long long TouchId;
 
   typedef Qt::Key Key;
   typedef TKeyHistoryT<Key> KeyHistory;
@@ -134,18 +135,18 @@ public:
     { return KeyState::Holder(keyState(), ticks, timeOffset); }
   inline KeyState::Holder keyStateHolder()
     { return keyStateHolder(ticks); }
-  inline KeyState::Holder keyHistoryHolder(TTimerTicks ticks, double timeOffset = 0.0)
-    { return KeyState::Holder(keyHistory, ticks, timeOffset); }
-  inline KeyState::Holder keyHistoryHolder()
+  inline KeyHistory::Holder keyHistoryHolder(TTimerTicks ticks, double timeOffset = 0.0)
+    { return KeyHistory::Holder(keyHistory(), ticks, timeOffset); }
+  inline KeyHistory::Holder keyHistoryHolder()
     { return keyHistoryHolder(ticks); }
 
   inline ButtonState::Holder buttonStateHolder(DeviceId device, TTimerTicks ticks, double timeOffset = 0.0)
     { return ButtonState::Holder(buttonState(device), ticks, timeOffset); }
   inline ButtonState::Holder buttonStateHolder(DeviceId device)
     { return buttonStateHolder(device, ticks); }
-  inline ButtonState::Holder buttonHistoryHolder(DeviceId device, long ticks, double timeOffset = 0.0)
-    { return ButtonState::Holder(buttonHistory(device), ticks, timeOffset); }
-  inline ButtonState::Holder buttonHistoryHolder(DeviceId device)
+  inline ButtonHistory::Holder buttonHistoryHolder(DeviceId device, long ticks, double timeOffset = 0.0)
+    { return ButtonHistory::Holder(buttonHistory(device), ticks, timeOffset); }
+  inline ButtonHistory::Holder buttonHistoryHolder(DeviceId device)
     { return buttonHistoryHolder(device, ticks); }
 };
 

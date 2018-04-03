@@ -33,7 +33,7 @@ TTrackModifier::calcPoint(double originalIndex) {
 
 TTrack::TTrack(
   TInputState::DeviceId deviceId,
-  TouchId touchId,
+  TInputState::TouchId touchId,
   const TInputState::KeyHistory::Holder &keyHistory,
   const TInputState::ButtonHistory::Holder &buttonHistory
 ):
@@ -84,14 +84,17 @@ TTrack::push_back(const TTrackPoint &point) {
   points_.push_back(point);
   if (size() == 1) return;
 
-  const TTrackPoint &prev = *(points_.end() - 2);
+  const TTrackPoint &prev = *(points_.rbegin() + 1);
   TTrackPoint &p = points_.back();
 
+  // fix originalIndex
   if (p.originalIndex < prev.originalIndex)
       p.originalIndex = prev.originalIndex;
-  if (p.time < prev.time)
-      p.time = prev.time;
 
+  // fix time
+  p.time = std::max(p.time, prev.time + TToolTimer::step);
+
+  // calculate length
   TPointD d = p.position - prev.position;
   p.length = prev.length + sqrt(d.x*d.x + d.y*d.y);
 }

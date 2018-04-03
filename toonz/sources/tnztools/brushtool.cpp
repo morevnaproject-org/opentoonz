@@ -2223,7 +2223,7 @@ void BrushTool::checkGuideSnapping(bool beforeMousePress, bool invertCheck) {
     // check guide snapping
     int vGuideCount = 0, hGuideCount = 0;
     double guideDistance  = sqrt(m_minDistance2);
-    TTool::Viewer *viewer = getViewer();
+    TToolViewer *viewer = getViewer();
     if (viewer) {
       vGuideCount = viewer->getVGuideCount();
       hGuideCount = viewer->getHGuideCount();
