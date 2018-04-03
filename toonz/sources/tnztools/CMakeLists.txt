@@ -32,6 +32,7 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/strokeselection.h
     ../include/tools/stylepicker.h
     ../include/tools/tool.h
+    ../include/tools/toolviewer.h
     ../include/tools/toolcommandids.h
     ../include/tools/toolutils.h
     ../include/tools/RGBpicker.h
