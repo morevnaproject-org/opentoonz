@@ -1350,7 +1350,7 @@ void PegbarChannelField::onChange(TMeasuredValue *fld, bool addToUndo) {
     after.setValue(v);
   after.applyValues();
 
-  TTool::Viewer *viewer = m_tool->getViewer();
+  TToolViewer *viewer = m_tool->getViewer();
   if (viewer) m_tool->invalidate();
   setCursorPosition(0);
 
