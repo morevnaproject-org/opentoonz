@@ -30,8 +30,8 @@ typedef qint64 TTimerTicks;
 
 class DVAPI TToolTimer {
 private:
-  static TToolTimer instance;
-  QElapsedTimer timer;
+  static TToolTimer m_instance;
+  QElapsedTimer m_timer;
   TToolTimer();
 
 public:
@@ -40,7 +40,7 @@ public:
   static const double epsilon;
 
   static inline TTimerTicks ticks()
-    { return instance.timer.nsecsElapsed(); }
+    { return m_instance.m_timer.nsecsElapsed(); }
 };
 
 

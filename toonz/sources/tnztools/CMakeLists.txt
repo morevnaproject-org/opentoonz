@@ -43,6 +43,7 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
+    ../include/tools/inputmanager.h
 )
 
 set(SOURCES
@@ -106,9 +107,9 @@ set(SOURCES
     toonzrasterbrushtool.cpp
     toonzvectorbrushtool.cpp
     tooltimer.cpp
-    keyhistory.cpp
     inputstate.cpp
     track.cpp
+    inputmanager.cpp
 )
 
 set(RESOURCES tnztools.qrc)

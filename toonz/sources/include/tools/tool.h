@@ -4,6 +4,8 @@
 #define TOOL_INCLUDED
 
 // TnzTools includes
+#include "tools/inputstate.h"
+#include "tools/track.h"
 #include "tools/toolviewer.h"
 
 // TnzLib includes
@@ -35,6 +37,7 @@
 
 //    Forward Declarations
 
+class TInputManager;
 class TToolParam;
 class TMouseEvent;
 class TStroke;
@@ -380,15 +383,59 @@ return true if the method execution can have changed the current tool
 */
   virtual bool preLeftButtonDown() { return false; }
 
+  // TODO: remove this block
   virtual void mouseMove(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonDown(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonDrag(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonUp(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonDoubleClick(const TPointD &, const TMouseEvent &) {}
   virtual void rightButtonDown(const TPointD &, const TMouseEvent &) {}
-  virtual bool keyDown(QKeyEvent *) { return false; }
 
-  virtual void onInputText(std::wstring, std::wstring, int, int){};
+  virtual void leftButtonDown(const TTrackPoint&, const TTrack&) {}
+  virtual void leftButtonDrag(const TTrackPoint&, const TTrack&) {}
+  virtual void leftButtonUp(const TTrackPoint&, const TTrack&) {}
+  virtual void mouseMove(const TPointD&, const TInputState&) {}
+  virtual void leftButtonDoubleClick(const TPointD&, const TInputState&) {}
+  virtual void rightButtonDown(const TPointD&, const TInputState&) {}
+  virtual bool keyDown(QKeyEvent *) { return false; }
+  virtual void onInputText(const std::wstring&, const std::wstring&, int, int){};
+
+  virtual bool keyEvent(
+    bool press,
+    TInputState::Key key,
+    QKeyEvent *event,
+    const TInputManager &manager );
+  virtual void buttonEvent(
+    bool press,
+    TInputState::DeviceId device,
+    TInputState::Button button,
+    const TInputManager &manager );
+  virtual void hoverEvent(const TInputManager &manager);
+  virtual void doubleClickEvent(const TInputManager &manager);
+
+  /*! paint single track-point at the top painting level */
+  virtual void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+
+  /*! create new painting level and return true, or do nothing and return false
+      was:            ------O-------O------
+      become:         ------O-------O------O */
+  virtual bool paintPush() { return false; }
+  /*! paint several track-points at the top painting level
+      was:            ------O-------O------
+      become:         ------O-------O------------ */
+  virtual void paintTracks(const TTrackList &tracks);
+  /*! try to merge N top painting levels and return count of levels that actually merged
+      was:            ------O-------O------O------
+      become (N = 2): ------O--------------------- */
+  virtual int paintApply(int count) { return 0; }
+  /*! reset top level to initial state
+      was:            ------O-------O------O------
+      become:         ------O-------O------O */
+  virtual void paintCancel() { }
+  /*! cancel and pop N painting levels
+      was:            ------O-------O------O------
+      become (N = 2): ------O------- */
+  virtual void paintPop(int count) { }
 
   virtual void onSetViewer() {}
 
