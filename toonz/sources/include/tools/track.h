@@ -34,11 +34,15 @@
 //    Forward Declarations
 
 class TTrack;
+class TTrackPoint;
 class TTrackHandler;
 class TTrackModifier;
+
 typedef TSmartPointerT<TTrack> TTrackP;
 typedef TSmartPointerT<TTrackHandler> TTrackHandlerP;
 typedef TSmartPointerT<TTrackModifier> TTrackModifierP;
+
+typedef std::vector<TTrackPoint> TTrackPointList;
 typedef std::vector<TTrackP> TTrackList;
 
 //===================================================================
@@ -48,7 +52,7 @@ typedef std::vector<TTrackP> TTrackList;
 //    TTrackPoint definition
 //*****************************************************************************************
 
-struct TTrackPoint {
+class TTrackPoint {
 public:
   TPointD position;
   double pressure;
@@ -85,7 +89,6 @@ public:
 //*****************************************************************************************
 
 class DVAPI TTrackHandler : public TSmartObject {
-  DECLARE_CLASS_CODE
 public:
   TTrack &original;
   std::vector<TTrackP> tracks;
@@ -99,7 +102,6 @@ public:
 //*****************************************************************************************
 
 class DVAPI TTrackModifier : public TSmartObject {
-  DECLARE_CLASS_CODE
 public:
     TTrackHandler &handler;
     TTrack &original;
@@ -116,15 +118,13 @@ public:
 //*****************************************************************************************
 
 class DVAPI TTrack : public TSmartObject {
-  DECLARE_CLASS_CODE
-
 public:
   typedef long long Id;
 
   static const double epsilon;
 
 private:
-  static Id lastId;
+  static Id m_lastId;
 
 public:
   const Id id;
@@ -132,15 +132,17 @@ public:
   const TInputState::TouchId touchId;
   const TInputState::KeyHistory::Holder keyHistory;
   const TInputState::ButtonHistory::Holder buttonHistory;
+  const bool hasPressure;
+  const bool hasTilt;
   const TTrackModifierP modifier;
 
   TTrackHandlerP handler;
-  int wayPointsRemoved;
-  int wayPointsAdded;
+  int pointsRemoved;
+  int pointsAdded;
 
 private:
-  std::vector<TTrackPoint> points_;
-  const TTrackPoint none;
+  TTrackPointList m_points;
+  const TTrackPoint m_none;
 
 public:
 
@@ -148,7 +150,9 @@ public:
     TInputState::DeviceId deviceId = TInputState::DeviceId(),
     TInputState::TouchId touchId = TInputState::TouchId(),
     const TInputState::KeyHistory::Holder &keyHistory = TInputState::KeyHistory::Holder(),
-    const TInputState::ButtonHistory::Holder &buttonHistory = TInputState::ButtonHistory::Holder()
+    const TInputState::ButtonHistory::Holder &buttonHistory = TInputState::ButtonHistory::Holder(),
+    bool hasPressure = false,
+    bool hasTilt = false
   );
 
   explicit TTrack(const TTrackModifierP &modifier);
@@ -160,7 +164,7 @@ public:
   inline TTimerTicks ticks() const
     { return keyHistory.ticks(); }
   inline bool changed() const
-    { return wayPointsAdded != 0 || wayPointsRemoved != 0; }
+    { return pointsAdded != 0 || pointsRemoved != 0; }
 
   const TTrack* root() const;
   TTrack* root();
@@ -187,22 +191,22 @@ public:
     { return point(ceilIndex(index)); }
 
   inline const TTrackPoint& point(int index) const
-    { return empty() ? none : points_[clampIndex(index)]; }
+    { return empty() ? m_none : m_points[clampIndex(index)]; }
 
   inline int size() const
-    { return (int)points_.size(); }
+    { return (int)m_points.size(); }
   inline bool empty() const
-    { return points_.empty(); }
+    { return m_points.empty(); }
   inline const TTrackPoint& front() const
     { return point(0); }
   inline const TTrackPoint& back() const
     { return point(size() - 1); }
   inline bool finished() const
-    { return !points_.empty() && back().final; }
+    { return !m_points.empty() && back().final; }
   inline const TTrackPoint& operator[] (int index) const
     { return point(index); }
-  inline const std::vector<TTrackPoint>& points() const
-    { return points_; }
+  inline const TTrackPointList& points() const
+    { return m_points; }
 
   void push_back(const TTrackPoint &point);
   void pop_back(int count = 1);
@@ -210,22 +214,28 @@ public:
   inline void truncate(int count)
     { pop_back(size() - count); }
 
+  inline const TTrackPoint& current() const
+    { return point(size() - pointsAdded); }
+  inline TInputState::KeyState::Holder getCurrentKeyState() const
+    { return keyHistory.get(current().time); }
+  inline TInputState::ButtonState::Holder getCurrentButtonState() const
+    { return buttonHistory.get(current().time); }
 
 private:
   template<double TTrackPoint::*Field>
   double binarySearch(double value) const {
     // points_[a].value <= value < points_[b].value
-    if (points_.empty()) return 0.0;
+    if (m_points.empty()) return 0.0;
     int a = 0;
-    double aa = points_[a].*Field;
+    double aa = m_points[a].*Field;
     if (value - aa <= 0.5*epsilon) return (double)a;
-    int b = (int)points_.size() - 1;
-    double bb = points_[b].*Field;
+    int b = (int)m_points.size() - 1;
+    double bb = m_points[b].*Field;
     if (bb - value <= 0.5*epsilon) return (double)b;
     while(true) {
       int c = (a + b)/2;
       if (a == c) break;
-      double cc = points_[c].*Field;
+      double cc = m_points[c].*Field;
       if (cc - value > 0.5*epsilon)
         { b = c; bb = cc; } else { a = c; aa = cc; }
     }
@@ -261,6 +271,8 @@ public:
 
   TTrackPoint calcPoint(double index) const;
   TPointD calcTangent(double index, double distance = 0.1) const;
+  double rootIndexByIndex(double index) const;
+  TTrackPoint calcRootPoint(double index) const;
 
   inline TTrackPoint interpolateLinear(double index) const {
     double frac;
