@@ -7,6 +7,7 @@
 #include "tools/toolhandle.h"
 #include "tools/cursors.h"
 #include "tools/tooloptions.h"
+#include "tools/inputmanager.h"
 
 // TnzQt includes
 #include "toonzqt/icongenerator.h"
@@ -514,6 +515,90 @@ int TTool::pick(const TPointD &p) {
   m_picking = false;
 
   return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+bool
+TTool::keyEvent(
+  bool press,
+  TInputState::Key key,
+  QKeyEvent *event,
+  const TInputManager &manager )
+{
+  if (press) return keyDown(event);
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::buttonEvent(
+  bool press,
+  TInputState::DeviceId device,
+  TInputState::Button button,
+  const TInputManager &manager )
+{
+  if (press && button == Qt::RightButton && !manager.getOutputHovers().empty())
+    rightButtonDown(manager.getOutputHovers().front(), manager.state);
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::hoverEvent(const TInputManager &manager) {
+  if (!manager.getOutputHovers().empty())
+    mouseMove(manager.getOutputHovers().front(), manager.state);
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::doubleClickEvent(const TInputManager &manager) {
+  if (!manager.getOutputHovers().empty())
+    leftButtonDoubleClick(manager.getOutputHovers().front(), manager.state);
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack) {
+  if (firstTrack) {
+    if (track.pointsAdded == track.size())
+      leftButtonDown(point, track);
+    else
+    if (point.final)
+      leftButtonUp(point, track);
+    else
+      leftButtonDrag(point, track);
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::paintTracks(const TTrackList &tracks) {
+  // paint track points in chronological order
+  while(true) {
+    TTrackP track;
+    TTimerTicks minTicks = 0;
+    double minTimeOffset = 0.0;
+    for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i) {
+      const TTrack &t = **i;
+      if (t.pointsAdded > 0) {
+        TTimerTicks ticks = t.ticks();
+        double timeOffset = t.timeOffset() + t.current().time;
+        if (!track || (ticks - minTicks)*TToolTimer::frequency + timeOffset - minTimeOffset < 0.0) {
+          track = *i;
+          minTicks = ticks;
+          minTimeOffset = timeOffset;
+        }
+      }
+    }
+    if (!track) break;
+    paintTrackPoint(track->current(), *track, track == tracks.front());
+    --track->pointsAdded;
+  }
 }
 
 //-----------------------------------------------------------------------------

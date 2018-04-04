@@ -30,26 +30,12 @@
 
 //===================================================================
 
-//    Base Classee Declarations
-
-
-class DVAPI TKeyStateBase : public TSmartObject {
-  DECLARE_CLASS_CODE
-};
-
-class DVAPI TKeyHistoryBase : public TSmartObject {
-  DECLARE_CLASS_CODE
-};
-
-//===================================================================
-
-
 //*****************************************************************************************
 //    TKeyState definition
 //*****************************************************************************************
 
 template<typename T>
-class TKeyStateT : public TKeyStateBase {
+class TKeyStateT : public TSmartObject {
 public:
   typedef T Type;
   typedef TSmartPointerT<TKeyStateT> Pointer;
@@ -145,7 +131,7 @@ const typename TKeyStateT<T>::Pointer TKeyStateT<T>::empty = new TKeyStateT<T>()
 //*****************************************************************************************
 
 template<typename T>
-class TKeyHistoryT : public TKeyHistoryBase {
+class TKeyHistoryT : public TSmartObject {
 public:
   typedef T Type;
   typedef TSmartPointerT<TKeyHistoryT> Pointer;
@@ -155,19 +141,19 @@ public:
 
   class Holder {
   private:
-    Pointer history_;
-    TTimerTicks ticks_;
-    double timeOffset_;
-    TTimerTicks heldTicks;
+    Pointer m_history;
+    TTimerTicks m_ticks;
+    double m_timeOffset;
+    TTimerTicks m_heldTicks;
 
   public:
     Holder():
-      ticks_(), timeOffset_(), heldTicks() { }
+      m_ticks(), m_timeOffset(), m_heldTicks() { }
     Holder(const Pointer &history, TTimerTicks ticks, double timeOffset = 0.0):
-      ticks_(), timeOffset_(), heldTicks()
+      m_ticks(), m_timeOffset(), m_heldTicks()
       { set(history, ticks, timeOffset); }
     Holder(const Holder &other):
-      ticks_(), timeOffset_(), heldTicks()
+      m_ticks(), m_timeOffset(), m_heldTicks()
       { set(other); }
     ~Holder()
       { reset(); }
@@ -176,11 +162,11 @@ public:
       { set(other); return *this; }
 
     void set(const Pointer &history, TTimerTicks ticks, double timeOffset = 0.0) {
-      if (history_) history_->releaseTicks(heldTicks);
-      history_ = history;
-      ticks_ = ticks;
-      timeOffset_ = timeOffset;
-      heldTicks = (history_ ? history_->holdTicks(ticks_) : 0);
+      if (m_history) m_history->releaseTicks(m_heldTicks);
+      m_history = history;
+      m_ticks = ticks;
+      m_timeOffset = timeOffset;
+      m_heldTicks = (m_history ? m_history->holdTicks(m_ticks) : 0);
     }
     void set(const Holder &other)
       { set(other.history(), other.ticks(), other.timeOffset()); }
@@ -188,11 +174,11 @@ public:
       { set(Pointer(), 0); }
 
     Pointer history() const
-      { return history_; }
+      { return m_history; }
     TTimerTicks ticks() const
-      { return ticks_; }
+      { return m_ticks; }
     double timeOffset() const
-      { return timeOffset_; }
+      { return m_timeOffset; }
 
     Holder offset(double timeOffset) const {
       return fabs(timeOffset) < TToolTimer::epsilon ? *this
@@ -200,49 +186,49 @@ public:
     }
 
     StateHolder get(double time) const {
-      TTimerTicks dticks = (TTimerTicks)ceil(TToolTimer::frequency*(time + timeOffset));
-      StatePointer state = history_->get(ticks + dticks);
-      return StateHolder(state, ticks, timeOffset + time);
+      TTimerTicks dticks = (TTimerTicks)ceil(TToolTimer::frequency*(time + m_timeOffset));
+      StatePointer state = m_history->get(m_ticks + dticks);
+      return StateHolder(state, m_ticks, m_timeOffset + time);
     }
   };
 
 private:
-  std::map<TTimerTicks, StatePointer> states;
-  std::multiset<TTimerTicks> locks;
+  std::map<TTimerTicks, StatePointer> m_states;
+  std::multiset<TTimerTicks> m_locks;
 
   void autoRemove() {
-    TTimerTicks ticks = locks.empty()
-                      ? states.rbegin()->first
-                      : *locks.begin();
+    TTimerTicks ticks = m_locks.empty()
+                      ? m_states.rbegin()->first
+                      : *m_locks.begin();
     while(true) {
-      typename std::map<TTimerTicks, StatePointer>::iterator i = states.begin();
+      typename std::map<TTimerTicks, StatePointer>::iterator i = m_states.begin();
       ++i;
-      if (i == states.end() || (!i->second->isEmpty() && i->first >= ticks)) break;
-      states.erase(i);
+      if (i == m_states.end() || (!i->second->isEmpty() && i->first >= ticks)) break;
+      m_states.erase(i);
     }
   }
 
   TTimerTicks holdTicks(TTimerTicks ticks)
-    { return *locks.insert(std::max(ticks, states.begin()->first)); }
+    { return *m_locks.insert(std::max(ticks, m_states.begin()->first)); }
   void releaseTicks(TTimerTicks heldTicks)
-    { locks.erase(heldTicks); autoRemove(); }
+    { m_locks.erase(heldTicks); autoRemove(); }
 
   StatePointer get(TTimerTicks ticks) {
-    typename std::map<TTimerTicks, StatePointer>::iterator i = states.upper_bound(ticks);
-    return i == states.begin() ? i->second : (--i)->second;
+    typename std::map<TTimerTicks, StatePointer>::iterator i = m_states.upper_bound(ticks);
+    return i == m_states.begin() ? i->second : (--i)->second;
   }
 
 public:
   TKeyHistoryT()
-    { states[TTimerTicks()] = StatePointer(new State()); }
+    { m_states[TTimerTicks()] = StatePointer(new State()); }
 
   StatePointer current() const
-    { return states.rbegin()->second; }
+    { return m_states.rbegin()->second; }
 
   StatePointer change(bool press, Type value, TTimerTicks ticks)  {
     StatePointer state = current()->change(press, value, ticks);
-    if (state != current() && state->ticks > states.rbegin()->first)
-      states[state->ticks] = state;
+    if (state != current() && state->ticks > m_states.rbegin()->first)
+      m_states[state->ticks] = state;
     autoRemove();
     return current();
   }
