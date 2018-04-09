@@ -49,11 +49,14 @@ public:
   bool askRead(const TRect &rect) override;
   bool askWrite(const TRect &rect) override;
 
+  TTrackPoint fixTrackPoint(const TTrackPoint &point, const TTrack &track);
+
   bool preLeftButtonDown() override;
-  void leftButtonDown(const TPointD &pos, const TMouseEvent &e) override;
-  void leftButtonDrag(const TPointD &pos, const TMouseEvent &e) override;
-  void leftButtonUp(const TPointD &pos, const TMouseEvent &e) override;
-  void mouseMove(const TPointD &pos, const TMouseEvent &e) override;
+  void leftButtonDown(const TTrackPoint &point, const TTrack &track) override;
+  void leftButtonDrag(const TTrackPoint &point, const TTrack &track) override;
+  void leftButtonUp();
+  void leftButtonUp(const TTrackPoint &point, const TTrack &track) override;
+  void mouseMove(const TPointD &position, const TInputState &state) override;
 
   void draw() override;
 
@@ -99,6 +102,8 @@ protected:
   TPointD m_mousePos,  //!< Current mouse position, in world coordinates.
           m_brushPos;  //!< World position the brush will be painted at.
 
+  TTrackPoint m_trackPoint;
+
   TRasterP m_backUpRas;
   TRaster32P m_workRaster;
 
@@ -117,7 +122,6 @@ protected:
   bool m_presetsLoaded;
   bool m_firstTime;
   bool m_mousePressed = false;
-  TMouseEvent m_mouseEvent;
 };
 
 //------------------------------------------------------------
