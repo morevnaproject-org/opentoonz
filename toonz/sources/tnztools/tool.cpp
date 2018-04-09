@@ -526,7 +526,8 @@ TTool::keyEvent(
   QKeyEvent *event,
   const TInputManager &manager )
 {
-  if (press) return keyDown(event);
+  if (press && !key.isModifier())
+    return keyDown(event);
   return false;
 }
 

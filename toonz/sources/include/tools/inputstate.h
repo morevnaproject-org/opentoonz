@@ -46,50 +46,38 @@ typedef std::vector<TPointD> THoverList;
 
 class TKey {
 public:
+  Qt::Key key;
   bool generic;
   bool numPad;
-  Qt::Key key;
-  Qt::KeyboardModifier modifier;
 
   static const TKey shift;
   static const TKey control;
   static const TKey alt;
   static const TKey meta;
 
-  inline TKey():
-    generic(),
-    numPad(),
-    key(),
-    modifier()
-    { }
-
-  inline explicit TKey(Qt::Key key, bool generic = true, bool numPad = false):
-    generic(generic),
-    numPad(numPad),
+  inline explicit TKey(Qt::Key key = Qt::Key(), bool generic = true, bool numPad = false):
     key(key),
-    modifier()
-    { }
-
-  inline explicit TKey(Qt::KeyboardModifier modifier, bool generic = true):
     generic(generic),
-    numPad(),
-    key(),
-    modifier(modifier)
+    numPad(numPad)
     { }
 
   inline bool operator== (const TKey &other) const {
-    if (isModifier())
-      return modifier == other.modifier;
     if (generic || other.generic)
-      return key == other.key;
+      return is(other.key);
     return key == other.key && numPad == other.numPad;
   }
 
-  inline bool isModifier() const
-    { return modifier != Qt::KeyboardModifier(); }
+  inline bool is(Qt::Key key) const
+    { return mapKey(this->key) == mapKey(key); }
 
-  inline bool isKey() const
-    { return !isModifier(); }
+  inline bool isModifier() const
+    { return isModifier(key); }
+  inline bool isNumber() const
+    { return isNumber(key); }
+
+  static Qt::Key mapKey(Qt::Key key);
+  static bool isNumber(Qt::Key key);
+  static bool isModifier(Qt::Key key);
 };
 
 

@@ -460,6 +460,7 @@ public:
 SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     : GLWidgetForHighDpi(parent)
     , m_inputManager(new TInputManager())
+    , m_hovers(1)
     , m_pressure(0)
     , m_lastMousePos(0, 0)
     , m_mouseButton(Qt::NoButton)

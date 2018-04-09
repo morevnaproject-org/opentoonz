@@ -66,6 +66,7 @@ class SceneViewer final : public GLWidgetForHighDpi,
   Q_OBJECT
 
   TInputManager *m_inputManager;
+  std::vector<TPointD> m_hovers;
 
   double m_pressure;
   QPointF m_lastMousePos;
