@@ -13,6 +13,7 @@
 #include <tsmartpointer.h>
 
 // Qt includes
+#include <QObject>
 #include <QKeyEvent>
 
 // std includes
@@ -181,7 +182,8 @@ public:
 //    TInputManager definition
 //*****************************************************************************************
 
-class TInputManager {
+class TInputManager: public QObject {
+  Q_OBJECT
 public:
   class TrackHandler: public TTrackHandler {
   public:
@@ -192,11 +194,14 @@ public:
   };
 
 private:
+  TToolViewer *m_viewer;
   TInputModifier::List m_modifiers;
   std::vector<TTrackList> m_tracks;
   std::vector<THoverList> m_hovers;
   TInputSavePoint::List m_savePoints;
   int m_savePointsSent;
+
+  static TInputState::TouchId m_lastTouchId;
 
 
 public:
@@ -255,11 +260,14 @@ public:
   void finishTracks();
   void reset();
 
+  TToolViewer* getViewer() const
+    { return m_viewer; }
+  void setViewer(TToolViewer *viewer);
+
   bool isActive() const;
-  TApplication* getApplication() const;
-  TTool* getTool() const;
-  TToolViewer* getViewer() const;
-  void onToolSwitched();
+
+  static TApplication* getApplication();
+  static TTool* getTool();
 
   int getModifiersCount() const
     { return (int)m_modifiers.size(); }
@@ -299,8 +307,15 @@ public:
     const std::wstring &commit,
     int replacementStart,
     int replacementLen );
+  void enverEvent();
+  void leaveEvent();
 
   void draw();
+
+  static TInputState::TouchId genTouchId();
+
+public slots:
+  void onToolSwitched();
 };
 
 

@@ -13,7 +13,8 @@ set(MOC_HEADERS
     rgbpickertool.h
     rulertool.h
     stylepickertool.h
-	viewtools.h
+    ../include/tools/inputmanager.h
+    viewtools.h
 )
 
 set(HEADERS ${MOC_HEADERS}
@@ -41,7 +42,6 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
-    ../include/tools/inputmanager.h
 )
 
 set(SOURCES

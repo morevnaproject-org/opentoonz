@@ -216,10 +216,14 @@ public:
 
   inline const TTrackPoint& current() const
     { return point(size() - pointsAdded); }
+  inline TInputState::KeyState::Holder getKeyState(double time) const
+    { return keyHistory.get(time); }
   inline TInputState::KeyState::Holder getCurrentKeyState() const
-    { return keyHistory.get(current().time); }
+    { return getKeyState(current().time); }
+  inline TInputState::ButtonState::Holder getButtonState(double time) const
+    { return buttonHistory.get(time); }
   inline TInputState::ButtonState::Holder getCurrentButtonState() const
-    { return buttonHistory.get(current().time); }
+    { return getButtonState(current().time); }
 
 private:
   template<double TTrackPoint::*Field>

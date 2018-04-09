@@ -9,6 +9,7 @@
 #include "cellselection.h"
 
 // TnzTools includes
+#include "tools/inputmanager.h"
 #include "tools/tool.h"
 #include "tools/toolhandle.h"
 #include "tools/toolcommandids.h"

@@ -13,6 +13,7 @@
 #include "locatorpopup.h"
 
 // TnzTools includes
+#include "tools/inputmanager.h"
 #include "tools/cursors.h"
 #include "tools/cursormanager.h"
 #include "tools/toolhandle.h"
@@ -458,6 +459,7 @@ public:
 
 SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     : GLWidgetForHighDpi(parent)
+    , m_inputManager(new TInputManager())
     , m_pressure(0)
     , m_lastMousePos(0, 0)
     , m_mouseButton(Qt::NoButton)
@@ -497,7 +499,8 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     , m_editPreviewSubCamera(false)
     , m_locator(NULL)
     , m_isLocator(false)
-    , m_isBusyOnTabletMove(false) {
+    , m_isBusyOnTabletMove(false)
+{
   m_visualSettings.m_sceneProperties =
       TApp::instance()->getCurrentScene()->getScene()->getProperties();
   // Enables multiple key input.
@@ -528,6 +531,8 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
 
   if (Preferences::instance()->isColorCalibrationEnabled())
     m_lutCalibrator = new LutCalibrator();
+
+  m_inputManager->setViewer(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -711,6 +716,7 @@ TPointD SceneViewer::winToWorld(const TPointD &winPos) const {
 //-----------------------------------------------------------------------------
 
 TPointD SceneViewer::worldToPos(const TPointD &worldPos) const {
+  // TODO: conversion for 3DView
   TPointD p = getViewMatrix() * worldPos;
   return TPointD(width() / 2 + p.x, height() / 2 + p.y);
 }

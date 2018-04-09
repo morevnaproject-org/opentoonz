@@ -7,6 +7,7 @@
 #include <tools/toolhandle.h>
 
 /*
+TODO:
 // TnzQt includes
 #include "toonzqt/icongenerator.h"
 */
@@ -15,6 +16,7 @@
 #include <toonz/tapplication.h>
 
 /*
+TODO:
 // TnzCore includes
 #include "tvectorimage.h"
 #include "timagecache.h"
@@ -23,6 +25,13 @@
 #include "ttoonzimage.h"
 #include "trasterimage.h"
 */
+
+
+//*****************************************************************************************
+//    static members
+//*****************************************************************************************
+
+TInputState::TouchId TInputManager::m_lastTouchId = 0;
 
 
 //*****************************************************************************************
@@ -73,11 +82,16 @@ TInputModifier::draw(const TTrackList &tracks, const std::vector<TPointD> &hover
 
 
 TInputManager::TInputManager():
+  m_viewer(),
   m_tracks(1),
   m_hovers(1),
   m_savePointsSent()
 {
-  // TODO: assign onToolSwitched
+  // assign onToolSwitched
+  assert(getApplication());
+  assert(getApplication()->getCurrentTool());
+  ToolHandle* handler = getApplication()->getCurrentTool();
+  QObject::connect(handler, &ToolHandle::toolSwitched, this, &TInputManager::onToolSwitched);
 }
 
 
@@ -213,6 +227,7 @@ TInputManager::paintTracks() {
         paintApply((int)m_savePoints.size(), subTracks);
         for(std::vector<TTrackList>::iterator i = m_tracks.begin(); i != m_tracks.end(); ++i)
           i->clear();
+        TTool::getApplication()->getCurrentTool()->setToolBusy(false);
       }
       break;
     }
@@ -376,31 +391,28 @@ TInputManager::reset() {
 }
 
 
+void
+TInputManager::setViewer(TToolViewer *viewer)
+  { m_viewer = viewer; }
+
+
 bool
 TInputManager::isActive() const {
   TTool* tool = getTool();
-  return tool && tool->isEnabled() && tool->getViewer();
+  return getViewer() && tool && tool->isEnabled();
 }
 
 
 TApplication*
-TInputManager::getApplication() const
+TInputManager::getApplication()
   { return TTool::getApplication(); }
 
 
 TTool*
-TInputManager::getTool() const {
+TInputManager::getTool() {
   if (TApplication *application = getApplication())
     if (ToolHandle *handle = application->getCurrentTool())
       return handle->getTool();
-  return NULL;
-}
-
-
-TToolViewer*
-TInputManager::getViewer() const {
-  if (TTool *tool = getTool())
-    return tool->getViewer();
   return NULL;
 }
 
@@ -459,9 +471,16 @@ TInputManager::trackEvent(
   bool final,
   TTimerTicks ticks )
 {
-  if (isActive() && getInputTracks().empty())
-    getTool()->preLeftButtonDown();
+  if (isActive() && getInputTracks().empty()) {
+    TToolViewer *viewer = getTool()->getViewer();
+    if (getTool()->preLeftButtonDown())
+      getTool()->setViewer(viewer);
+  }
+
   if (isActive()) {
+    if (getInputTracks().empty())
+      TTool::getApplication()->getCurrentTool()->setToolBusy(true);
+
     TTrackP track = getTrack(deviceId, touchId, ticks, (bool)pressure, (bool)tilt);
     if (!track->finished()) {
       double time = (double)(ticks - track->ticks())*TToolTimer::step - track->timeOffset();
@@ -543,9 +562,25 @@ TInputManager::textEvent(
 
 
 void
+TInputManager::enverEvent() {
+  if (isActive())
+    getTool()->onEnter();
+}
+
+
+void
+TInputManager::leaveEvent() {
+  if (isActive())
+    getTool()->onLeave();
+}
+
+
+void
 TInputManager::draw() {
   if (!isActive()) return;
   TToolViewer *viewer = getViewer();
+
+  // TODO: paint
 
   // paint not sent sub-tracks
   if (m_savePointsSent < (int)m_savePoints.size()) {
@@ -583,3 +618,7 @@ TInputManager::draw() {
   for(int i = 0; i < (int)m_modifiers.size(); ++i)
     m_modifiers[i]->draw(m_tracks[i], m_hovers[i]);
 }
+
+TInputState::TouchId
+TInputManager::genTouchId()
+  { return ++m_lastTouchId; }
