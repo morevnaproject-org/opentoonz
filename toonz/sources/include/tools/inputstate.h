@@ -51,6 +51,11 @@ public:
   Qt::Key key;
   Qt::KeyboardModifier modifier;
 
+  static const TKey shift;
+  static const TKey control;
+  static const TKey alt;
+  static const TKey meta;
+
   inline TKey():
     generic(),
     numPad(),
@@ -58,14 +63,14 @@ public:
     modifier()
     { }
 
-  inline explicit TKey(Qt::Key key, bool numPad = false, bool generic = false):
+  inline explicit TKey(Qt::Key key, bool generic = true, bool numPad = false):
     generic(generic),
     numPad(numPad),
     key(key),
     modifier()
     { }
 
-  inline explicit TKey(Qt::KeyboardModifier modifier, bool generic = false):
+  inline explicit TKey(Qt::KeyboardModifier modifier, bool generic = true):
     generic(generic),
     numPad(),
     key(),
@@ -119,8 +124,8 @@ public:
     { return m_ticks; }
   void touch(TTimerTicks ticks);
 
-  inline KeyHistory::Pointer keyHistory() const
-    { return keyHistory(); }
+  inline const KeyHistory::Pointer& keyHistory() const
+    { return m_keyHistory; }
   inline KeyState::Pointer keyState() const
     { return keyHistory()->current(); }
 
@@ -142,11 +147,11 @@ public:
 
   inline KeyState::Holder keyStateHolder(TTimerTicks ticks, double timeOffset = 0.0) const
     { return KeyState::Holder(keyState(), ticks, timeOffset); }
-  inline KeyState::Holder keyStateHolder()
+  inline KeyState::Holder keyStateHolder() const
     { return keyStateHolder(m_ticks); }
-  inline KeyHistory::Holder keyHistoryHolder(TTimerTicks ticks, double timeOffset = 0.0)
+  inline KeyHistory::Holder keyHistoryHolder(TTimerTicks ticks, double timeOffset = 0.0) const
     { return KeyHistory::Holder(keyHistory(), ticks, timeOffset); }
-  inline KeyHistory::Holder keyHistoryHolder()
+  inline KeyHistory::Holder keyHistoryHolder() const
     { return keyHistoryHolder(m_ticks); }
 
   ButtonHistory::Pointer buttonHistory(DeviceId deviceId) const;

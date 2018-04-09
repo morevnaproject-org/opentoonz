@@ -4,7 +4,17 @@
 
 
 //*****************************************************************************************
-//    TInputState static members
+//    TKey static members
+//*****************************************************************************************
+
+const TKey TKey::shift   ( Qt::ShiftModifier   , true );
+const TKey TKey::control ( Qt::ControlModifier , true );
+const TKey TKey::alt     ( Qt::AltModifier     , true );
+const TKey TKey::meta    ( Qt::MetaModifier    , true );
+
+
+  //*****************************************************************************************
+//    TInputState implementation
 //*****************************************************************************************
 
 TInputState::TInputState():

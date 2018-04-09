@@ -13,6 +13,7 @@ set(MOC_HEADERS
     ../include/tools/screenpicker.h
     ../include/tools/toolhandle.h
     ../include/tools/tooloptions.h
+    ../include/tools/inputmanager.h
 )
 
 set(HEADERS
@@ -45,7 +46,6 @@ set(HEADERS
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
-    ../include/tools/inputmanager.h
 )
 
 set(SOURCES

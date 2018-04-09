@@ -45,7 +45,7 @@ public:
     TTimerTicks ticks;
     double timeOffset;
 
-    explicit Holder(const Pointer &state, TTimerTicks ticks = 0, double timeOffset = 0.0):
+    explicit Holder(const Pointer &state = Pointer(), TTimerTicks ticks = 0, double timeOffset = 0.0):
       state(state), ticks(ticks), timeOffset(timeOffset) { }
 
     Pointer find(const Type &value) const

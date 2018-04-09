@@ -39,7 +39,6 @@
 
 class TInputManager;
 class TToolParam;
-class TMouseEvent;
 class TStroke;
 class TImage;
 class TPropertyGroup;
@@ -391,14 +390,27 @@ return true if the method execution can have changed the current tool
   virtual void leftButtonDoubleClick(const TPointD &, const TMouseEvent &) {}
   virtual void rightButtonDown(const TPointD &, const TMouseEvent &) {}
 
-  virtual void leftButtonDown(const TTrackPoint&, const TTrack&) {}
-  virtual void leftButtonDrag(const TTrackPoint&, const TTrack&) {}
-  virtual void leftButtonUp(const TTrackPoint&, const TTrack&) {}
-  virtual void mouseMove(const TPointD&, const TInputState&) {}
-  virtual void leftButtonDoubleClick(const TPointD&, const TInputState&) {}
-  virtual void rightButtonDown(const TPointD&, const TInputState&) {}
-  virtual bool keyDown(QKeyEvent *) { return false; }
-  virtual void onInputText(const std::wstring&, const std::wstring&, int, int){};
+  /*
+  void leftButtonDown(const TTrackPoint &point, const TTrack &track) override;
+  void leftButtonDrag(const TTrackPoint &point, const TTrack &track) override;
+  void leftButtonUp(const TTrackPoint &point, const TTrack &track) override;
+  void mouseMove(const TPointD &position, const TInputState &state) override;
+  void leftButtonDoubleClick(const TPointD &position, const TInputState &state) override;
+  void rightButtonDown(const TPointD &position, const TInputState &state) override;
+  */
+
+  virtual void leftButtonDown(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
+  virtual void leftButtonDrag(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
+  virtual void leftButtonUp(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
+  virtual void mouseMove(const TPointD& /*position*/,  const TInputState& /*state*/) {}
+  virtual void leftButtonDoubleClick(const TPointD& /*position*/, const TInputState& /*state*/) {}
+  virtual void rightButtonDown(const TPointD& /*position*/, const TInputState& /*state*/) {}
+  virtual bool keyDown(QKeyEvent* /*event*/) { return false; }
+  virtual void onInputText(
+    const std::wstring& /*preedit*/,
+    const std::wstring& /*commit*/,
+    int /*replacementStart*/,
+    int /*replacementEnd*/ ) { }
 
   virtual bool keyEvent(
     bool press,
@@ -424,18 +436,23 @@ return true if the method execution can have changed the current tool
       was:            ------O-------O------
       become:         ------O-------O------------ */
   virtual void paintTracks(const TTrackList &tracks);
+  /*! try to merge single top painting level */
+  virtual int paintApply() { return false; }
   /*! try to merge N top painting levels and return count of levels that actually merged
       was:            ------O-------O------O------
       become (N = 2): ------O--------------------- */
-  virtual int paintApply(int count) { return 0; }
+  virtual int paintApply(int count);
   /*! reset top level to initial state
       was:            ------O-------O------O------
       become:         ------O-------O------O */
   virtual void paintCancel() { }
+  /*! cancel and pop top painting level */
+  virtual void paintPop() { }
   /*! cancel and pop N painting levels
       was:            ------O-------O------O------
       become (N = 2): ------O------- */
-  virtual void paintPop(int count) { }
+  virtual void paintPop(int count);
+
 
   virtual void onSetViewer() {}
 
