@@ -466,7 +466,7 @@ TInputManager::trackEvent(
   TInputState::DeviceId deviceId,
   TInputState::TouchId touchId,
   const TPointD &position,
-  double *pressure,
+  const double *pressure,
   const TPointD *tilt,
   bool final,
   TTimerTicks ticks )
@@ -496,20 +496,23 @@ TInputManager::trackEvent(
 }
 
 
-void
+bool
 TInputManager::keyEvent(
   bool press,
   TInputState::Key key,
   TTimerTicks ticks,
   QKeyEvent *event )
 {
+  bool result = false;
   state.keyEvent(press, key, ticks);
   if (isActive()) {
     processTracks();
-    getTool()->keyEvent(press, key, event, *this);
+    result = getTool()->keyEvent(press, key, event, *this);
     touchTracks();
     processTracks();
+    //hoverEvent(getInputHovers());
   }
+  return result;
 }
 
 
@@ -532,7 +535,8 @@ TInputManager::buttonEvent(
 
 void
 TInputManager::hoverEvent(const THoverList &hovers) {
-  m_hovers[0] = hovers;
+  if (&m_hovers[0] != &hovers)
+    m_hovers[0] = hovers;
   for(int i = 0; i < (int)m_modifiers.size(); ++i) {
     m_hovers[i+1].clear();
     m_modifiers[i]->modifyHovers(m_hovers[i], m_hovers[i+1]);
