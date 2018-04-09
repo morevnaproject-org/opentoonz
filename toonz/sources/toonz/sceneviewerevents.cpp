@@ -550,6 +550,7 @@ void SceneViewer::onMove(const TMouseEvent &event) {
       getInputManager()->trackEvent(
         0, 0, pos, &event.m_pressure, NULL,
         false, TToolTimer::ticks() );
+      getInputManager()->processTracks();
       m_tabletState = OnStroke;
     } else
     if (m_mouseButton == Qt::LeftButton) {
@@ -560,6 +561,7 @@ void SceneViewer::onMove(const TMouseEvent &event) {
         getInputManager()->trackEvent(
           0, 0, pos, NULL, NULL,
           false, TToolTimer::ticks() );
+        getInputManager()->processTracks();
       }
       tool->leftButtonDrag(pos, event);
       getInputManager()->trackEvent(
@@ -725,6 +727,7 @@ void SceneViewer::onPress(const TMouseEvent &event) {
     getInputManager()->trackEvent(
       0, 0, pos, &event.m_pressure, NULL,
       false, TToolTimer::ticks() );
+    getInputManager()->processTracks();
   } else if (m_mouseButton == Qt::LeftButton) {
     m_mouseState = StartStroke;
     TApp::instance()->getCurrentTool()->setToolBusy(true);
@@ -732,6 +735,7 @@ void SceneViewer::onPress(const TMouseEvent &event) {
     getInputManager()->trackEvent(
       0, 0, pos, NULL, NULL,
       false, TToolTimer::ticks() );
+    getInputManager()->processTracks();
   }
   if (m_mouseButton == Qt::RightButton) tool->rightButtonDown(pos, event);
 }
@@ -827,6 +831,7 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
           0, 0, pos,
           (event.m_isTablet ? &event.m_pressure : NULL),
           NULL, true, TToolTimer::ticks() );
+        getInputManager()->processTracks();
       }
       TApp::instance()->getCurrentTool()->setToolBusy(false);
     }
