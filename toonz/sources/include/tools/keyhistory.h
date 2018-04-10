@@ -227,8 +227,8 @@ public:
 
   StatePointer change(bool press, Type value, TTimerTicks ticks)  {
     StatePointer state = current()->change(press, value, ticks);
-    if (state != current() && state->ticks > m_states.rbegin()->first)
-      m_states[state->ticks] = state;
+    if (state != current() && ticks > m_states.rbegin()->first)
+      m_states[ticks] = state;
     autoRemove();
     return current();
   }

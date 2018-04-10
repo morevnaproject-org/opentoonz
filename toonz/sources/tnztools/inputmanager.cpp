@@ -673,6 +673,8 @@ TInputManager::draw() {
   // paint modifiers
   for(int i = 0; i < (int)m_modifiers.size(); ++i)
     m_modifiers[i]->draw(m_tracks[i], m_hovers[i]);
+
+  getTool()->draw();
 }
 
 TInputState::TouchId

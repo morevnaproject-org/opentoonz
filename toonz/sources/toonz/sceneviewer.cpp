@@ -1423,7 +1423,7 @@ void SceneViewer::drawOverlay() {
         !app->getCurrentObject()->isSpline())
       glScaled(m_dpiScale.x, m_dpiScale.y, 1);
     m_pixelSize = sqrt(tglGetPixelSize2()) * getDevPixRatio();
-    tool->draw();
+    getInputManager()->draw();
     glPopMatrix();
     // Used (only in the T_RGBPicker tool) to notify and set the currentColor
     // outside the draw() methods:

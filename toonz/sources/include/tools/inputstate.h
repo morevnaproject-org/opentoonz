@@ -55,7 +55,13 @@ public:
   static const TKey alt;
   static const TKey meta;
 
-  inline explicit TKey(Qt::Key key = Qt::Key(), bool generic = true, bool numPad = false):
+  inline explicit TKey():
+    key(),
+    generic(),
+    numPad()
+    { }
+
+  inline explicit TKey(Qt::Key key, bool generic = true, bool numPad = false):
     key(key),
     generic(generic),
     numPad(numPad)
