@@ -539,7 +539,7 @@ TInputManager::trackEvent(
       addTrackPoint(
         track,
         position,
-        pressure ? *pressure : 1.0,
+        pressure ? *pressure : 0.5,
         tilt ? *tilt : TPointD(),
         time,
         final );

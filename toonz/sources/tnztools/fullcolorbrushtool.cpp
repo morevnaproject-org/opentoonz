@@ -345,7 +345,7 @@ TTrackPoint FullColorBrushTool::fixTrackPoint(const TTrackPoint &point,
                                               const TTrack &track)
 {
   TTrackPoint p = point;
-  if (!m_enabledPressure || !track.hasPressure)
+  if (!m_enabledPressure)
     p.pressure = 0.5;
   return p;
 }
