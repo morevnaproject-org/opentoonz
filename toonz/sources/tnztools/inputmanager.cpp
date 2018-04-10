@@ -47,6 +47,49 @@ TInputModifier::setManager(TInputManager *manager) {
 
 
 void
+TInputModifier::modifyTrack(
+  const TTrackP &track,
+  const TInputSavePoint::Holder &savePoint,
+  TTrackList &outTracks )
+{
+  if (!track->handler) {
+      track->handler = new TTrackHandler(*track);
+      track->handler->tracks.push_back(
+        new TTrack(
+          new TTrackModifier(*track->handler) ));
+  }
+
+  outTracks.insert(
+    outTracks.end(),
+    track->handler->tracks.begin(),
+    track->handler->tracks.end() );
+  if (!track->changed())
+    return;
+
+  int start = track->size() - track->pointsAdded;
+  if (start < 0) start = 0;
+
+  for(TTrackList::const_iterator ti = track->handler->tracks.begin(); ti != track->handler->tracks.end(); ++ti) {
+    TTrack &subTrack = **ti;
+
+    // remove points
+    if (start < track->size()) {
+      subTrack.pointsRemoved += subTrack.size() - start;
+      subTrack.truncate(start);
+    }
+
+    // add points
+    for(int i = start; i < track->size(); ++i)
+      subTrack.push_back( subTrack.modifier->calcPoint(i) );
+    subTrack.pointsAdded += subTrack.size() - start;
+  }
+
+  track->pointsRemoved = 0;
+  track->pointsAdded = 0;
+}
+
+
+void
 TInputModifier::modifyTracks(
     const TTrackList &tracks,
     const TInputSavePoint::Holder &savePoint,
@@ -54,6 +97,15 @@ TInputModifier::modifyTracks(
 {
   for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
     modifyTrack(*i, savePoint, outTracks);
+}
+
+
+void
+TInputModifier::modifyHover(
+  const TPointD &hover,
+  THoverList &outHovers )
+{
+  outHovers.push_back(hover);
 }
 
 

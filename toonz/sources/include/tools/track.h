@@ -181,12 +181,10 @@ public:
   inline int ceilIndex(double index) const
     { return clampIndex(ceilIndexNoClamp(index)); }
 
-  int floorIndex(double index, double &outFrac) const;
+  int floorIndex(double index, double *outFrac) const;
 
-  inline const TTrackPoint& floorPoint(double index, double &outFrac) const
+  inline const TTrackPoint& floorPoint(double index, double *outFrac = NULL) const
     { return point(floorIndex(index, outFrac)); }
-  inline const TTrackPoint& floorPoint(double index) const
-    { return point(floorIndex(index)); }
   inline const TTrackPoint& ceilPoint(double index) const
     { return point(ceilIndex(index)); }
 
@@ -256,19 +254,19 @@ public:
 
   inline double originalIndexByIndex(double index) const {
     double frac;
-    const TTrackPoint &p0 = floorPoint(index, frac);
+    const TTrackPoint &p0 = floorPoint(index, &frac);
     const TTrackPoint &p1 = ceilPoint(index);
     return interpolationLinear(p0.originalIndex, p1.originalIndex, frac);
   }
   inline double timeByIndex(double index) const {
     double frac;
-    const TTrackPoint &p0 = floorPoint(index, frac);
+    const TTrackPoint &p0 = floorPoint(index, &frac);
     const TTrackPoint &p1 = ceilPoint(index);
     return interpolationLinear(p0.time, p1.time, frac);
   }
   inline double lengthByIndex(double index) const {
     double frac;
-    const TTrackPoint &p0 = floorPoint(index, frac);
+    const TTrackPoint &p0 = floorPoint(index, &frac);
     const TTrackPoint &p1 = ceilPoint(index);
     return interpolationLinear(p0.length, p1.length, frac);
   }
@@ -280,7 +278,7 @@ public:
 
   inline TTrackPoint interpolateLinear(double index) const {
     double frac;
-    const TTrackPoint &p0 = floorPoint(index, frac);
+    const TTrackPoint &p0 = floorPoint(index, &frac);
     const TTrackPoint &p1 = ceilPoint(index);
     return interpolationLinear(p0, p1, frac);
   }
