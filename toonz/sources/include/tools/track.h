@@ -35,6 +35,7 @@
 
 class TTrack;
 class TTrackPoint;
+class TTrackTangent;
 class TTrackHandler;
 class TTrackModifier;
 
@@ -43,6 +44,7 @@ typedef TSmartPointerT<TTrackHandler> TTrackHandlerP;
 typedef TSmartPointerT<TTrackModifier> TTrackModifierP;
 
 typedef std::vector<TTrackPoint> TTrackPointList;
+typedef std::vector<TTrackTangent> TTrackTangentList;
 typedef std::vector<TTrackP> TTrackList;
 
 //===================================================================
@@ -80,6 +82,28 @@ public:
     time(time),
     length(length),
     final(final)
+  { }
+};
+
+
+//*****************************************************************************************
+//    TTrackTangent definition
+//*****************************************************************************************
+
+class TTrackTangent {
+public:
+  TPointD position;
+  double pressure;
+  TPointD tilt;
+
+  inline explicit TTrackTangent(
+    const TPointD &position = TPointD(),
+    double pressure = 0.0,
+    const TPointD &tilt = TPointD()
+  ):
+    position(position),
+    pressure(pressure),
+    tilt(tilt)
   { }
 };
 
@@ -287,6 +311,16 @@ public:
   static inline T interpolationLinear(const T &p0, const T &p1, double l)
     { return p0*(1.0 - l) + p1*l; }
 
+  template<typename T>
+  static T interpolationSpline(const T &p0, const T &p1, const T &t0, const T &t1, double l) {
+    double ll = l*l;
+    double lll = ll*l;
+    return p0*( 2.0*lll - 3.0*ll + 1.0)
+         + p1*(-2.0*lll + 3.0*ll      )
+         + t0*(     lll - 2.0*ll + l  )
+         + t1*(     lll - 1.0*ll      );
+  }
+
   static inline TTrackPoint interpolationLinear(const TTrackPoint &p0, const TTrackPoint &p1, double l) {
     if (l <= epsilon) return p0;
     if (l >= 1.0 - epsilon) return p1;
@@ -294,6 +328,24 @@ public:
       interpolationLinear(p0.position      , p1.position      , l),
       interpolationLinear(p0.pressure      , p1.pressure      , l),
       interpolationLinear(p0.tilt          , p1.tilt          , l),
+      interpolationLinear(p0.originalIndex , p1.originalIndex , l),
+      interpolationLinear(p0.time          , p1.time          , l),
+      interpolationLinear(p0.length        , p1.length        , l) );
+  }
+
+  static inline TTrackPoint interpolationSpline(
+    const TTrackPoint &p0,
+    const TTrackPoint &p1,
+    const TTrackTangent &t0,
+    const TTrackTangent &t1,
+    double l )
+  {
+    if (l <= epsilon) return p0;
+    if (l >= 1.0 - epsilon) return p1;
+    return TTrackPoint(
+      interpolationSpline(p0.position      , p1.position      , t0.position , t1.position , l),
+      interpolationSpline(p0.pressure      , p1.pressure      , t0.pressure , t1.pressure , l),
+      interpolationSpline(p0.tilt          , p1.tilt          , t0.tilt     , t1.tilt     , l),
       interpolationLinear(p0.originalIndex , p1.originalIndex , l),
       interpolationLinear(p0.time          , p1.time          , l),
       interpolationLinear(p0.length        , p1.length        , l) );

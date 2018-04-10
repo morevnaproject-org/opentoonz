@@ -13,13 +13,15 @@
 #include "locatorpopup.h"
 
 // TnzTools includes
-#include "tools/inputmanager.h"
-#include "tools/modifiertest.h"
 #include "tools/cursors.h"
 #include "tools/cursormanager.h"
 #include "tools/toolhandle.h"
 #include "tools/toolcommandids.h"
 #include "tools/toolutils.h"
+#include "tools/inputmanager.h"
+#include "tools/modifiers/modifiertangents.h"
+#include "tools/modifiers/modifiertest.h"
+#include "tools/modifiers/modifiersegmentation.h"
 
 // TnzQt includes
 #include "toonzqt/icongenerator.h"
@@ -535,7 +537,9 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     m_lutCalibrator = new LutCalibrator();
 
   m_inputManager->setViewer(this);
+  m_inputManager->addModifier(new TModifierTangents());
   m_inputManager->addModifier(new TModifierTest());
+  m_inputManager->addModifier(new TModifierSegmentation());
 }
 
 //-----------------------------------------------------------------------------

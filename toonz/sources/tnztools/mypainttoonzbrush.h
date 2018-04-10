@@ -105,9 +105,15 @@ private:
 
   bool reset;
   Params previous, current;
+  bool interpolation;
 
 public:
-  MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller, const mypaint::Brush &brush);
+
+  MyPaintToonzBrush(
+    const TRaster32P &ras,
+    RasterController &controller,
+    const mypaint::Brush &brush,
+    bool interpolation = false);
   void beginStroke();
   void endStroke();
   void strokeTo(const TPointD &p, double pressure, double dtime);
