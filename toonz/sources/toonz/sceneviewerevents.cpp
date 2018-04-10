@@ -1359,7 +1359,7 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
 
   TKey key = TKey((Qt::Key)event->key(), false, (bool)(event->modifiers() & Qt::KeypadModifier));
 
-  getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event);
+  getInputManager()->keyEvent(false, key, TToolTimer::ticks(), event);
 
   if (key.isModifier()) {
     // quando l'utente preme shift/ctrl ecc. alcuni tool (es. pinch) devono
