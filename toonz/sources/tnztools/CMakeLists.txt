@@ -44,7 +44,9 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
-    ../include/tools/modifiertest.h
+    ../include/tools/modifiers/modifiertest.h
+    ../include/tools/modifiers/modifiertangents.h
+    ../include/tools/modifiers/modifiersegmentation.h
 )
 
 set(SOURCES
@@ -112,6 +114,8 @@ set(SOURCES
     track.cpp
     inputmanager.cpp
     modifiertest.cpp
+    modifiertangents.cpp
+    modifiersegmentation.cpp
 )
 
 set(RESOURCES tnztools.qrc)

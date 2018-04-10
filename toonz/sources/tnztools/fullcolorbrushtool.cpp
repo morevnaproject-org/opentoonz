@@ -321,7 +321,7 @@ void FullColorBrushTool::leftButtonDown(const TTrackPoint &point,
 
   mypaint::Brush mypaintBrush;
   applyToonzBrushSettings(mypaintBrush);
-  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaintBrush);
+  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaintBrush, false);
 
   m_strokeRect.empty();
   m_strokeSegmentRect.empty();
