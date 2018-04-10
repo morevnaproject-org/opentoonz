@@ -6,17 +6,6 @@
 // TnzTools includes
 #include <tools/inputmanager.h>
 
-// TnzCore includes
-//#include <tcommon.h>
-//#include <tsmartpointer.h>
-
-// Qt includes
-//#include <QObject>
-//#include <QKeyEvent>
-
-// std includes
-#include <cmath>
-
 
 #undef DVAPI
 #undef DVVAR
@@ -28,18 +17,6 @@
 #define DVVAR DV_IMPORT_VAR
 #endif
 
-
-//====================================================
-
-//  Forward declarations
-
-//class TApplication;
-//class TTool;
-//class TToolViewer;
-//class TInputModifier;
-//class TInputManager;
-
-//typedef TSmartPointerT<TInputModifier> TInputModifierP;
 
 //===================================================================
 
@@ -62,14 +39,14 @@ public:
     double speed;
 
     Modifier(TTrackHandler &handler, double angle, double radius, double speed = 0.25);
-    TTrackPoint calcPoint(double originalIndex);
+    TTrackPoint calcPoint(double originalIndex) override;
   };
 
 public:
-  int count;
-  double radius;
+  const int count;
+  const double radius;
 
-  explicit TModifierTest();
+  TModifierTest();
 
   void modifyTrack(
     const TTrackP &track,

@@ -1,9 +1,9 @@
 
 
-#include <tools/modifiertest.h>
+#include <tools/modifiers/modifiertest.h>
 
-// TnzLib includes
-#include <toonz/tapplication.h>
+// std includes
+#include <cmath>
 
 
 //*****************************************************************************************
