@@ -54,6 +54,7 @@ TTrack::TTrack(const TTrackModifierP &modifier):
   buttonHistory(modifier->original.buttonHistory),
   hasPressure(modifier->original.hasPressure),
   hasTilt(modifier->original.hasTilt),
+  modifier(modifier),
   pointsRemoved(),
   pointsAdded()
   { }
@@ -71,13 +72,17 @@ TTrack::level() const
   { return original() ? original()->level() + 1 : 0; }
 
 int
-TTrack::floorIndex(double index, double &outFrac) const {
+TTrack::floorIndex(double index, double *outFrac) const {
   int i = (int)floor(index + epsilon);
-  if (i > size() - 1)
-    { outFrac = 0.0; return size() - 1; }
-  if (i < 0)
-    { outFrac = 0.0; return 0; }
-  outFrac = std::max(0.0, index - (double)i);
+  if (i > size() - 1) {
+    if (outFrac) *outFrac = 0.0;
+    return size() - 1;
+  }
+  if (i < 0) {
+    if (outFrac) *outFrac = 0.0;
+    return 0;
+  }
+  if (outFrac) *outFrac = std::max(0.0, index - (double)i);
   return i;
 }
 
