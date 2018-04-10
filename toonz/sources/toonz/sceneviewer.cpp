@@ -14,6 +14,7 @@
 
 // TnzTools includes
 #include "tools/inputmanager.h"
+#include "tools/modifiertest.h"
 #include "tools/cursors.h"
 #include "tools/cursormanager.h"
 #include "tools/toolhandle.h"
@@ -533,6 +534,7 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     m_lutCalibrator = new LutCalibrator();
 
   m_inputManager->setViewer(this);
+  m_inputManager->addModifier(new TModifierTest());
 }
 
 //-----------------------------------------------------------------------------

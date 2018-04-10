@@ -157,7 +157,7 @@ public:
   virtual void modifyTrack(
     const TTrackP &track,
     const TInputSavePoint::Holder &savePoint,
-    TTrackList &outTracks ) { }
+    TTrackList &outTracks );
   virtual void modifyTracks(
     const TTrackList &tracks,
     const TInputSavePoint::Holder &savePoint,
@@ -165,7 +165,7 @@ public:
 
   virtual void modifyHover(
     const TPointD &hover,
-    THoverList &outHovers ) { }
+    THoverList &outHovers );
   virtual void modifyHovers(
     const THoverList &hovers,
     THoverList &outHovers );
