@@ -74,7 +74,7 @@ TModifierTest::modifyTrack(
   const double segmentSize = M_PI/180.0*10.0;
 
   if (!track->handler) {
-    if (track->getCurrentKeyState().isPressed(TKey(Qt::Key_T))) {
+    if (track->getKeyState(track->front().time).isPressed(TKey(Qt::Key_T))) {
       // TModifierTest::Handler for spiro
       track->handler = new Handler(*track);
       for(int i = 0; i < count; ++i)
