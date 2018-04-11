@@ -1767,6 +1767,7 @@ void SceneViewer::GLInvalidateRect(const TRectD &rect) {
   if (m_vRuler) m_vRuler->update();
   if (m_hRuler) m_hRuler->update();
 }
+
 //-----------------------------------------------------------------------------
 
 // delta.x: right panning, pixel; delta.y: down panning, pixel
