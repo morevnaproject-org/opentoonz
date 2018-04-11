@@ -123,6 +123,34 @@ void tglDrawSegment(const TPointD &p1, const TPointD &p2) {
 
 //-----------------------------------------------------------------------------
 
+void tglDrawDoubleSegment(const TPointD &p1, const TPointD &p2) {
+  double color[4] = {};
+  double width = 1.0;
+  glGetDoublev(GL_CURRENT_COLOR, color);
+  glGetDoublev(GL_LINE_WIDTH, &width);
+  if (width < 1.0) width = 1.0;
+
+  TPointD d = p2 - p1;
+  double k = sqrt(d.x*d.x + d.y*d.y);
+  if (k <= 1e-9) return;
+  k = 0.5*width/k;
+  TPointD offset(-k*d.y, k*d.x);
+
+  glColor4d(1.0 - color[0], 1.0 - color[1], 1.0 - color[2], color[3]);
+  glBegin(GL_LINES);
+  tglVertex(p1 - offset);
+  tglVertex(p2 - offset);
+  glEnd();
+
+  glColor4dv(color);
+  glBegin(GL_LINES);
+  tglVertex(p1 + offset);
+  tglVertex(p2 + offset);
+  glEnd();
+}
+
+//-----------------------------------------------------------------------------
+
 void tglDrawCircle(const TPointD &center, double radius) {
   if (radius <= 0) return;
 

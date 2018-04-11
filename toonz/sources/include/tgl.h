@@ -134,6 +134,11 @@ DVAPI void tglDrawDisk(const TPointD &c, double r);
  */
 DVAPI void tglDrawSegment(const TPointD &p1, const TPointD &p2);
 
+/*!
+ Draw a segment pair - positive and negative.
+ */
+DVAPI void tglDrawDoubleSegment(const TPointD &p1, const TPointD &p2);
+
 inline void tglDrawSegment(const TPoint &p1, const TPoint &p2) {
   tglDrawSegment(convert(p1), convert(p2));
 }
