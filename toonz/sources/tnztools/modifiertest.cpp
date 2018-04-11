@@ -105,10 +105,10 @@ TModifierTest::modifyTrack(
   if (start < 0) start = 0;
 
   // remove angles
-  if (start < (int)handler->angles.size())
-    handler->angles.erase(
-      handler->angles.begin() + start,
-      handler->angles.end() );
+  double lastAngle = start < (int)handler->angles.size() ? handler->angles[start]
+                   : handler->angles.empty() ? 0.0
+                   : handler->angles.back();
+  handler->angles.resize(start, lastAngle);
 
   // add angles
   for(int i = start; i < track.size(); ++i) {
@@ -131,11 +131,7 @@ TModifierTest::modifyTrack(
     if (subStart < 0) subStart = 0;
     if (subStart < subTrack.size() && subTrack[subStart].originalIndex + TTrack::epsilon < start)
       ++subStart;
-
-    if (subStart < subTrack.size()) {
-      subTrack.pointsRemoved += subTrack.size() - subStart;
-      subTrack.truncate(subStart);
-    }
+    subTrack.truncate(subStart);
 
     // add points
     for(int i = start; i < track.size(); ++i) {
@@ -151,10 +147,8 @@ TModifierTest::modifyTrack(
       }
       subTrack.push_back( subTrack.modifier->calcPoint(i) );
     }
-    subTrack.pointsAdded += subTrack.size() - subStart;
   }
 
-  track.pointsRemoved = 0;
-  track.pointsAdded = 0;
+  track.resetChanges();
 }
 

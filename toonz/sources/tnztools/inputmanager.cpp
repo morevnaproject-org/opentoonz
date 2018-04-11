@@ -52,26 +52,14 @@ TInputModifier::modifyTrack(
   if (!track.changed())
     return;
 
-  int start = track.size() - track.pointsAdded;
-  if (start < 0) start = 0;
-
+  int start = std::max(0, track.size() - track.pointsAdded);
   for(TTrackList::const_iterator ti = track.handler->tracks.begin(); ti != track.handler->tracks.end(); ++ti) {
     TTrack &subTrack = **ti;
-
-    // remove points
-    if (start < track.size()) {
-      subTrack.pointsRemoved += subTrack.size() - start;
-      subTrack.truncate(start);
-    }
-
-    // add points
+    subTrack.truncate(start);
     for(int i = start; i < track.size(); ++i)
       subTrack.push_back( subTrack.modifier->calcPoint(i) );
-    subTrack.pointsAdded += subTrack.size() - start;
   }
-
-  track.pointsRemoved = 0;
-  track.pointsAdded = 0;
+  track.resetChanges();
 }
 
 
@@ -162,15 +150,15 @@ TInputManager::paintRollbackTo(int saveIndex, TTrackList &subTracks) {
   for(TTrackList::const_iterator i = subTracks.begin(); i != subTracks.end(); ++i) {
     TTrack &track = **i;
     if (TrackHandler *handler = dynamic_cast<TrackHandler*>(track.handler.getPointer())) {
-      handler->saves.erase(handler->saves.begin() + level, handler->saves.end());
+      handler->saves.resize(level);
       int cnt = handler->saves[saveIndex];
-      track.pointsRemoved = 0;
+      track.resetRemoved();
       track.pointsAdded = track.size() - cnt;
     }
   }
   for(int i = level; i < (int)m_savePoints.size(); ++i)
     m_savePoints[i].savePoint()->available = false;
-  m_savePoints.erase(m_savePoints.begin() + level, m_savePoints.end());
+  m_savePoints.resize(level);
 }
 
 
@@ -203,15 +191,15 @@ TInputManager::paintApply(int count, TTrackList &subTracks) {
     TTrack &track = **i;
     if (TrackHandler *handler = dynamic_cast<TrackHandler*>(track.handler.getPointer())) {
       if (resend) {
-        track.pointsRemoved = 0;
+        track.resetRemoved();
         track.pointsAdded = track.size() - handler->saves[m_savePointsSent];
       }
-      handler->saves.erase(handler->saves.begin() + level, handler->saves.end());
+      handler->saves.resize(level);
     }
   }
   for(int i = level; i < (int)m_savePoints.size(); ++i)
     m_savePoints[i].savePoint()->available = false;
-  m_savePoints.erase(m_savePoints.begin() + level, m_savePoints.end());
+  m_savePoints.resize(level);
 }
 
 
@@ -263,11 +251,8 @@ TInputManager::paintTracks() {
     // send to tool
     if (m_savePointsSent == (int)m_savePoints.size() && !subTracks.empty())
       tool->paintTracks(subTracks);
-    for(TTrackList::const_iterator i = subTracks.begin(); i != subTracks.end(); ++i) {
-      TTrack &track = **i;
-      track.pointsRemoved = 0;
-      track.pointsAdded = 0;
-    }
+    for(TTrackList::const_iterator i = subTracks.begin(); i != subTracks.end(); ++i)
+      (*i)->resetChanges();
 
     // is paint finished?
     newSavePoint.unlock();
@@ -379,7 +364,6 @@ TInputManager::addTrackPoint(
     time,
     0.0, // length will calculated inside of TTrack::push_back
     final ));
-  ++track->pointsAdded;
 }
 
 
