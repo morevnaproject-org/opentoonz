@@ -28,9 +28,21 @@ namespace mypaint { class Brush; }
 
 class FullColorBrushTool final : public TTool, public RasterController {
   Q_DECLARE_TR_FUNCTIONS(FullColorBrushTool)
+public:
+  class TrackHandler: public TTrackToolHandler {
+  public:
+    MyPaintToonzBrush brush;
 
+    TrackHandler(
+      const TRaster32P &ras,
+      RasterController &controller,
+      const mypaint::Brush &brush
+    ):
+      brush(ras, controller, brush) { }
+  };
+
+private:
   void updateCurrentStyle();
-  double restartBrushTimer();
   void applyClassicToonzBrushSettings(mypaint::Brush &mypaintBrush);
   void applyToonzBrushSettings(mypaint::Brush &mypaintBrush);
 
@@ -49,14 +61,11 @@ public:
   bool askRead(const TRect &rect) override;
   bool askWrite(const TRect &rect) override;
 
-  TTrackPoint fixTrackPoint(const TTrackPoint &point, const TTrack &track);
-
   bool preLeftButtonDown() override;
-  void leftButtonDown(const TTrackPoint &point, const TTrack &track) override;
-  void leftButtonDrag(const TTrackPoint &point, const TTrack &track) override;
-  void leftButtonUp();
-  void leftButtonUp(const TTrackPoint &point, const TTrack &track) override;
   void mouseMove(const TPointD &position, const TInputState &state) override;
+  void paintBegin() override;
+  void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  void paintEnd() override;
 
   void draw() override;
 
@@ -85,15 +94,15 @@ public:
 protected:
   TPropertyGroup m_prop;
 
-  TIntPairProperty m_thickness;
-  TBoolProperty m_pressure;
+  TIntPairProperty    m_thickness;
+  TBoolProperty       m_pressure;
   TDoublePairProperty m_opacity;
-  TDoubleProperty m_hardness;
-  TDoubleProperty m_modifierSize;
-  TDoubleProperty m_modifierOpacity;
-  TBoolProperty m_modifierEraser;
-  TBoolProperty m_modifierLockAlpha;
-  TEnumProperty m_preset;
+  TDoubleProperty     m_hardness;
+  TDoubleProperty     m_modifierSize;
+  TDoubleProperty     m_modifierOpacity;
+  TBoolProperty       m_modifierEraser;
+  TBoolProperty       m_modifierLockAlpha;
+  TEnumProperty       m_preset;
 
   TPixel32 m_currentColor;
   bool m_enabledPressure;
@@ -109,9 +118,6 @@ protected:
 
   TRect m_strokeRect, m_strokeSegmentRect, m_lastRect;
 
-  MyPaintToonzBrush *m_toonz_brush;
-  QElapsedTimer m_brushTimer;
-
   TTileSetFullColor *m_tileSet;
   TTileSaverFullColor *m_tileSaver;
 
@@ -121,7 +127,7 @@ protected:
 
   bool m_presetsLoaded;
   bool m_firstTime;
-  bool m_mousePressed = false;
+  bool m_started;
 };
 
 //------------------------------------------------------------

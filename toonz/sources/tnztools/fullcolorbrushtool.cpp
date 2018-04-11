@@ -124,12 +124,12 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
     , m_minCursorThick(0)
     , m_maxCursorThick(0)
     , m_enabledPressure(false)
-    , m_toonz_brush(0)
     , m_tileSet(0)
     , m_tileSaver(0)
     , m_notifier(0)
     , m_presetsLoaded(false)
-    , m_firstTime(true) {
+    , m_firstTime(true)
+    , m_started(false) {
   bind(TTool::RasterImage | TTool::EmptyTarget);
 
   m_prop.bind(m_thickness);
@@ -143,8 +143,6 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
   m_prop.bind(m_preset);
 
   m_preset.setId("BrushPreset");
-
-  m_brushTimer.start();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -211,7 +209,7 @@ void FullColorBrushTool::onActivate() {
 //--------------------------------------------------------------------------------------------------
 
 void FullColorBrushTool::onDeactivate() {
-  if (m_mousePressed) leftButtonUp();
+  if (m_started) paintEnd();
   m_workRaster = TRaster32P();
   m_backUpRas  = TRasterP();
 }
@@ -281,165 +279,10 @@ bool FullColorBrushTool::askWrite(const TRect &rect) {
 
 bool FullColorBrushTool::preLeftButtonDown() {
   touchImage();
-
   if (m_isFrameCreated) setWorkAndBackupImages();
-
   return true;
 }
 
-//---------------------------------------------------------------------------------------------------
-
-void FullColorBrushTool::leftButtonDown(const TTrackPoint &point,
-                                        const TTrack &track) {
-  TPointD previousBrushPos = m_brushPos;
-  m_trackPoint            = fixTrackPoint(point, track);
-  m_brushPos = m_mousePos = m_trackPoint.position;
-  m_mousePressed          = true;
-  TToolViewer *viewer     = getViewer();
-  if (!viewer) return;
-
-  TRasterImageP ri = (TRasterImageP)getImage(true);
-  if (!ri) ri      = (TRasterImageP)touchImage();
-
-  if (!ri) return;
-
-  /* update color here since the current style might be switched with numpad
-   * shortcut keys */
-  updateCurrentStyle();
-
-  TRasterP ras = ri->getRaster();
-
-  if (!(m_workRaster && m_backUpRas)) setWorkAndBackupImages();
-
-  m_workRaster->lock();
-
-  TPointD rasCenter = ras->getCenterD();
-  TPointD position(m_trackPoint.position + rasCenter);
-
-  m_tileSet   = new TTileSetFullColor(ras->getSize());
-  m_tileSaver = new TTileSaverFullColor(ras, m_tileSet);
-
-  mypaint::Brush mypaintBrush;
-  applyToonzBrushSettings(mypaintBrush);
-  m_toonz_brush = new MyPaintToonzBrush(m_workRaster, *this, mypaintBrush, false);
-
-  m_strokeRect.empty();
-  m_strokeSegmentRect.empty();
-  m_toonz_brush->beginStroke();
-  m_toonz_brush->strokeTo(position, point.pressure, restartBrushTimer());
-  TRect updateRect = m_strokeSegmentRect * ras->getBounds();
-  if (!updateRect.isEmpty())
-    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
-
-  TPointD thickOffset(m_maxCursorThick * 0.5, m_maxCursorThick * 0.5);
-  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
-  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
-  invalidateRect +=
-      TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
-  invalidate(invalidateRect.enlarge(2.0));
-}
-
-//-------------------------------------------------------------------------------------------------------------
-
-TTrackPoint FullColorBrushTool::fixTrackPoint(const TTrackPoint &point,
-                                              const TTrack &track)
-{
-  TTrackPoint p = point;
-  if (!m_enabledPressure)
-    p.pressure = 0.5;
-  return p;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-
-void FullColorBrushTool::leftButtonDrag(const TTrackPoint &point,
-                                        const TTrack &track) {
-  TPointD previousBrushPos = m_brushPos;
-  m_trackPoint            = fixTrackPoint(point, track);
-  m_brushPos = m_mousePos = m_trackPoint.position;
-  TRasterImageP ri        = (TRasterImageP)getImage(true);
-  if (!ri) return;
-
-  TRasterP ras      = ri->getRaster();
-  TPointD rasCenter = ras->getCenterD();
-  TPointD position(m_trackPoint.position + rasCenter);
-  double pressure = m_trackPoint.pressure;
-
-  m_strokeSegmentRect.empty();
-  m_toonz_brush->strokeTo(position, pressure, restartBrushTimer());
-  TRect updateRect = m_strokeSegmentRect * ras->getBounds();
-  if (!updateRect.isEmpty())
-    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
-
-  TPointD thickOffset(m_maxCursorThick * 0.5, m_maxCursorThick * 0.5);
-  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
-  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
-  invalidateRect +=
-      TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
-  invalidate(invalidateRect.enlarge(2.0));
-}
-
-//---------------------------------------------------------------------------------------------------------------
-
-void FullColorBrushTool::leftButtonUp() {
-  TPointD previousBrushPos = m_brushPos;
-  m_brushPos = m_mousePos = m_trackPoint.position;
-
-  TRasterImageP ri = (TRasterImageP)getImage(true);
-  if (!ri) return;
-
-  TRasterP ras      = ri->getRaster();
-  TPointD rasCenter = ras->getCenterD();
-  TPointD position(m_trackPoint.position + rasCenter);
-  double pressure = m_trackPoint.pressure;
-
-  m_strokeSegmentRect.empty();
-  m_toonz_brush->strokeTo(position, pressure, restartBrushTimer());
-  m_toonz_brush->endStroke();
-  TRect updateRect = m_strokeSegmentRect * ras->getBounds();
-  if (!updateRect.isEmpty())
-    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
-
-  TPointD thickOffset(m_maxCursorThick * 0.5, m_maxCursorThick * 0.5);
-  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
-  invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
-  invalidateRect +=
-      TRectD(previousBrushPos - thickOffset, previousBrushPos + thickOffset);
-  invalidate(invalidateRect.enlarge(2.0));
-
-  if (m_toonz_brush) {
-    delete m_toonz_brush;
-    m_toonz_brush = 0;
-  }
-
-  m_lastRect.empty();
-  m_workRaster->unlock();
-
-  if (m_tileSet->getTileCount() > 0) {
-    delete m_tileSaver;
-    TTool::Application *app   = TTool::getApplication();
-    TXshLevel *level          = app->getCurrentLevel()->getLevel();
-    TXshSimpleLevelP simLevel = level->getSimpleLevel();
-    TFrameId frameId          = getCurrentFid();
-    TRasterP subras           = ras->extract(m_strokeRect)->clone();
-    TUndoManager::manager()->add(new FullColorBrushUndo(
-        m_tileSet, simLevel.getPointer(), frameId, m_isFrameCreated, subras,
-        m_strokeRect.getP00()));
-  }
-
-  notifyImageChanged();
-  m_strokeRect.empty();
-  m_mousePressed = false;
-}
-
-//---------------------------------------------------------------------------------------------------------------
-
-void FullColorBrushTool::leftButtonUp(const TTrackPoint &point,
-                                      const TTrack &track)
-{
-  m_trackPoint = fixTrackPoint(point, track);
-  leftButtonUp();
-}
 //---------------------------------------------------------------------------------------------------------------
 
 void FullColorBrushTool::mouseMove(const TPointD &position, const TInputState &state) {
@@ -493,6 +336,98 @@ void FullColorBrushTool::mouseMove(const TPointD &position, const TInputState &s
 
   m_mousePos = position;
   invalidate();
+}
+
+//-------------------------------------------------------------------------------------------------------------
+
+void FullColorBrushTool::paintBegin() {
+  TRasterImageP ri = (TRasterImageP)getImage(true);
+  if (!ri) ri      = (TRasterImageP)touchImage();
+  if (!ri) return;
+  TRasterP ras = ri->getRaster();
+
+  if (!(m_workRaster && m_backUpRas)) setWorkAndBackupImages();
+  m_workRaster->lock();
+  m_tileSet   = new TTileSetFullColor(ras->getSize());
+  m_tileSaver = new TTileSaverFullColor(ras, m_tileSet);
+
+  // update color here since the current style might be switched
+  // with numpad shortcut keys
+  updateCurrentStyle();
+  m_started = true;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+
+void FullColorBrushTool::paintEnd() {
+  TRasterImageP ri = (TRasterImageP)getImage(true);
+  if (!ri) return;
+  TRasterP ras = ri->getRaster();
+
+  m_lastRect.empty();
+  m_workRaster->unlock();
+
+  if (m_tileSet->getTileCount() > 0) {
+    delete m_tileSaver;
+    TTool::Application *app   = TTool::getApplication();
+    TXshLevel *level          = app->getCurrentLevel()->getLevel();
+    TXshSimpleLevelP simLevel = level->getSimpleLevel();
+    TFrameId frameId          = getCurrentFid();
+    TRasterP subras           = ras->extract(m_strokeRect)->clone();
+    TUndoManager::manager()->add(new FullColorBrushUndo(
+        m_tileSet, simLevel.getPointer(), frameId, m_isFrameCreated, subras,
+        m_strokeRect.getP00()));
+  }
+
+  notifyImageChanged();
+  m_strokeRect.empty();
+  m_started = false;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+
+void FullColorBrushTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack) {
+  // get raster
+  if (!m_started || !getViewer()) return;
+  TRasterImageP ri = (TRasterImageP)getImage(true);
+  if (!ri) return;
+  TRasterP ras = ri->getRaster();
+  TPointD rasCenter = ras->getCenterD();
+
+  // init brush
+  TrackHandler *handler;
+  if (track.size() == track.pointsAdded && !track.toolHandler && m_workRaster) {
+    mypaint::Brush mypaintBrush;
+    applyToonzBrushSettings(mypaintBrush);
+    handler = new TrackHandler(m_workRaster, *this, mypaintBrush);
+    handler->brush.beginStroke();
+    track.toolHandler = handler;
+  }
+  handler = dynamic_cast<TrackHandler*>(track.toolHandler.getPointer());
+  if (!handler) return;
+
+  // paint stroke
+  m_strokeSegmentRect.empty();
+  handler->brush.strokeTo(
+    point.position + rasCenter,
+    m_enabledPressure ? point.pressure : 0.5,
+    point.tilt,
+    point.time - track.previous().time );
+  if (track.pointsAdded == 1 && track.finished())
+    handler->brush.endStroke();
+
+  // update affected area
+  TRect updateRect = m_strokeSegmentRect * ras->getBounds();
+  if (!updateRect.isEmpty())
+    ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
+  TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
+  if (firstTrack) {
+    TPointD thickOffset(m_maxCursorThick * 0.5, m_maxCursorThick * 0.5);
+    invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
+    invalidateRect += TRectD(point.position - thickOffset, point.position + thickOffset);
+    m_brushPos = m_mousePos = point.position;
+  }
+  invalidate(invalidateRect.enlarge(2.0));
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -744,14 +679,6 @@ void FullColorBrushTool::updateCurrentStyle() {
         m_brushPos + TPointD(m_maxCursorThick + 2, m_maxCursorThick + 2));
     invalidate(rect);
   }
-}
-
-//------------------------------------------------------------------
-
-double FullColorBrushTool::restartBrushTimer() {
-  double dtime = m_brushTimer.nsecsElapsed() * 1e-9;
-  m_brushTimer.restart();
-  return dtime;
 }
 
 //------------------------------------------------------------------

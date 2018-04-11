@@ -428,6 +428,8 @@ return true if the method execution can have changed the current tool
   /*! paint single track-point at the top painting level */
   virtual void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
 
+  /*! called before paint first point */
+  virtual void paintBegin() { }
   /*! create new painting level and return true, or do nothing and return false
       was:            ------O-------O------
       become:         ------O-------O------O */
@@ -452,6 +454,8 @@ return true if the method execution can have changed the current tool
       was:            ------O-------O------O------
       become (N = 2): ------O------- */
   virtual void paintPop(int count);
+  /*! called after all tracks finished */
+  virtual void paintEnd() { }
 
 
   virtual void onSetViewer() {}

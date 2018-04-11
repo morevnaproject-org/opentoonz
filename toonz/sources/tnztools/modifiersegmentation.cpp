@@ -11,7 +11,7 @@
 
 TModifierSegmentation::TModifierSegmentation(double precision):
   precision(std::max(TTrack::epsilon, precision)),
-  precisionSqr(this->precision * this->precision)
+  precisionSqr(std::max(TTrack::epsilon, precision) * std::max(TTrack::epsilon, precision))
 { }
 
 

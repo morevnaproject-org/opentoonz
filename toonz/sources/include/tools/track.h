@@ -37,10 +37,12 @@ class TTrack;
 class TTrackPoint;
 class TTrackTangent;
 class TTrackHandler;
+class TTrackToolHandler;
 class TTrackModifier;
 
 typedef TSmartPointerT<TTrack> TTrackP;
 typedef TSmartPointerT<TTrackHandler> TTrackHandlerP;
+typedef TSmartPointerT<TTrackToolHandler> TTrackToolHandlerP;
 typedef TSmartPointerT<TTrackModifier> TTrackModifierP;
 
 typedef std::vector<TTrackPoint> TTrackPointList;
@@ -122,6 +124,13 @@ public:
 
 
 //*****************************************************************************************
+//    TTrackToolHandler definition
+//*****************************************************************************************
+
+class DVAPI TTrackToolHandler : public TSmartObject { };
+
+
+//*****************************************************************************************
 //    TTrackModifier definition
 //*****************************************************************************************
 
@@ -161,6 +170,7 @@ public:
   const TTrackModifierP modifier;
 
   mutable TTrackHandlerP handler;
+  mutable TTrackToolHandlerP toolHandler;
   mutable int pointsRemoved;
   mutable int pointsAdded;
 
@@ -244,6 +254,11 @@ public:
 
   inline const TTrackPoint& current() const
     { return point(size() - pointsAdded); }
+  inline const TTrackPoint& previous() const
+    { return point(size() - pointsAdded - 1); }
+  inline const TTrackPoint& next() const
+    { return point(size() - pointsAdded + 1); }
+
   inline TInputState::KeyState::Holder getKeyState(double time) const
     { return keyHistory.get(time); }
   inline TInputState::KeyState::Holder getCurrentKeyState() const
