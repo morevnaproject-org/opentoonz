@@ -618,7 +618,7 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
   m_inputManager->setViewer(this);
   m_inputManager->addModifier(new TModifierTangents());
   m_inputManager->addModifier(new TModifierTest());
-  m_inputManager->addModifier(new TModifierSegmentation());
+  m_inputManager->addModifier(new TModifierSegmentation(0.25));
 }
 
 //-----------------------------------------------------------------------------

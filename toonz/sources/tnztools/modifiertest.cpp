@@ -41,7 +41,7 @@ TModifierTest::Modifier::calcPoint(double originalIndex) {
       double s = sin(angle);
       double c = cos(angle);
 
-      TPointD tangent = TPointD(1.0, 0.0); // original.calcTangent(originalIndex, fabs(2.0*this->radius/speed));
+      TPointD tangent = original.calcTangent(originalIndex, fabs(2.0*this->radius/speed));
       p.position.x += radius*(c*tangent.x - s*tangent.y);
       p.position.y += radius*(s*tangent.x + c*tangent.y);
       p.pressure   *= 0.5*(1.0 + c);
