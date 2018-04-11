@@ -38,7 +38,7 @@ public:
   };
 
   void modifyTrack(
-    const TTrackP &track,
+    const TTrack &track,
     const TInputSavePoint::Holder &savePoint,
     TTrackList &outTracks ) override;
 };

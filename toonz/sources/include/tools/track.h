@@ -114,9 +114,9 @@ public:
 
 class DVAPI TTrackHandler : public TSmartObject {
 public:
-  TTrack &original;
+  const TTrack &original;
   std::vector<TTrackP> tracks;
-  TTrackHandler(TTrack &original):
+  TTrackHandler(const TTrack &original):
     original(original) { }
 };
 
@@ -128,7 +128,7 @@ public:
 class DVAPI TTrackModifier : public TSmartObject {
 public:
     TTrackHandler &handler;
-    TTrack &original;
+    const TTrack &original;
     const double timeOffset;
 
     explicit TTrackModifier(TTrackHandler &handler, double timeOffset = 0.0):
@@ -160,9 +160,9 @@ public:
   const bool hasTilt;
   const TTrackModifierP modifier;
 
-  TTrackHandlerP handler;
-  int pointsRemoved;
-  int pointsAdded;
+  mutable TTrackHandlerP handler;
+  mutable int pointsRemoved;
+  mutable int pointsAdded;
 
 private:
   TTrackPointList m_points;
@@ -181,7 +181,7 @@ public:
 
   explicit TTrack(const TTrackModifierP &modifier);
 
-  inline TTrack* original() const
+  inline const TTrack* original() const
     { return modifier ? &modifier->original : NULL; }
   inline double timeOffset() const
     { return modifier ? modifier->timeOffset : 0.0; }
@@ -191,7 +191,6 @@ public:
     { return pointsAdded != 0 || pointsRemoved != 0; }
 
   const TTrack* root() const;
-  TTrack* root();
   int level() const;
 
   inline int clampIndex(int index) const
