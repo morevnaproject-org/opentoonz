@@ -32,42 +32,42 @@ TModifierTangents::Modifier::calcPoint(double originalIndex) {
 
 void
 TModifierTangents::modifyTrack(
-  const TTrackP &track,
+  const TTrack &track,
   const TInputSavePoint::Holder &savePoint,
   TTrackList &outTracks )
 {
-  if (!track->handler) {
-    track->handler = new TTrackHandler(*track);
-    track->handler->tracks.push_back(
+  if (!track.handler) {
+    track.handler = new TTrackHandler(track);
+    track.handler->tracks.push_back(
       new TTrack(
-        new Modifier(*track->handler) ));
+        new Modifier(*track.handler) ));
   }
 
-  if (track->handler->tracks.empty())
+  if (track.handler->tracks.empty())
     return;
 
-  TTrack &subTrack = *track->handler->tracks.front();
+  TTrack &subTrack = *track.handler->tracks.front();
   Modifier *modifier = dynamic_cast<Modifier*>(subTrack.modifier.getPointer());
   if (!modifier)
     return;
 
-  outTracks.push_back(track->handler->tracks.front());
+  outTracks.push_back(track.handler->tracks.front());
 
-  if ( !track->changed()
-    && track->size() == subTrack.size()
-    && track->size() == (int)modifier->tangents.size() )
+  if ( !track.changed()
+    && track.size() == subTrack.size()
+    && track.size() == (int)modifier->tangents.size() )
       return;
 
-  if (!track->changed() && subTrack.size() == track->size() - 1) {
+  if (!track.changed() && subTrack.size() == track.size() - 1) {
     // add temporary point
     modifier->tangents.push_back(TTrackTangent());
-    subTrack.push_back(track->back());
+    subTrack.push_back(track.back());
     ++subTrack.pointsAdded;
   } else {
     // apply permanent changes
 
     // remove points
-    int start = track->size() - track->pointsAdded;
+    int start = track.size() - track.pointsAdded;
     if (start < 0) start = 0;
     if (start > 1) --start;
     if (start < subTrack.size()) {
@@ -83,16 +83,16 @@ TModifierTangents::modifyTrack(
     int index = start;
     if (index == 0) {
       modifier->tangents.push_back(TTrackTangent());
-      subTrack.push_back(track->back());
+      subTrack.push_back(track.back());
       ++index;
     }
 
     // add points with tangents
-    if (track->size() > 2) {
-      while(index < track->size() - 1) {
-        const TTrackPoint &p0 = (*track)[index-1];
-        const TTrackPoint &p1 = (*track)[index];
-        const TTrackPoint &p2 = (*track)[index+1];
+    if (track.size() > 2) {
+      while(index < track.size() - 1) {
+        const TTrackPoint &p0 = track[index-1];
+        const TTrackPoint &p1 = track[index];
+        const TTrackPoint &p2 = track[index+1];
         double dt = p2.time - p0.time;
         double k = dt > TTrack::epsilon ? (p1.time - p0.time)/dt : 0.0;
         TTrackTangent tangent(
@@ -105,17 +105,17 @@ TModifierTangents::modifyTrack(
       }
     }
 
-    track->pointsRemoved = 0;
-    track->pointsAdded = 0;
+    track.pointsRemoved = 0;
+    track.pointsAdded = 0;
     subTrack.pointsAdded += index - start;
 
     // release previous key point
     modifier->savePoint.reset();
 
-    if (track->finished()) {
+    if (track.finished()) {
       // finish
       modifier->tangents.push_back(TTrackTangent());
-      subTrack.push_back(track->back());
+      subTrack.push_back(track.back());
       ++subTrack.pointsAdded;
     } else {
       // save key point

@@ -63,10 +63,6 @@ const TTrack*
 TTrack::root() const
   { return original() ? original()->root() : this; }
 
-TTrack*
-TTrack::root()
-  { return original() ? original()->root() : this; }
-
 int
 TTrack::level() const
   { return original() ? original()->level() + 1 : 0; }

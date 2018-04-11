@@ -39,7 +39,7 @@ public:
   TModifierSegmentation(double precision = 1.0);
 
   void modifyTrack(
-    const TTrackP &track,
+    const TTrack &track,
     const TInputSavePoint::Holder &savePoint,
     TTrackList &outTracks ) override;
 };

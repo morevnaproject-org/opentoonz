@@ -29,7 +29,7 @@ public:
   class Handler: public TTrackHandler {
   public:
     std::vector<double> angles;
-    Handler(TTrack &original): TTrackHandler(original) { }
+    Handler(const TTrack &original): TTrackHandler(original) { }
   };
 
   class Modifier: public TTrackModifier {
@@ -49,7 +49,7 @@ public:
   TModifierTest();
 
   void modifyTrack(
-    const TTrackP &track,
+    const TTrack &track,
     const TInputSavePoint::Holder &savePoint,
     TTrackList &outTracks ) override;
 };

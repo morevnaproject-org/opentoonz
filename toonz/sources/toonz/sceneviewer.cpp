@@ -1870,6 +1870,7 @@ void SceneViewer::GLInvalidateRect(const TRectD &rect) {
   if (m_hRuler) m_hRuler->update();
   m_guidedDrawingBBox.empty();
 }
+
 //-----------------------------------------------------------------------------
 
 // delta.x: right panning, pixel; delta.y: down panning, pixel

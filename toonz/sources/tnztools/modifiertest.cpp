@@ -67,28 +67,28 @@ TModifierTest::TModifierTest():
 
 void
 TModifierTest::modifyTrack(
-  const TTrackP &track,
+  const TTrack &track,
   const TInputSavePoint::Holder &savePoint,
   TTrackList &outTracks )
 {
   const double segmentSize = M_PI/180.0*10.0;
 
-  if (!track->handler) {
-    if (track->getKeyState(track->front().time).isPressed(TKey(Qt::Key_T))) {
+  if (!track.handler) {
+    if (track.getKeyState(track.front().time).isPressed(TKey(Qt::Key_T))) {
       // TModifierTest::Handler for spiro
-      track->handler = new Handler(*track);
+      track.handler = new Handler(track);
       for(int i = 0; i < count; ++i)
-        track->handler->tracks.push_back(
+        track.handler->tracks.push_back(
           new TTrack(
             new Modifier(
-              *track->handler,
+              *track.handler,
               i*2.0*M_PI/(double)count,
               radius,
               2.0 )));
     }
   }
 
-  Handler *handler = dynamic_cast<Handler*>(track->handler.getPointer());
+  Handler *handler = dynamic_cast<Handler*>(track.handler.getPointer());
   if (!handler) {
     TInputModifier::modifyTrack(track, savePoint, outTracks);
     return;
@@ -96,12 +96,12 @@ TModifierTest::modifyTrack(
 
   outTracks.insert(
     outTracks.end(),
-    track->handler->tracks.begin(),
-    track->handler->tracks.end() );
-  if (!track->changed())
+    track.handler->tracks.begin(),
+    track.handler->tracks.end() );
+  if (!track.changed())
     return;
 
-  int start = track->size() - track->pointsAdded;
+  int start = track.size() - track.pointsAdded;
   if (start < 0) start = 0;
 
   // remove angles
@@ -111,11 +111,11 @@ TModifierTest::modifyTrack(
       handler->angles.end() );
 
   // add angles
-  for(int i = start; i < track->size(); ++i) {
+  for(int i = start; i < track.size(); ++i) {
     if (i > 0) {
-      double dl = (*track)[i].length - (*track)[i-1].length;
-      double da = (*track)[i].pressure > TTrack::epsilon
-                ? dl/(2.0*radius*(*track)[i].pressure) : 0.0;
+      double dl = track[i].length - track[i-1].length;
+      double da = track[i].pressure > TTrack::epsilon
+                ? dl/(2.0*radius*track[i].pressure) : 0.0;
       handler->angles.push_back(handler->angles[i-1] + da);
     } else {
       handler->angles.push_back(0.0);
@@ -138,7 +138,7 @@ TModifierTest::modifyTrack(
     }
 
     // add points
-    for(int i = start; i < track->size(); ++i) {
+    for(int i = start; i < track.size(); ++i) {
       if (i > 0) {
         double prevAngle = handler->angles[i-1];
         double nextAngle = handler->angles[i];
@@ -154,7 +154,7 @@ TModifierTest::modifyTrack(
     subTrack.pointsAdded += subTrack.size() - subStart;
   }
 
-  track->pointsRemoved = 0;
-  track->pointsAdded = 0;
+  track.pointsRemoved = 0;
+  track.pointsAdded = 0;
 }
 
