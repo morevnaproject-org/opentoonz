@@ -100,13 +100,16 @@ TTrack::push_back(const TTrackPoint &point) {
   // calculate length
   TPointD d = p.position - prev.position;
   p.length = prev.length + sqrt(d.x*d.x + d.y*d.y);
+
+  ++pointsAdded;
 }
 
 void
 TTrack::pop_back(int count) {
-  if (count > (int)size()) count = size();
+  if (count > size()) count = size();
   if (count <= 0) return;
-  m_points.erase(m_points.end() - count, m_points.end());
+  m_points.resize(size() - count);
+  pointsRemoved += count;
 }
 
 
