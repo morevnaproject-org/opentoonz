@@ -58,17 +58,8 @@ TModifierSegmentation::modifyTrack(
   // remove points
   int start = track.size() - track.pointsAdded;
   if (start < 0) start = 0;
-  int subStart = subTrack.floorIndex(subTrack.indexByOriginalIndex(start));
-  if (subStart < 0) subStart = 0;
-  if (subStart < subTrack.size() && subTrack[subStart].originalIndex + TTrack::epsilon < start)
-    ++subStart;
-
-  while(subStart > 0 && subTrack[subStart-1].originalIndex + TTrack::epsilon >= start)
-    --subStart;
-  if (subStart < subTrack.size()) {
-    subTrack.pointsRemoved += subTrack.size() - subStart;
-    subTrack.truncate(subStart);
-  }
+  int subStart = subTrack.ceilIndex(subTrack.indexByOriginalIndex(start-1)) + 1;
+  subTrack.truncate(subStart);
 
   // add points
   TTrackPoint p0 = subTrack.modifier->calcPoint(start - 1);
@@ -77,8 +68,6 @@ TModifierSegmentation::modifyTrack(
     addSegments(subTrack, p0, p1);
     p0 = p1;
   }
-  subTrack.pointsAdded += subTrack.size() - subStart;
 
-  track.pointsRemoved = 0;
-  track.pointsAdded = 0;
+  track.resetChanges();
 }

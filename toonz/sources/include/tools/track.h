@@ -229,6 +229,13 @@ public:
   inline const TTrackPointList& points() const
     { return m_points; }
 
+  inline void resetRemoved() const
+    { pointsRemoved = 0; }
+  inline void resetAdded() const
+    { pointsAdded = 0; }
+  inline void resetChanges() const
+    { resetRemoved(); resetAdded(); }
+
   void push_back(const TTrackPoint &point);
   void pop_back(int count = 1);
 
