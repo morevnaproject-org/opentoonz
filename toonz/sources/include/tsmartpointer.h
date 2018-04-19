@@ -182,4 +182,8 @@ public:
   }
 };
 
+//=========================================================
+
+typedef TSmartPointerT<TSmartObject> TSmartObjectP;
+
 #endif

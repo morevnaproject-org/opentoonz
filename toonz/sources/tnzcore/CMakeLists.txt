@@ -121,6 +121,7 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tmeshimage.h
     ../include/tgldisplaylistsmanager.h
     ../include/tversion.h
+    ../include/tassistantsimage.h
 )
 
 set(SOURCES
@@ -244,6 +245,7 @@ set(SOURCES
     ../common/tmeshimage/tmeshimage.cpp
     ../common/tmsgcore.cpp
     ../common/tvrender/tfont_qt.cpp
+    ../common/tassistantsimage/tassistantsimage.cpp
 )
 
 if(BUILD_TARGET_WIN)
@@ -282,6 +284,7 @@ add_definitions(
     -DTSOUND_EXPORTS
     -DTIMAGE_IO_EXPORTS
     -DTRASTERIMAGE_EXPORTS
+    -DTASSISTANTSIMAGE_EXPORTS
     -DTVRENDER_EXPORTS
     -DTFLASH_EXPORTS
     -DTROP_EXPORTS
