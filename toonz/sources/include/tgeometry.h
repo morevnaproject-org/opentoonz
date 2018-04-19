@@ -17,6 +17,14 @@
 #endif
 
 //=============================================================================
+
+inline double logNormalDistribuitionUnscaled(double x, double x0, double w)
+  { return exp(-0.5*pow(log(x/x0)/w, 2.0))/x; }
+
+inline double logNormalDistribuition(double x, double x0, double w)
+  { return logNormalDistribuitionUnscaled(x, x0, w)/(w*sqrt(2.0*M_PI)); }
+
+//=============================================================================
 /*
 * This is an example of how to use the TPointT, the TRectT and the TAffine
 * classes.

@@ -34,6 +34,16 @@ public:
   std::string type;
   std::vector<TPointD> points;
   TSmartObjectP handler;
+
+  TPointD& operator[] (int index) {
+    if (index <= (int)points.size()) points.resize(index + 1);
+    return points[index];
+  }
+
+  const TPointD& operator[] (int index) const {
+    static const TPointD blank;
+    return index <= (int)points.size() ? blank : points[index];
+  }
 };
 
 //-------------------------------------------------------------------
