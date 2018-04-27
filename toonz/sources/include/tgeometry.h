@@ -25,6 +25,9 @@ inline double logNormalDistribuition(double x, double x0, double w)
   { return logNormalDistribuitionUnscaled(x, x0, w)/(w*sqrt(2.0*M_PI)); }
 
 //=============================================================================
+
+template <class T> class TPoint4T;
+
 /*
 * This is an example of how to use the TPointT, the TRectT and the TAffine
 * classes.
@@ -39,6 +42,8 @@ public:
   TPointT() : x(0), y(0){};
   TPointT(T _x, T _y) : x(_x), y(_y){};
   TPointT(const TPointT &point) : x(point.x), y(point.y){};
+  explicit TPointT(const TPoint4T<T> &point);
+
   inline TPointT &operator=(const TPointT &a) {
     x = a.x;
     y = a.y;
@@ -65,6 +70,25 @@ public:
 
   bool operator!=(const TPointT &p) const { return x != p.x || y != p.y; }
 };
+
+template <class T>
+class TPoint4T {
+public:
+  union {
+    struct { T x, y, z, w; };
+    T a[4];
+  };
+
+  TPoint4T():
+    x(), y(), z(), w() { };
+  TPoint4T(T x, T y, T z, T w):
+    x(x), y(y), z(z), w(w) { };
+  explicit TPoint4T(const TPointT<T> &p, T w = (T)1):
+      x(p.x), y(p.y), z(), w(w) { };
+};
+
+template <class T>
+inline TPointT<T>::TPointT(const TPoint4T<T> &point) : x(point.x), y(point.y){};
 
 /*! \relates TPointT
 * Rotate a point 90 degrees (counterclockwise).
@@ -108,6 +132,7 @@ inline std::ostream &operator<<(std::ostream &out, const TPointT<T> &p) {
 
 typedef TPointT<int> TPoint, TPointI;
 typedef TPointT<double> TPointD;
+typedef TPoint4T<double> TPoint4D;
 
 #ifdef _WIN32
 template class DVAPI TPointT<int>;
@@ -895,6 +920,7 @@ public:
       , a21(a.a21)
       , a22(a.a22)
       , a23(a.a23){};
+
   /*!
           Assignment operator.
 */
@@ -1040,6 +1066,11 @@ a12*a12+a21*a21) < err;
 return TPointD(p.x*a11+p.y*a12+a13, p.x*a21+p.y*a22+a23);
 };
 */
+
+  /*!
+          Transform point without translation
+  */
+  TPointD transformDirection(const TPointD &p) const;
 
   /*!
           Retruns the transformed box of the bounding box.
@@ -1189,5 +1220,80 @@ inline std::ostream &operator<<(std::ostream &out, const TAffine &a) {
   return out << "(" << a.a11 << ", " << a.a12 << ", " << a.a13 << ";" << a.a21
              << ", " << a.a22 << ", " << a.a23 << ")";
 }
+
+
+//=============================================================================
+
+//! This class performs basic manipulations of affine transformations in 3D space.
+//! the matrix is transposed to TAffine and equal to OpenGL
+
+class DVAPI TAffine4 {
+public:
+  union {
+    struct {
+      double a11, a12, a13, a14;
+      double a21, a22, a23, a24;
+      double a31, a32, a33, a34;
+      double a41, a42, a43, a44;
+    };
+    double m[4][4];
+    double a[16];
+  };
+
+  inline TAffine4():
+    a11(1.0), a12(0.0), a13(0.0), a14(0.0),
+    a21(0.0), a22(1.0), a23(0.0), a24(0.0),
+    a31(0.0), a32(0.0), a33(1.0), a34(0.0),
+    a41(0.0), a42(0.0), a43(0.0), a44(1.0) { }
+
+  inline explicit TAffine4(const TAffine &a):
+    a11(a.a11), a12(a.a21), a13(0.0), a14(0.0),
+    a21(a.a12), a22(a.a22), a23(0.0), a24(0.0),
+    a31( 0.0 ), a32( 0.0 ), a33(1.0), a34(0.0),
+    a41(a.a13), a42(a.a23), a43(0.0), a44(1.0) { }
+
+  inline TAffine4(
+    const TPoint4D &rowX,
+    const TPoint4D &rowY,
+    const TPoint4D &rowZ,
+    const TPoint4D &rowW
+  ):
+    a11(rowX.x), a12(rowX.y), a13(rowX.z), a14(rowX.w),
+    a21(rowY.x), a22(rowY.y), a23(rowY.z), a24(rowY.w),
+    a31(rowZ.x), a32(rowZ.y), a33(rowZ.z), a34(rowZ.w),
+    a41(rowW.x), a42(rowW.y), a43(rowW.z), a44(rowW.w) { }
+
+  inline TPoint4D& row(int index)
+    { return *(TPoint4D*)(m[index]); }
+  inline const TPoint4D& row(int index) const
+    { return *(const TPoint4D*)(m[index]); }
+
+  inline TPoint4D& rowX() { return row(0); }
+  inline TPoint4D& rowY() { return row(1); }
+  inline TPoint4D& rowZ() { return row(2); }
+  inline TPoint4D& rowW() { return row(3); }
+
+  inline const TPoint4D& rowX() const { return row(0); }
+  inline const TPoint4D& rowY() const { return row(1); }
+  inline const TPoint4D& rowZ() const { return row(2); }
+  inline const TPoint4D& rowW() const { return row(3); }
+
+  TPoint4D operator*(const TPoint4D &b) const;
+  TAffine4 operator*(const TAffine4 &b) const;
+  TAffine4 operator*=(const TAffine4 &b);
+
+  TAffine4 inv() const;
+
+  TAffine get2d(double z = 0.0) const;
+
+  inline static TAffine4 identity() { return TAffine4(); }
+  static TAffine4 translation(double x, double y, double z);
+  static TAffine4 scale(double x, double y, double z);
+  static TAffine4 rotation(double x, double y, double z, double angle);
+  static TAffine4 rotationX(double angle);
+  static TAffine4 rotationY(double angle);
+  static TAffine4 rotationZ(double angle);
+  static TAffine4 perspective(double near, double far, double tangent);
+};
 
 #endif  //  __T_GEOMETRY_INCLUDED__
