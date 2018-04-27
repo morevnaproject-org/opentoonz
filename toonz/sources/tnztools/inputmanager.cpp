@@ -8,6 +8,9 @@
 
 // TnzLib includes
 #include <toonz/tapplication.h>
+#include <toonz/tobjecthandle.h>
+#include <toonz/txshlevelhandle.h>
+#include <toonz/dpiscale.h>
 
 // TnzCore includes
 #include "tgl.h"
@@ -514,6 +517,36 @@ TInputManager::clearModifiers() {
 }
 
 
+void TInputManager::updateDpiScale() const {
+  if (TApplication *application = getApplication())
+    if (TTool *tool = getTool())
+      if (TXshLevelHandle *levelHandle = application->getCurrentLevel())
+        if (TXshLevel *level = levelHandle->getLevel())
+          if (TXshSimpleLevel *simpleLevel = level->getSimpleLevel())
+            { m_dpiScale = getCurrentDpiScale(simpleLevel, tool->getCurrentFid()); return; }
+  m_dpiScale = TPointD(1.0, 1.0);
+}
+
+
+TAffine
+TInputManager::toolToWorld() const {
+  if (!isActive()) return TAffine();
+
+  TAffine matrix = getTool()->getMatrix();
+  if (getTool()->getToolType() & TTool::LevelTool)
+    if (TObjectHandle *objHandle = getApplication()->getCurrentObject())
+      if (!objHandle->isSpline())
+        matrix *= TScale(m_dpiScale.x, m_dpiScale.y);
+
+  return matrix;
+}
+
+
+TAffine
+TInputManager::worldToTool() const
+  { return toolToWorld().inv(); }
+
+
 void
 TInputManager::trackEvent(
   TInputState::DeviceId deviceId,
@@ -528,6 +561,7 @@ TInputManager::trackEvent(
     TToolViewer *viewer = getTool()->getViewer();
     if (getTool()->preLeftButtonDown())
       getTool()->setViewer(viewer);
+    updateDpiScale();
   }
 
   if (isActive()) {
@@ -536,7 +570,7 @@ TInputManager::trackEvent(
       double time = (double)(ticks - track->ticks())*TToolTimer::step - track->timeOffset();
       addTrackPoint(
         track,
-        position,
+        worldToTool() * position,
         pressure ? *pressure : 0.5,
         tilt ? *tilt : TPointD(),
         time,
@@ -585,8 +619,13 @@ TInputManager::buttonEvent(
 
 void
 TInputManager::hoverEvent(const THoverList &hovers) {
-  if (&m_hovers[0] != &hovers)
-    m_hovers[0] = hovers;
+  if (&m_hovers.front() != &hovers)
+    m_hovers.front() = hovers;
+
+  TAffine matrix = worldToTool();
+  for(THoverList::iterator i = m_hovers.front().begin(); i != m_hovers.front().end(); ++i)
+    *i = matrix * (*i);
+
   for(int i = 0; i < (int)m_modifiers.size(); ++i) {
     m_hovers[i+1].clear();
     m_modifiers[i]->modifyHovers(m_hovers[i], m_hovers[i+1]);
