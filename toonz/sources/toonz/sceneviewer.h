@@ -221,6 +221,8 @@ public:
   //! The view matrix is a matrix contained in \b m_viewAff
   TAffine getSceneMatrix() const;
 
+  TAffine4 get3dViewMatrix() const;
+
   void setViewMatrix(const TAffine &aff, int viewMode);
 
   int getFPS() { return m_FPS; }
