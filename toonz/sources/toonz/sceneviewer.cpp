@@ -486,7 +486,6 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     , m_zoomScale3D(0.1)
     , m_theta3D(20)
     , m_phi3D(30)
-    , m_dpiScale(TPointD(1, 1))
     , m_compareSettings()
     , m_minZ(0)
     , m_tableDLId(-1)
@@ -733,7 +732,7 @@ void SceneViewer::showEvent(QShowEvent *) {
           SLOT(update()));
   connect(app->getCurrentLevel(), SIGNAL(xshCanvasSizeChanged()), this,
           SLOT(update()));
-  // when level is switched, update m_dpiScale in order to show white background
+  // when level is switched, update dpiScale in order to show white background
   // for Ink&Paint work properly
   connect(app->getCurrentLevel(), SIGNAL(xshLevelSwitched(TXshLevel *)), this,
           SLOT(onLevelSwitched()));
@@ -902,16 +901,14 @@ void SceneViewer::drawBuildVars() {
 
   // Camera test check
   m_drawCameraTest = CameraTestCheck::instance()->isEnabled();
-
   if (m_previewMode == NO_PREVIEW) {
     m_drawEditingLevel = app->getCurrentFrame()->isEditingLevel();
     m_viewMode         = m_drawEditingLevel ? LEVEL_VIEWMODE : SCENE_VIEWMODE;
-    m_draw3DMode       = is3DView() && (m_previewMode != SUBCAMERA_PREVIEW);
   } else {
     m_drawEditingLevel = false;
     m_viewMode         = app->getCurrentFrame()->isEditingLevel();
-    m_draw3DMode       = false;
   }
+  m_draw3DMode = is3DView();
 
   // Clip rect
   if (!m_clipRect.isEmpty() && !m_draw3DMode) {
@@ -1025,7 +1022,7 @@ void SceneViewer::drawCameraStand() {
     glDepthFunc(GL_ALWAYS);
     glClear(GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-    mult3DMatrix();
+    tglMultMatrix(get3dViewMatrix());
   } else
     glDisable(GL_DEPTH_TEST);
 
@@ -1059,13 +1056,8 @@ void SceneViewer::drawCameraStand() {
   if (m_drawEditingLevel && tool && tool->isEnabled()) {
     if (!m_isLocator) tool->setViewer(this);
     glPushMatrix();
-    if (m_referenceMode == CAMERA3D_REFERENCE) {
-      mult3DMatrix();
-      tglMultMatrix(tool->getMatrix());
-    } else {
-      tglMultMatrix(getViewMatrix() * tool->getMatrix());
-    }
-    glScaled(m_dpiScale.x, m_dpiScale.y, 1);
+    tglMultMatrix(getViewMatrix());
+    tglMultMatrix(getInputManager()->toolToWorld());
 
     TImageP image = tool->getImage(false);
 
@@ -1296,14 +1288,8 @@ void SceneViewer::drawOverlay() {
     // tool->setViewer(this);                            // Moved at
     // drawBuildVars(), before drawing anything
     glPushMatrix();
-    if (m_draw3DMode) {
-      mult3DMatrix();
-      tglMultMatrix(tool->getMatrix());
-    } else
-      tglMultMatrix(getViewMatrix() * tool->getMatrix());
-    if (tool->getToolType() & TTool::LevelTool &&
-        !app->getCurrentObject()->isSpline())
-      glScaled(m_dpiScale.x, m_dpiScale.y, 1);
+    tglMultMatrix(get3dViewMatrix());
+    tglMultMatrix(getInputManager()->toolToWorld());
     m_pixelSize = sqrt(tglGetPixelSize2()) * getDevPixRatio();
     getInputManager()->draw();
     glPopMatrix();
@@ -1593,20 +1579,11 @@ void SceneViewer::drawScene() {
   }
 }
 
-//------------------------------------------------------------------------------
-
-void SceneViewer::mult3DMatrix() {
-  glTranslated(m_pan3D.x, m_pan3D.y, 0);
-  glScaled(m_zoomScale3D, m_zoomScale3D, 1);
-  glRotated(m_theta3D, 1, 0, 0);
-  glRotated(m_phi3D, 0, 1, 0);
-}
-
 //-----------------------------------------------------------------------------
 
 double SceneViewer::projectToZ(const TPointD &delta) {
   glPushMatrix();
-  mult3DMatrix();
+  tglMultMatrix(get3dViewMatrix());
   GLint viewport[4];
   double modelview[16], projection[16];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -1726,7 +1703,7 @@ void SceneViewer::setViewMatrix(const TAffine &aff, int viewMode) {
 
 bool SceneViewer::is3DView() const {
   bool isCameraTest = CameraTestCheck::instance()->isEnabled();
-  return (m_referenceMode == CAMERA3D_REFERENCE && !isCameraTest);
+  return (m_referenceMode == CAMERA3D_REFERENCE && !isCameraTest && m_previewMode == NO_PREVIEW);
 }
 
 //-----------------------------------------------------------------------------
@@ -1787,6 +1764,11 @@ void SceneViewer::panQt(const QPointF &delta) {
   invalidateAll();
   emit refreshNavi();
 }
+
+//-----------------------------------------------------------------------------
+
+TPointD SceneViewer::getDpiScale() const
+  { return getInputManager()->dpiScale(); }
 
 //-----------------------------------------------------------------------------
 
@@ -2173,31 +2155,17 @@ void SceneViewer::setActualPixelSize() {
 
 //-----------------------------------------------------------------------------
 
-void SceneViewer::onLevelChanged() {
-  TTool *tool = TApp::instance()->getCurrentTool()->getTool();
-  if (tool) {
-    TXshLevel *level = TApp::instance()->getCurrentLevel()->getLevel();
-    if (level && level->getSimpleLevel())
-      m_dpiScale =
-          getCurrentDpiScale(level->getSimpleLevel(), tool->getCurrentFid());
-    else
-      m_dpiScale = TPointD(1, 1);
-  }
-}
-//-----------------------------------------------------------------------------
-/*! when level is switched, update m_dpiScale in order to show white background
+/*! when level is switched, update dpiScale in order to show white background
  * for Ink&Paint work properly
  */
-void SceneViewer::onLevelSwitched() {
-  TApp *app        = TApp::instance();
-  TTool *tool      = app->getCurrentTool()->getTool();
-  TXshLevel *level = app->getCurrentLevel()->getLevel();
-  if (level && level->getSimpleLevel())
-    m_dpiScale =
-        getCurrentDpiScale(level->getSimpleLevel(), tool->getCurrentFid());
-  else
-    m_dpiScale = TPointD(1, 1);
-}
+
+void SceneViewer::onLevelChanged()
+  { getInputManager()->updateDpiScale(); }
+
+//-----------------------------------------------------------------------------
+
+void SceneViewer::onLevelSwitched()
+  { getInputManager()->updateDpiScale(); }
 
 //-----------------------------------------------------------------------------
 
@@ -2580,21 +2548,12 @@ void SceneViewer::invalidateToolStatus() {
 */
 
 TRectD SceneViewer::getGeometry() const {
-  int devPixRatio = getDevPixRatio();
-  TTool *tool     = TApp::instance()->getCurrentTool()->getTool();
-  TPointD topLeft =
-      tool->getMatrix().inv() * winToWorld(geometry().topLeft() * devPixRatio);
-  TPointD bottomRight = tool->getMatrix().inv() *
-                        winToWorld(geometry().bottomRight() * devPixRatio);
-
-  TObjectHandle *objHandle = TApp::instance()->getCurrentObject();
-  if (tool->getToolType() & TTool::LevelTool && !objHandle->isSpline()) {
-    topLeft.x /= m_dpiScale.x;
-    topLeft.y /= m_dpiScale.y;
-    bottomRight.x /= m_dpiScale.x;
-    bottomRight.y /= m_dpiScale.y;
-  }
-
+  int devPixRatio     = getDevPixRatio();
+  TAffine worldToTool = getInputManager()->worldToTool();
+  TPointD topLeft     = worldToTool
+                      * winToWorld( geometry().topLeft()     * devPixRatio );
+  TPointD bottomRight = worldToTool
+                      * winToWorld( geometry().bottomRight() * devPixRatio );
   return TRectD(topLeft, bottomRight);
 }
 

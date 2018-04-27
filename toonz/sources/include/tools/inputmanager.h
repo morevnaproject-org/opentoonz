@@ -11,6 +11,7 @@
 // TnzCore includes
 #include <tcommon.h>
 #include <tsmartpointer.h>
+#include <tgeometry.h>
 
 // Qt includes
 #include <QObject>
@@ -84,7 +85,7 @@ public:
         m_lock = lock;
         if (m_savePoint) {
           m_savePoint->hold();
-           if (m_lock) savePoint->lock();
+          if (m_lock) savePoint->lock();
         }
       } else
       if (m_lock != lock) {
@@ -98,10 +99,12 @@ public:
 
     inline void reset()
       { set(NULL, false); }
+    inline void setLock(bool lock)
+      { set(m_savePoint, lock); }
     inline void lock()
-      { set(m_savePoint, true); }
+      { setLock(true); }
     inline void unlock()
-      { set(m_savePoint, false); }
+      { setLock(false); }
 
     inline TInputSavePoint* savePoint() const
       { return m_savePoint; }
@@ -212,6 +215,7 @@ private:
   TInputSavePoint::List m_savePoints;
   int m_started;
   int m_savePointsSent;
+  mutable TPointD m_dpiScale;
 
   static TInputState::TouchId m_lastTouchId;
 
@@ -293,6 +297,13 @@ public:
   void removeModifier(const TInputModifierP &modifier)
     { removeModifier(findModifier(modifier)); }
   void clearModifiers();
+
+  void updateDpiScale() const;
+  const TPointD& dpiScale() const
+    { return m_dpiScale; }
+
+  TAffine toolToWorld() const;
+  TAffine worldToTool() const;
 
   void trackEvent(
     TInputState::DeviceId deviceId,

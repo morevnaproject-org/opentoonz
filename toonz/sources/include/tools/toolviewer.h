@@ -76,6 +76,11 @@ public:
   }  //!< Gets the viewer's current view affine (ie the transform from
      //!<  starting to current <I> world view <\I>)
 
+  virtual TAffine4 get3dViewMatrix() const {
+    return TAffine4(getViewMatrix());
+  }  //!< Gets the viewer's current view affine 3d (ie the transform from
+     //!<  starting to current <I> world view <\I>)
+
   //! return the column index of the drawing intersecting point \b p
   //! (window coordinate, pixels, bottom-left origin)
   virtual int posToColumnIndex(const TPointD &p, double distance,
