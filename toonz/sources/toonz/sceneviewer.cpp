@@ -758,39 +758,9 @@ void SceneViewer::enablePreview(int previewMode) {
 TPointD SceneViewer::winToWorld(const QPointF &pos) const {
   // coordinate window (origine in alto a sinistra) -> coordinate colonna
   // (origine al centro dell'immagine)
-  TPointD pp(pos.x() - (double)width() / 2.0,
-             -pos.y() + (double)height() / 2.0);
-  if (is3DView()) {
-    TXsheet *xsh            = TApp::instance()->getCurrentXsheet()->getXsheet();
-    TStageObjectId cameraId = xsh->getStageObjectTree()->getCurrentCameraId();
-    double z                = xsh->getStageObject(cameraId)->getZ(
-        TApp::instance()->getCurrentFrame()->getFrame());
-
-    TPointD p(pp.x - m_pan3D.x, pp.y - m_pan3D.y);
-    p               = p * (1 / m_zoomScale3D);
-    double theta    = m_theta3D * M_PI_180;
-    double phi      = m_phi3D * M_PI_180;
-    double cs_phi   = cos(phi);
-    double sn_phi   = sin(phi);
-    double cs_theta = cos(theta);
-    double sn_theta = sin(theta);
-    TPointD a(cs_phi, sn_theta * sn_phi);   // proiezione di (1,0,0)
-    TPointD b(0, cs_theta);                 // proiezione di (0,1,0)
-    TPointD c(sn_phi, -sn_theta * cs_phi);  // proiezione di (0,0,1)
-    TPointD aa = rotate90(a);
-    TPointD bb = rotate90(b);
-
-    double abb = a * bb;
-    double baa = b * aa;
-    if (fabs(abb) > 0.001 && fabs(baa) > 0.001) {
-      p -= c * z;
-      TPointD g((p * bb) / (a * bb), (p * aa) / (b * aa));
-      return TAffine() * g;
-    } else
-      return TAffine() * TPointD(0, 0);
-  }
-
-  return getViewMatrix().inv() * pp;
+  TPointD pp( pos.x() - (double)width()/2.0,
+             -pos.y() + (double)height()/2.0 );
+  return get3dViewMatrix().get2d().inv() * pp;
 }
 
 //-----------------------------------------------------------------------------
@@ -802,9 +772,9 @@ TPointD SceneViewer::winToWorld(const TPointD &winPos) const {
 //-----------------------------------------------------------------------------
 
 TPointD SceneViewer::worldToPos(const TPointD &worldPos) const {
-  // TODO: conversion for 3DView
-  TPointD p = getViewMatrix() * worldPos;
-  return TPointD(width() / 2 + p.x, height() / 2 + p.y);
+  TPointD p;
+  p = get3dViewMatrix().get2d() * worldPos;
+  return TPointD(width()/2 + p.x, height()/2 + p.y);
 }
 
 //-----------------------------------------------------------------------------
@@ -1782,11 +1752,44 @@ TRect SceneViewer::getActualClipRect(const TAffine &aff) {
 
 //-----------------------------------------------------------------------------
 
+TAffine4 SceneViewer::get3dViewMatrix() const {
+  if (is3DView()) {
+    TXsheet *xsh = TApp::instance()->getCurrentXsheet()->getXsheet();
+    TStageObjectId cameraId = xsh->getStageObjectTree()->getCurrentCameraId();
+    double z = xsh->getStageObject(cameraId)->getZ(
+                  TApp::instance()->getCurrentFrame()->getFrame());
+
+    TAffine4 affine;
+    affine *= TAffine4::translation(m_pan3D.x, m_pan3D.y, z);
+    affine *= TAffine4::scale(m_zoomScale3D, m_zoomScale3D, m_zoomScale3D);
+    affine *= TAffine4::rotationX(M_PI_180*m_theta3D);
+    affine *= TAffine4::rotationY(M_PI_180*m_phi3D);
+    return affine;
+  }
+
+  int viewMode = TApp::instance()->getCurrentFrame()->isEditingLevel()
+                     ? LEVEL_VIEWMODE
+                     : SCENE_VIEWMODE;
+
+  if (m_referenceMode == CAMERA_REFERENCE) {
+    int frame    = TApp::instance()->getCurrentFrame()->getFrame();
+    TXsheet *xsh = TApp::instance()->getCurrentXsheet()->getXsheet();
+    TAffine aff  = xsh->getCameraAff(frame);
+    return TAffine4(m_viewAff[viewMode] * aff.inv());
+  }
+
+  return TAffine4(m_viewAff[viewMode]);
+}
+
+//-----------------------------------------------------------------------------
+
 TAffine SceneViewer::getViewMatrix() const {
   int viewMode = TApp::instance()->getCurrentFrame()->isEditingLevel()
                      ? LEVEL_VIEWMODE
                      : SCENE_VIEWMODE;
-  if (is3DView()) return TAffine();
+  if (is3DView()) {
+    return TAffine();
+  } else
   if (m_referenceMode == CAMERA_REFERENCE) {
     int frame    = TApp::instance()->getCurrentFrame()->getFrame();
     TXsheet *xsh = TApp::instance()->getCurrentXsheet()->getXsheet();
