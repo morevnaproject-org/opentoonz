@@ -121,6 +121,8 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tmeshimage.h
     ../include/tgldisplaylistsmanager.h
     ../include/tversion.h
+    ../include/tstringid.h
+    ../include/tvariant.h
     ../include/tassistantsimage.h
 )
 
@@ -246,6 +248,8 @@ set(SOURCES
     ../common/tmsgcore.cpp
     ../common/tvrender/tfont_qt.cpp
     ../common/tassistantsimage/tassistantsimage.cpp
+    ../common/tstringid.cpp
+    ../common/tvariant.cpp
 )
 
 if(BUILD_TARGET_WIN)
@@ -289,6 +293,8 @@ add_definitions(
     -DTFLASH_EXPORTS
     -DTROP_EXPORTS
     -DTSTREAM_EXPORTS
+    -DTSTRINGID_EXPORTS
+    -DTVARIANT_EXPORTS
 )
 
 message("subdir: tnzcore")
