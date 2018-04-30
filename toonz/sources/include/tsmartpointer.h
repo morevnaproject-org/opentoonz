@@ -102,66 +102,81 @@ public:                                                                        \
 //=========================================================
 
 template <class T>
-class TSmartPointerT {
+class TSmartPointerBaseT {
+public:
+  typedef T Type;
 protected:
   T *m_pointer;
-
+  T& reference() const
+    { assert(m_pointer); return *m_pointer; }
 public:
-  TSmartPointerT() : m_pointer(0) {}
+  TSmartPointerBaseT() : m_pointer(0) {}
+  TSmartPointerBaseT(const TSmartPointerBaseT &src) : m_pointer(src.m_pointer)
+    { if (m_pointer) m_pointer->addRef(); }
+  TSmartPointerBaseT(T *pointer) : m_pointer(pointer)
+    { if (m_pointer) m_pointer->addRef(); }
+  virtual ~TSmartPointerBaseT()
+    { if (m_pointer) { m_pointer->release(); m_pointer = 0; } }
+  TSmartPointerBaseT& operator=(const TSmartPointerBaseT &src)
+    { set(src); return *this; }
 
-  TSmartPointerT(const TSmartPointerT &src) : m_pointer(src.m_pointer) {
-    if (m_pointer) m_pointer->addRef();
-  }
-
-  TSmartPointerT(T *pointer) : m_pointer(pointer) {
-    if (m_pointer) m_pointer->addRef();
-  }
-
-  virtual ~TSmartPointerT() {
-    if (m_pointer) {
-      m_pointer->release();
-      m_pointer = 0;
+  void set(T *pointer) {
+    if (m_pointer != pointer) {
+      // call 'addRef' before 'release'
+      if (pointer) pointer->addRef();
+      if (m_pointer) m_pointer->release();
+      m_pointer = pointer;
     }
   }
+  void set(const TSmartPointerBaseT &src)
+    { set(src.m_pointer); }
+  bool operator!() const
+    { return m_pointer == 0; }
+  operator bool() const
+    { return m_pointer != 0; }
+  bool operator==(const TSmartPointerBaseT &p) const
+    { return m_pointer == p.m_pointer; }
+  bool operator!=(const TSmartPointerBaseT &p) const
+    { return m_pointer != p.m_pointer; }
+  bool operator<(const TSmartPointerBaseT &p) const
+    { return m_pointer < p.m_pointer; }
+  bool operator>(const TSmartPointerBaseT &p) const
+    { return m_pointer > p.m_pointer; }
+};
 
-  TSmartPointerT &operator=(const TSmartPointerT &src) {
-    // prima addRef  e poi release per evitare brutti scherzi
-    // in caso di parentela
-    T *old    = m_pointer;
-    m_pointer = src.m_pointer;
-    if (m_pointer) m_pointer->addRef();
-    if (old) old->release();
-    return *this;
-  }
+//=========================================================
 
-  T *operator->() const {
-    assert(m_pointer);
-    return m_pointer;
-  }
+template <class T>
+class TSmartPointerT: public TSmartPointerBaseT<T> {
+public:
+  typedef TSmartPointerBaseT<T> Base;
+  TSmartPointerT() {}
+  TSmartPointerT(const TSmartPointerT &src): Base(src) {}
+  TSmartPointerT(T *pointer): Base(pointer) {}
+  TSmartPointerT& operator=(const TSmartPointerT &src) { Base::set(src); return *this; }
+  T* operator->() const { return &Base::reference(); }
+  T& operator*() const { return Base::reference(); }
+  T* getPointer() const { return Base::m_pointer; }
+};
 
-  T &operator*() const {
-    assert(m_pointer);
-    return *m_pointer;
-  }
+//=========================================================
 
-  T *getPointer() const { return m_pointer; }
-
-  bool operator!() const { return m_pointer == 0; }
-  operator bool() const { return m_pointer != 0; }
-
-  bool operator==(const TSmartPointerT &p) const {
-    return m_pointer == p.m_pointer;
-  }
-  bool operator!=(const TSmartPointerT &p) const {
-    return m_pointer != p.m_pointer;
-  }
-
-  bool operator<(const TSmartPointerT &p) const {
-    return m_pointer < p.m_pointer;
-  }
-  bool operator>(const TSmartPointerT &p) const {
-    return m_pointer > p.m_pointer;
-  }
+//! smart reference returns constant pointer when reference is constant
+//! and returns non-constant pointer when reference is non-constant
+template <class T>
+class TSmartRefT: public TSmartPointerBaseT<T> {
+public:
+  typedef TSmartPointerBaseT<T> Base;
+  TSmartRefT() {}
+  TSmartRefT(const TSmartRefT &src): Base(src) {}
+  TSmartRefT(T *pointer): Base(pointer) {}
+  TSmartRefT& operator=(const TSmartRefT &src) { Base::set(src); return *this; }
+  const T* operator->() const { return &Base::reference(); }
+  const T& operator*() const { return Base::reference(); }
+  const T* getPointer() const { return Base::m_pointer; }
+  T* operator->() { return &Base::reference(); }
+  T& operator*() { return Base::reference(); }
+  T* getPointer() { return Base::m_pointer; }
 };
 
 //=========================================================
