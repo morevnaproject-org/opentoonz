@@ -179,6 +179,10 @@ inline void tglMultMatrix(const TAffine &aff) {
   glMultMatrixd(m);
 }
 
+inline void tglMultMatrix(const TAffine4 &aff) {
+  glMultMatrixd(aff.a);
+}
+
 //=============================================================================
 
 void DVAPI tglRgbOnlyColorMask();
