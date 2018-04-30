@@ -63,28 +63,4 @@ TGuideline::findBest(const TGuidelineList &guidelines, const TTrack &track, cons
 //    TAssistant implementation
 //************************************************************************
 
-TAssistant::Registry&
-TAssistant::getRegistry() {
-  static Registry registry;
-  return registry;
-}
-
-//---------------------------------------------------------------------------------------------------
-
-TAssistant*
-TAssistant::create(const std::string &name) {
-  const Registry &registry = getRegistry();
-  Registry::const_iterator i = registry.find(name);
-  return i == registry.end() ? NULL : i->second();
-}
-
-//---------------------------------------------------------------------------------------------------
-
-TAssistantP
-TAssistant::wrap(TAssistantDesc &desc) {
-  if (desc.handler)
-    return dynamic_cast<TAssistant*>(desc.handler.getPointer());
-  TAssistantP assistant = create(desc.type);
-  desc.handler = assistant.getPointer();
-  return assistant;
-}
+// TODO:
