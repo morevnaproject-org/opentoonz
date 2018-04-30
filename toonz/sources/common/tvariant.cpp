@@ -101,7 +101,10 @@ TVariant&
 TVariant::operator[] (const TStringId &field) {
   setType(Map);
   TVariant &result = m_map[field];
-  if (!result.m_parent) result.setParent(*this, field);
+  if (!result.m_parent) {
+    result.setParent(*this, field);
+    touch();
+  }
   return result;
 }
 

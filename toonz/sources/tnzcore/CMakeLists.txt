@@ -123,7 +123,7 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tversion.h
     ../include/tstringid.h
     ../include/tvariant.h
-    ../include/tassistantsimage.h
+    ../include/tmetaimage.h
 )
 
 set(SOURCES
@@ -247,7 +247,7 @@ set(SOURCES
     ../common/tmeshimage/tmeshimage.cpp
     ../common/tmsgcore.cpp
     ../common/tvrender/tfont_qt.cpp
-    ../common/tassistantsimage/tassistantsimage.cpp
+    ../common/tmetaimage/tmetaimage.cpp
     ../common/tstringid.cpp
     ../common/tvariant.cpp
 )
@@ -288,7 +288,7 @@ add_definitions(
     -DTSOUND_EXPORTS
     -DTIMAGE_IO_EXPORTS
     -DTRASTERIMAGE_EXPORTS
-    -DTASSISTANTSIMAGE_EXPORTS
+    -DTMETAIMAGE_EXPORTS
     -DTVRENDER_EXPORTS
     -DTFLASH_EXPORTS
     -DTROP_EXPORTS

@@ -91,7 +91,7 @@ public:
 class DVAPI TVariantOwner {
 public:
   virtual ~TVariantOwner() { }
-  virtual void onTouchVariant(const TVariant &value) { }
+  virtual void onVariantChanged(const TVariant &value) { }
 };
 
 //-------------------------------------------------------------------
@@ -197,7 +197,7 @@ public:
     m_parent() { setMap(v); }
 
   inline void touch()
-    { if (m_root->m_owner) m_root->m_owner->onTouchVariant(*this); }
+    { if (m_root->m_owner) m_root->m_owner->onVariantChanged(*this); }
 
   inline TVariant& operator=(const TVariant &other) {
     switch(other.m_type) {
@@ -322,6 +322,8 @@ public:
     { return m_parent || !m_parentField ? this - &m_parent->m_list.front() : 0; }
   inline const TStringId& parentField() const
     { return m_parentField; }
+  inline bool isRoot() const
+    { return this == m_root; }
 
   int getPathSize() const;
   void getParentPath(TVariantPath &outPath) const;
