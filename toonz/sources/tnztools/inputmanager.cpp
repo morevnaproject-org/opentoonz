@@ -706,6 +706,9 @@ TInputManager::draw() {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     tglEnableBlending();
     tglEnableLineSmooth(true, 0.5);
+    double pixelSize = sqrt(tglGetPixelSize2());
+    double colorBlack[4] = { 0.0, 0.0, 0.0, 1.0 };
+    double colorWhite[4] = { 1.0, 1.0, 1.0, 1.0 };
     for(TTrackList::const_iterator ti = getOutputTracks().begin(); ti != getOutputTracks().end(); ++ti) {
       TTrack &track = **ti;
       if (TrackHandler *handler = dynamic_cast<TrackHandler*>(track.handler.getPointer())) {
@@ -713,14 +716,24 @@ TInputManager::draw() {
         if (start < 0) start = 0;
         if (start + 1 < track.size()) {
           int level = m_savePointsSent;
-          double alpha = 1.0;
-          glColor4d(1.0, 1.0, 1.0, alpha);
+          colorBlack[3] = (colorWhite[3] = 0.8);
           for(int i = start + 1; i < track.size(); ++i) {
-            while(level < (int)handler->saves.size() && handler->saves[level] <= i) {
-              glColor4d(1.0, 1.0, 1.0, alpha *= 1.0);
-              ++level;
+            while(level < (int)handler->saves.size() && handler->saves[level] <= i)
+              colorBlack[3] = (colorWhite[3] *= 0.8), ++level;
+
+            const TPointD &a = track[i-1].position;
+            const TPointD &b = track[i].position;
+            TPointD d = b - a;
+
+            double k = norm2(d);
+            if (k > TConsts::epsilon*TConsts::epsilon) {
+              double k = 0.5*pixelSize/sqrt(k);
+              d = TPointD(-k*d.y, k*d.x);
+              glColor4dv(colorWhite);
+              tglDrawSegment(a - d, b - d);
+              glColor4dv(colorBlack);
+              tglDrawSegment(a + d, b + d);
             }
-            tglDrawDoubleSegment(track[i-1].position, track[i].position);
           }
         }
       }
