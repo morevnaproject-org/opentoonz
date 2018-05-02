@@ -39,7 +39,7 @@ TMetaObject::setType(const TStringId &name) {
 
 void
 TMetaObject::onVariantChanged(const TVariant &value)
-  { if (m_handler) m_handler->onDataChanged(value); }
+  { if (m_handler) m_handler->dataChanged(value); }
 
 //---------------------------------------------------------
 
