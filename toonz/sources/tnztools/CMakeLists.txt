@@ -42,10 +42,11 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
+    ../include/tools/assistant.h
     ../include/tools/modifiers/modifiertest.h
     ../include/tools/modifiers/modifiertangents.h
     ../include/tools/modifiers/modifiersegmentation.h
-    ../include/tools/assistant.h
+    ../include/tools/modifiers/modifierassistants.h
 )
 
 set(SOURCES
@@ -110,10 +111,11 @@ set(SOURCES
     inputstate.cpp
     track.cpp
     inputmanager.cpp
-    modifiertest.cpp
-    modifiertangents.cpp
-    modifiersegmentation.cpp
     assistant.cpp
+    modifiers/modifiertest.cpp
+    modifiers/modifiertangents.cpp
+    modifiers/modifiersegmentation.cpp
+    modifiers/modifierassistants.cpp
 )
 
 set(RESOURCES tnztools.qrc)

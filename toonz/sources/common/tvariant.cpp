@@ -123,7 +123,7 @@ const TVariant&
 TVariant::byPath(const TVariantPath &path, int begin, int end) const {
   if ((int)path.size() <= begin || begin >= end) return *this;
   if (isNone()) return blank();
-  return byPath(path[begin]).byPath(path, begin + 1, end);
+  return (*this)[path[begin]].byPath(path, begin + 1, end);
 }
 
 //---------------------------------------------------------
@@ -131,29 +131,41 @@ TVariant::byPath(const TVariantPath &path, int begin, int end) const {
 TVariant&
 TVariant::byPath(const TVariantPath &path, int begin, int end) {
   if ((int)path.size() <= begin || begin >= end) return *this;
-  return byPath(path[begin]).byPath(path, begin + 1, end);
+  return (*this)[path[begin]].byPath(path, begin + 1, end);
 }
 
 //---------------------------------------------------------
 
 int
-TVariant::getPathSize() const {
-  const TVariant *a = this->m_parent;
+TVariant::getParentPathSize(const TVariant &parent) const {
   int ac = 0;
-  while(a) a = a->m_parent, ++ac;
-  return ac;
+  for(const TVariant *a = this; a; a = a->parent(), ++ac)
+    if (a == &parent) return ac;
+  return -1;
 }
 
 //---------------------------------------------------------
 
-void
-TVariant::getParentPath(TVariantPath &outPath) const {
-  if (m_parent) {
-    m_parent->getParentPath(outPath);
-    outPath.push_back(parentPathEntry());
-  } else {
-    outPath.clear();
-  }
+bool
+TVariant::getParentPath(TVariantPath &outPath, const TVariant &parent) const {
+  if (!m_parent)
+    { outPath.clear(); return false; }
+  if (m_parent == this)
+    { outPath.clear(); return true; }
+  if (m_parent->getParentPath(outPath))
+    { outPath.push_back(parentPathEntry()); return true; }
+  return false;
+}
+
+//---------------------------------------------------------
+
+bool
+TVariant::getChildPathEntry(const TVariant &child, TVariantPathEntry &outEntry) const {
+  for(const TVariant *a = &child; a->parent(); a = a->parent())
+    if (a->parent() == this)
+      { outEntry = a->parentPathEntry(); return true; }
+  outEntry = TVariantPathEntry();
+  return false;
 }
 
 //---------------------------------------------------------

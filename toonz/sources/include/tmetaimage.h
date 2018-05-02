@@ -30,7 +30,6 @@ class TMetaObject;
 class TMetaObjectHandler;
 typedef TSmartPointerT<TMetaObject> TMetaObjectP;
 typedef TSmartRefT<TMetaObject> TMetaObjectR;
-typedef std::vector<TMetaObjectP> TMetaObjectList;
 typedef std::vector<TMetaObjectR> TMetaObjectRefList;
 
 //-------------------------------------------------------------------
@@ -98,6 +97,7 @@ public:
 class DVAPI TMetaObjectHandler {
 private:
   TMetaObject &m_object;
+  TAtomicVar m_fixindData;
 
 public:
   TMetaObjectHandler(TMetaObject &object):
@@ -113,8 +113,19 @@ public:
   inline TVariant& data()
     { return object().data(); }
 
+protected:
   virtual void onDataChanged(const TVariant &value) { }
-  virtual void fixData() { }
+  virtual void onFixData() { }
+
+public:
+  void dataChanged(const TVariant &value)
+    { if (m_fixindData != 0) onFixData(); }
+
+  void fixData() {
+    ++m_fixindData;
+    if (m_fixindData == 1) onFixData();
+    --m_fixindData;
+  }
 };
 
 //-------------------------------------------------------------------
