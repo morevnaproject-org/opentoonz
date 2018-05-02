@@ -10,6 +10,30 @@
 //    TGuideline implementation
 //************************************************************************
 
+void
+TGuideline::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool active) const {
+  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+  if (!active) colorBlack[3] = (colorWhite[3] *= 0.5);
+
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
+  tglEnableBlending();
+  tglEnableLineSmooth(true, 0.5);
+  TPointD d = p1 - p0;
+  double k = norm2(d);
+  if (k > TConsts::epsilon*TConsts::epsilon) {
+    double k = 0.5*pixelSize/sqrt(k);
+    d = TPointD(-k*d.y, k*d.x);
+    glColor4dv(colorWhite);
+    tglDrawSegment(p0 - d, p1 - d);
+    glColor4dv(colorBlack);
+    tglDrawSegment(p0 + d, p1 + d);
+  }
+  glPopAttrib();
+}
+
+//---------------------------------------------------------------------------------------------------
+
 double
 TGuideline::calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &outLongEnough) const {
   outLongEnough = false;
@@ -165,6 +189,29 @@ TAssistant::onFixData() {
 //---------------------------------------------------------------------------------------------------
 
 void
+TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const {
+  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
+  tglEnableBlending();
+  tglEnableLineSmooth(true, 0.5);
+  TPointD d = p1 - p0;
+  double k = norm2(d);
+  if (k > TConsts::epsilon*TConsts::epsilon) {
+    double k = 0.5*pixelSize/sqrt(k);
+    d = TPointD(-k*d.y, k*d.x);
+    glColor4dv(colorWhite);
+    tglDrawSegment(p0 - d, p1 - d);
+    glColor4dv(colorBlack);
+    tglDrawSegment(p0 + d, p1 + d);
+  }
+  glPopAttrib();
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
 TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
   double radius = 10.0;
   double crossSize = 1.2*radius;
@@ -226,6 +273,7 @@ TAssistant::draw(TToolViewer *viewer) const
 void
 TAssistant::drawEdit(TToolViewer *viewer) const {
   // paint all points
+  draw(viewer);
   double pixelSize = sqrt(tglGetPixelSize2());
   for(int i = 0; i < pointsCount(); ++i)
     drawPoint(m_points[i], pixelSize);

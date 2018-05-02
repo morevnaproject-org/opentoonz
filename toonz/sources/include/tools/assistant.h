@@ -6,8 +6,6 @@
 // TnzTools includes
 #include <tools/track.h>
 
-// TnzLib includes
-
 // TnzCore includes
 #include <tsmartpointer.h>
 #include <tgeometry.h>
@@ -49,7 +47,7 @@ typedef std::vector<TAssistantPoint> TAssistantPointList;
 //    TGuideline definition
 //*****************************************************************************************
 
-class DVAPI TGuideline final : public TSmartObject {
+class DVAPI TGuideline : public TSmartObject {
 public:
   virtual TTrackPoint transformPoint(const TTrackPoint &point) const
     { return point; }
@@ -57,6 +55,8 @@ public:
     { }
   void draw() const
     { draw(false); }
+
+  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool active) const;
 
   double calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &outLongEnough) const;
   static TGuidelineP findBest(const TGuidelineList &guidelines, const TTrack &track, const TAffine &toScreen, bool &outLongEnough);
@@ -87,7 +87,7 @@ public:
 //    TAssistant definition
 //*****************************************************************************************
 
-class DVAPI TAssistant final : public TMetaObjectHandler {
+class DVAPI TAssistant : public TMetaObjectHandler {
 protected:
   const TStringId m_idPoints;
   const TStringId m_idX;
@@ -130,6 +130,7 @@ protected:
   //! save object data to variant
   virtual void onFixData();
 
+  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
 
 public:

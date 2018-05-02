@@ -116,6 +116,8 @@ set(SOURCES
     modifiers/modifiertangents.cpp
     modifiers/modifiersegmentation.cpp
     modifiers/modifierassistants.cpp
+    assistants/guidelineline.cpp
+    assistants/assistantvanishingpoint.cpp
 )
 
 set(RESOURCES tnztools.qrc)
