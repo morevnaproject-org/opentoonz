@@ -108,11 +108,23 @@ TInputModifier::calcDrawBounds(const TTrackList &tracks, const THoverList &hover
 
 
 void
-TInputModifier::draw(const TTrackList &tracks, const std::vector<TPointD> &hovers) {
+TInputModifier::drawTracks(const TTrackList &tracks) {
   for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
     drawTrack(**i);
+}
+
+
+void
+TInputModifier::drawHovers(const std::vector<TPointD> &hovers) {
   for(std::vector<TPointD>::const_iterator i = hovers.begin(); i != hovers.end(); ++i)
     drawHover(*i);
+}
+
+
+void
+TInputModifier::draw(const TTrackList &tracks, const std::vector<TPointD> &hovers) {
+  drawTracks(tracks);
+  drawHovers(hovers);
 }
 
 

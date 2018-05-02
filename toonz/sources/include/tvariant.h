@@ -68,6 +68,11 @@ public:
 
 class DVAPI TVariantPath: public std::vector<TVariantPathEntry> {
 public:
+  inline TVariantPath& append(const TVariantPathEntry &x)
+    { push_back(x); return *this; }
+  inline TVariantPath& append(const TVariantPath &x)
+    { insert(end(), x.begin(), x.end()); return *this; }
+
   inline bool isSubPathOf(const TVariantPath &other) const
     { return compare(*this, 0, other, 0, (int)size()); }
   inline bool isBasePathOf(const TVariantPath &other) const
@@ -289,12 +294,12 @@ public:
   // path methods
   const TVariant& byPath(const TVariantPath &path, int begin, int end) const;
   TVariant& byPath(const TVariantPath &path, int begin, int end);
-  inline const TVariant& byPath(const TVariantPathEntry &entry) const {
+  inline const TVariant& operator[] (const TVariantPathEntry &entry) const {
     return entry.isIndex()
          ? (m_type == List ? (*this)[entry.index()] : blank())
          : (m_type == Map  ? (*this)[entry.field()] : blank());
   }
-  inline TVariant& byPath(const TVariantPathEntry &entry)
+  inline TVariant& operator[] (const TVariantPathEntry &entry)
     { return entry.isIndex() ? (*this)[entry.index()] : (*this)[entry.field()]; }
   inline const TVariant& byPath(const TVariantPath &path, int begin = 0) const
     { return byPath(path, begin, (int)path.size()); }
@@ -325,15 +330,23 @@ public:
   inline bool isRoot() const
     { return this == m_root; }
 
-  int getPathSize() const;
-  void getParentPath(TVariantPath &outPath) const;
+  int getParentPathSize(const TVariant &parent) const;
+  bool getParentPath(TVariantPath &outPath, const TVariant &parent) const;
   inline TVariantPathEntry parentPathEntry() const {
     return !m_parent               ? TVariantPathEntry()
          : m_parent->m_type == Map ? TVariantPathEntry(m_parentField)
          : TVariantPathEntry( this - &m_parent->m_list.front() );
   }
-  inline TVariantPath getParentPath() const
-    { TVariantPath path; getParentPath(path); return path; }
+  inline int getParentPathSize() const
+    { return getParentPathSize(*m_root); }
+  inline bool getParentPath(TVariantPath &outPath) const
+    { return getParentPath(outPath, *m_root); }
+
+  inline int getChildPathSize(const TVariant &child) const
+    { return child.getParentPathSize(*this); }
+  inline bool getChildPath(TVariantPath &outPath, const TVariant &child) const
+    { return child.getParentPath(outPath, *this); }
+  bool getChildPathEntry(const TVariant &child, TVariantPathEntry &outEntry) const;
 
   bool isChildOf(const TVariant &other) const;
   bool isChildOrEqual(const TVariant &other) const;

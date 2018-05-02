@@ -184,8 +184,10 @@ public:
   virtual TRectD calcDrawBoundsTrack(const TTrack &track) { return TRectD(); }
   virtual TRectD calcDrawBounds(const TTrackList &tracks, const THoverList &hovers);
 
-  virtual void drawHover(const TPointD &hover) { }
   virtual void drawTrack(const TTrack &track) { }
+  virtual void drawHover(const TPointD &hover) { }
+  virtual void drawTracks(const TTrackList &tracks);
+  virtual void drawHovers(const THoverList &hovers);
   virtual void draw(const TTrackList &tracks, const THoverList &hovers);
 
   virtual void deactivate() { }
