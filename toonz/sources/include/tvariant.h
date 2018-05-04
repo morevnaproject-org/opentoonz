@@ -359,6 +359,9 @@ public:
 
   const TVariant* findCommonParent(const TVariant &other) const;
 
+  // memory
+  size_t getMemSize() const;
+
   // serialization
   // TODO:
 };

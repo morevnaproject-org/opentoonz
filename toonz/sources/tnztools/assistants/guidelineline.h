@@ -44,8 +44,6 @@ public:
 
 class DVAPI TGuidelineLine : public TGuidelineLineBase {
 public:
-  const TPointD p0;
-  const TPointD p1;
   const TPointD dir;
   const double dist;
 
@@ -61,8 +59,6 @@ public:
 
 class DVAPI TGuidelineInfiniteLine : public TGuidelineLineBase {
 public:
-  const TPointD p0;
-  const TPointD p1;
   const TPointD dir;
 
   TGuidelineInfiniteLine(const TPointD &p0, const TPointD &p1);
@@ -77,8 +73,6 @@ public:
 
 class DVAPI TGuidelineRay : public TGuidelineLineBase {
 public:
-  const TPointD p0;
-  const TPointD p1;
   const TPointD dir;
 
   TGuidelineRay(const TPointD &p0, const TPointD &p1);
