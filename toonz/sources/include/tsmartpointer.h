@@ -113,7 +113,7 @@ public:
   TSmartPointerBaseT() : m_pointer(0) {}
   TSmartPointerBaseT(const TSmartPointerBaseT &src) : m_pointer(src.m_pointer)
     { if (m_pointer) m_pointer->addRef(); }
-  TSmartPointerBaseT(T *pointer) : m_pointer(pointer)
+  explicit TSmartPointerBaseT(T *pointer) : m_pointer(pointer)
     { if (m_pointer) m_pointer->addRef(); }
   virtual ~TSmartPointerBaseT()
     { if (m_pointer) { m_pointer->release(); m_pointer = 0; } }
@@ -130,10 +130,13 @@ public:
   }
   void set(const TSmartPointerBaseT &src)
     { set(src.m_pointer); }
+  void reset()
+    { set(0); }
   bool operator!() const
     { return m_pointer == 0; }
   operator bool() const
     { return m_pointer != 0; }
+
   bool operator==(const TSmartPointerBaseT &p) const
     { return m_pointer == p.m_pointer; }
   bool operator!=(const TSmartPointerBaseT &p) const
@@ -142,6 +145,15 @@ public:
     { return m_pointer < p.m_pointer; }
   bool operator>(const TSmartPointerBaseT &p) const
     { return m_pointer > p.m_pointer; }
+
+  bool operator==(const T *p) const
+    { return m_pointer == p; }
+  bool operator!=(const T *p) const
+    { return m_pointer != p; }
+  bool operator<(const T *p) const
+    { return m_pointer < p; }
+  bool operator>(const T *p) const
+    { return m_pointer > p; }
 };
 
 //=========================================================
@@ -169,7 +181,7 @@ public:
   typedef TSmartPointerBaseT<T> Base;
   TSmartRefT() {}
   TSmartRefT(const TSmartRefT &src): Base(src) {}
-  TSmartRefT(T *pointer): Base(pointer) {}
+  explicit TSmartRefT(T *pointer): Base(pointer) {}
   TSmartRefT& operator=(const TSmartRefT &src) { Base::set(src); return *this; }
   const T* operator->() const { return &Base::reference(); }
   const T& operator*() const { return Base::reference(); }
