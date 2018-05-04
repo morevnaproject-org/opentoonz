@@ -331,11 +331,13 @@ int TApp::getCurrentImageType() {
       return TImage::TOONZ_RASTER;
     case OVL_XSHLEVEL:
       return TImage::RASTER;
+    case META_XSHLEVEL:
+      return TImage::META;
+    case MESH_XSHLEVEL:
+      return TImage::MESH;
     case PLI_XSHLEVEL:
     default:
       return TImage::VECTOR;
-    case MESH_XSHLEVEL:
-      return TImage::MESH;
     }
   }
 

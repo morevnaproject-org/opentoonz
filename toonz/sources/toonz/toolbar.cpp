@@ -68,7 +68,9 @@ Toolbar::Toolbar(QWidget *parent, bool isVertical)
       actionAdded;
   actionAdded = addAction(CommandManager::instance()->getAction(T_RGBPicker)) ||
                 actionAdded;
-  actionAdded = addAction(CommandManager::instance()->getAction(T_Ruler));
+  actionAdded = addAction(CommandManager::instance()->getAction(T_Ruler)) ||
+                actionAdded;
+  actionAdded = addAction(CommandManager::instance()->getAction(T_EditAssistants));
   if (actionAdded) addSeparator();
   actionAdded = false;
   actionAdded =

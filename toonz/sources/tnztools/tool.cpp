@@ -173,6 +173,8 @@ void TTool::bind(int targetType) {
         std::make_pair(std::make_pair(name, RasterImage), &theDummyTool));
     toolTable->insert(
         std::make_pair(std::make_pair(name, MeshImage), &theDummyTool));
+    toolTable->insert(
+        std::make_pair(std::make_pair(name, MetaImage), &theDummyTool));
 
     ToolSelector *toolSelector = new ToolSelector(name);
     CommandManager::instance()->setHandler(
@@ -188,6 +190,8 @@ void TTool::bind(int targetType) {
     (*toolTable)[std::make_pair(name, RasterImage)] = this;
   if (targetType & MeshImage)
     (*toolTable)[std::make_pair(name, MeshImage)] = this;
+  if (targetType & MetaImage)
+    (*toolTable)[std::make_pair(name, MetaImage)] = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -996,6 +1000,11 @@ QString TTool::updateEnabled() {
         return (
             enable(false),
             QObject::tr("The current tool cannot be used on a Mesh Level."));
+
+      if ((levelType == META_XSHLEVEL) && !(targetType & MetaImage))
+        return (
+            enable(false),
+            QObject::tr("The current tool cannot be used on a Assistants (Meta) Level."));
     }
 
     // Check against impossibly traceable movements on the column

@@ -41,16 +41,17 @@ TGuidelineLineBase::truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPoi
 
 void
 TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool ray, bool active) const {
-  TAffine4 modelview;
+  TAffine4 modelview, projection;
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
+  glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
 
-  TAffine matrix = modelview.get2d();
+  TAffine matrix = (projection*modelview).get2d();
   TPointD pp0 = matrix*p0;
   TPointD pp1 = matrix*p1;
   truncateInfiniteLine(TRectD(-1.0, -1.0, 1.0, 1.0), pp0, pp1);
 
+  double pixelSize = sqrt(tglGetPixelSize2());
   TAffine matrixInv = matrix.inv();
-  double pixelSize = norm(TPointD(matrixInv.a11 + matrixInv.a12, matrixInv.a21 + matrixInv.a22));
   drawSegment((ray ? p0 : matrixInv*pp0), matrixInv*pp1, pixelSize, active);
 }
 

@@ -125,12 +125,15 @@ void ToolHandle::onImageChanged(TImage::Type imageType) {
   case TImage::TOONZ_RASTER:
     targetType = TTool::ToonzImage;
     break;
+  case TImage::MESH:
+    targetType = TTool::MeshImage;
+    break;
+  case TImage::META:
+    targetType = TTool::MetaImage;
+    break;
   case TImage::VECTOR:
   default:
     targetType = TTool::VectorImage;
-    break;
-  case TImage::MESH:
-    targetType = TTool::MeshImage;
     break;
   }
 

@@ -208,3 +208,15 @@ TVariant::findCommonParent(const TVariant &other) const {
 
   return NULL;
 }
+
+//---------------------------------------------------------
+
+size_t
+TVariant::getMemSize() const {
+  size_t s = sizeof(*this);
+  for(TVariantList::const_iterator i = m_list.begin(); i != m_list.end(); ++i)
+    s += i->getMemSize();
+  for(TVariantMap::const_iterator i = m_map.begin(); i != m_map.end(); ++i)
+    s += sizeof(*i) - sizeof(*this) + i->second.getMemSize();
+  return s;
+}
