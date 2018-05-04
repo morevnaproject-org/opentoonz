@@ -36,14 +36,15 @@ typedef std::vector<TMetaObjectR> TMetaObjectRefList;
 
 class DVAPI TMetaObject: public TSmartObject, public TVariantOwner {
 public:
-  typedef TMetaObjectHandler* (*Fabric)();
+  typedef TMetaObjectHandler* (*Fabric)(TMetaObject&);
   typedef std::map<TStringId, Fabric> Registry;
 
   template<typename T>
   class Registrator {
   public:
     typedef T Type;
-    static TMetaObjectHandler* fabric() { return new Type(); }
+    static TMetaObjectHandler* fabric(TMetaObject &obj)
+      { return new Type(obj); }
     Registrator(const std::string &typeName)
       { registerType(typeName, fabric); }
     Registrator(const TStringId &typeName)
@@ -76,7 +77,7 @@ public:
 
   template<typename T>
   const T* getHandler() const
-    { return dynamic_cast<T*>(m_handler); }
+    { return dynamic_cast<const T*>(m_handler); }
   template<typename T>
   T* getHandler()
     { return dynamic_cast<T*>(m_handler); }
@@ -97,7 +98,7 @@ public:
 class DVAPI TMetaObjectHandler {
 private:
   TMetaObject &m_object;
-  TAtomicVar m_fixindData;
+  TAtomicVar m_fixingData;
 
 public:
   TMetaObjectHandler(TMetaObject &object):
@@ -119,12 +120,12 @@ protected:
 
 public:
   void dataChanged(const TVariant &value)
-    { if (m_fixindData != 0) onFixData(); }
+    { if (m_fixingData == 0) onDataChanged(value); }
 
   void fixData() {
-    ++m_fixindData;
-    if (m_fixindData == 1) onFixData();
-    --m_fixindData;
+    ++m_fixingData;
+    if (m_fixingData == 1) onFixData();
+    --m_fixingData;
   }
 };
 

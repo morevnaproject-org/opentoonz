@@ -30,7 +30,7 @@ TMetaObject::setType(const TStringId &name) {
     if (m_handler) delete m_handler;
     m_type = name;
     Registry::const_iterator i = registry().find(m_type);
-    m_handler = i == registry().end() ? NULL : i->second();
+    m_handler = i == registry().end() ? NULL : i->second(*this);
     onVariantChanged(m_data);
   }
 }

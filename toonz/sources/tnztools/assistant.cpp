@@ -22,7 +22,7 @@ TGuideline::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, 
   TPointD d = p1 - p0;
   double k = norm2(d);
   if (k > TConsts::epsilon*TConsts::epsilon) {
-    double k = 0.5*pixelSize/sqrt(k);
+    k = 0.5*pixelSize/sqrt(k);
     d = TPointD(-k*d.y, k*d.x);
     glColor4dv(colorWhite);
     tglDrawSegment(p0 - d, p1 - d);
@@ -91,6 +91,32 @@ TGuideline::findBest(const TGuidelineList &guidelines, const TTrack &track, cons
 
 
 //************************************************************************
+//    TAssistantPoint implementation
+//************************************************************************
+
+TAssistantPoint::TAssistantPoint(
+  Type type,
+  const TPointD &position
+):
+  type(type),
+  position(position),
+  radius(10.0),
+  selected() { }
+
+//---------------------------------------------------------------------------------------------------
+
+TAssistantPoint::TAssistantPoint(
+  Type type,
+  const TPointD &position,
+  double radius
+):
+  type(type),
+  position(position),
+  radius(radius),
+  selected() { }
+
+
+//************************************************************************
 //    TAssistant implementation
 //************************************************************************
 
@@ -112,7 +138,7 @@ TAssistant::blank() {
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::fixPoints(int index, const TPointD &position)
+TAssistant::fixPoints()
   { onFixPoints(); }
 
 //---------------------------------------------------------------------------------------------------
@@ -124,7 +150,7 @@ TAssistant::movePoint(int index, const TPointD &position)
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::setPointSelection(int index, bool selected) {
+TAssistant::setPointSelection(int index, bool selected)  const {
   if (index >= 0 && index < pointsCount())
     m_points[index].selected = selected;
 }
@@ -159,11 +185,11 @@ TAssistant::onAllDataChanged() {
       pointData[m_idX].getDouble(),
       pointData[m_idY].getDouble() );
   }
+  fixPoints();
 }
 
 //---------------------------------------------------------------------------------------------------
 
-//! fix positions of all points
 void
 TAssistant::onFixPoints()
   { }
@@ -213,45 +239,49 @@ TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) 
 
 void
 TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
-  double radius = 10.0;
+  double radius = point.radius;
   double crossSize = 1.2*radius;
 
   double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
   double colorGray[4]  = { 0.5, 0.5, 0.5, 0.5 };
   double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+  double width = 0.5;
 
   if (point.selected) {
     colorBlack[2] = 1.0;
     colorGray[2] = 1.0;
+    width = 2.0;
   }
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
+  // fill
   tglEnableBlending();
-  tglEnableLineSmooth(true, 0.5);
-
   if (point.type == TAssistantPoint::CircleFill) {
     glColor4dv(colorGray);
     tglDrawDisk(point.position, radius*pixelSize);
   }
 
-  if (point.type == TAssistantPoint::CircleCross) {
-    TPointD dp(0.5*pixelSize, 0.5*pixelSize);
-    TPointD dx(pixelSize*crossSize, 0.0);
-    TPointD dy(0.0, pixelSize*crossSize);
+  TPointD crossDx(pixelSize*crossSize, 0.0);
+  TPointD crossDy(0.0, pixelSize*crossSize);
 
-    glColor4dv(colorWhite);
-    tglDrawSegment(point.position - dx + dp, point.position + dx + dp);
-    tglDrawSegment(point.position - dy + dp, point.position + dy + dp);
-    glColor4dv(colorBlack);
-    tglDrawSegment(point.position - dx - dp, point.position + dx - dp);
-    tglDrawSegment(point.position - dy - dp, point.position + dy - dp);
-  }
-
+  // back line
+  tglEnableLineSmooth(true, 2.0*std::max(1.0, width));
   glColor4dv(colorWhite);
-  tglDrawCircle(point.position, (radius + 0.5)*pixelSize);
+  if (point.type == TAssistantPoint::CircleCross) {
+    tglDrawSegment(point.position - crossDx, point.position + crossDx);
+    tglDrawSegment(point.position - crossDy, point.position + crossDy);
+  }
+  tglDrawCircle(point.position, radius*pixelSize);
+
+  // front line
+  glLineWidth(width);
   glColor4dv(colorBlack);
-  tglDrawCircle(point.position, (radius - 0.5)*pixelSize);
+  if (point.type == TAssistantPoint::CircleCross) {
+    tglDrawSegment(point.position - crossDx, point.position + crossDx);
+    tglDrawSegment(point.position - crossDy, point.position + crossDy);
+  }
+  tglDrawCircle(point.position, radius*pixelSize);
 
   glPopAttrib();
 }

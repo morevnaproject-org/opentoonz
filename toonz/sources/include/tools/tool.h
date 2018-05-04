@@ -280,13 +280,15 @@ public:
     MeshImage   = 0x8,   //!< Will work on mesh images
     Splines     = 0x10,  //!< Will work on motion paths
 
-    LevelColumns = 0x20,  //!< Will work on level columns
-    MeshColumns  = 0x40,  //!< Will work on mesh columns
+    LevelColumns= 0x20,  //!< Will work on level columns
+    MeshColumns = 0x40,  //!< Will work on mesh columns
 
     EmptyTarget = 0x80,  //!< Will work on empty cells/columns
 
+    MetaImage   = 0x100, //!< Will work on mets images
+
     CommonImages = VectorImage | ToonzImage | RasterImage,
-    AllImages    = CommonImages | MeshImage,
+    AllImages    = CommonImages | MeshImage | MetaImage,
     Vectors      = VectorImage | Splines,
 
     CommonLevels = CommonImages | LevelColumns,

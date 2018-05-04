@@ -77,10 +77,11 @@ public:
 
   Type type;
   TPointD position;
-  bool selected;
+  mutable bool selected;
+  double radius;
 
-  inline explicit TAssistantPoint(Type type = Circle, const TPointD &position = TPointD()):
-    type(Circle), position(position), selected() { }
+  explicit TAssistantPoint(Type type = Circle, const TPointD &position = TPointD());
+  TAssistantPoint(Type type, const TPointD &position, double radius);
 };
 
 //*****************************************************************************************
@@ -105,17 +106,17 @@ public:
   inline const int pointsCount() const
     { return (int)m_points.size(); }
 
-  void fixPoints(int index, const TPointD &position);
+  void fixPoints();
   void movePoint(int index, const TPointD &position);
-  void setPointSelection(int index, bool selected);
+  void setPointSelection(int index, bool selected) const;
 
-  inline void selectPoint(int index)
+  inline void selectPoint(int index) const
     { setPointSelection(index, true); }
-  inline void deselectPoint(int index)
+  inline void deselectPoint(int index) const
     { setPointSelection(index, false); }
-  inline void selectAll()
+  inline void selectAll() const
     { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, false); }
-  inline void deselectAll()
+  inline void deselectAll() const
     { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, false); }
 
 protected:
@@ -123,7 +124,7 @@ protected:
   void onDataChanged(const TVariant &value) override;
   //! load object data from variant
   virtual void onAllDataChanged();
-  //! fix positions of all points
+  //! fix positions of all points (as like as all points moved)
   virtual void onFixPoints();
   //! try to move point
   virtual void onMovePoint(int index, const TPointD &position);
