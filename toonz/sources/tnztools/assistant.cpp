@@ -42,7 +42,7 @@ TGuideline::calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &
 
   const double snapLenght = 20.0;
   const double snapScale = 1.0;
-  const double maxLength = 20.0*snapLenght*snapScale;
+  const double maxLength = 2.0*snapLenght*snapScale;
 
   double sumWeight = 0.0;
   double sumLength = 0.0;
@@ -225,7 +225,7 @@ TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) 
   TPointD d = p1 - p0;
   double k = norm2(d);
   if (k > TConsts::epsilon*TConsts::epsilon) {
-    double k = 0.5*pixelSize/sqrt(k);
+    k = 0.5*pixelSize/sqrt(k);
     d = TPointD(-k*d.y, k*d.x);
     glColor4dv(colorWhite);
     tglDrawSegment(p0 - d, p1 - d);

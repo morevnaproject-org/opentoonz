@@ -107,7 +107,6 @@ protected:
   TPointD        m_currentPointOffset;
   TVariant       m_currentAssistantBackup;
   TPointD        m_currentPosition;
-  TGuidelineList m_currentGuidelines;
 
 public:
   EditAssistantsTool():
@@ -119,7 +118,7 @@ public:
     m_currentPointIndex(-1)
   {
     bind(MetaImage);
-    m_prop.add(&m_assistantType);
+    m_prop.bind(m_assistantType);
     updateTranslation();
   }
 
@@ -277,26 +276,13 @@ public:
   }
 
   void draw() override {
-    m_currentGuidelines.clear();
-
-    // draw assistants
     TMetaImage *mi = dynamic_cast<TMetaImage*>(getImage(false));
     if (!mi) return;
     TMetaImage::Reader reader(*mi);
     for(TMetaObjectRefList::const_iterator i = reader->begin(); i != reader->end(); ++i)
       if (*i)
-      if (const TAssistant *assistant = (*i)->getHandler<TAssistant>())
-      {
-        assistant->drawEdit(getViewer());
-        assistant->getGuidelines(
-          m_currentPosition + m_currentPointOffset,
-          TAffine(),
-          m_currentGuidelines );
-      }
-
-    // draw guidelines
-    for(TGuidelineList::const_iterator i = m_currentGuidelines.begin(); i != m_currentGuidelines.end(); ++i)
-      (*i)->draw();
+        if (const TAssistant *assistant = (*i)->getHandler<TAssistant>())
+          assistant->drawEdit(getViewer());
   }
 };
 

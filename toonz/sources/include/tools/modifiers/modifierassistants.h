@@ -36,21 +36,28 @@ public:
     TTrackPoint calcPoint(double originalIndex) override;
   };
 
+private:
+  bool scanAssistants(
+    const TPointD *positions,
+    int positionsCount,
+    TGuidelineList *outGuidelines,
+    bool draw ) const;
+
 public:
+  const bool drawOnly;
   const double sensitiveLength;
 
-  TModifierAssistants();
-
-  void findGuidelines(
-    const TPointD &position,
-    TGuidelineList &outGuidelines ) const;
+  explicit TModifierAssistants(bool drawOnly = false);
 
   void modifyTrack(
     const TTrack &track,
     const TInputSavePoint::Holder &savePoint,
     TTrackList &outTracks ) override;
-  void drawHover(const TPointD &hover) override;
+
+  TRectD calcDrawBounds(const TTrackList &tracks, const THoverList &hovers) override;
+
   void drawTrack(const TTrack &track) override;
+  void draw(const TTrackList &tracks, const THoverList &hovers) override;
 };
 
 
