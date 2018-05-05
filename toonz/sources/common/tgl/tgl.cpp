@@ -73,6 +73,16 @@ double tglGetPixelSize2() {
 
 //-----------------------------------------------------------------------------
 
+TRectD tglGetBounds() {
+  TAffine4 modelview;
+  TAffine4 projection;
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
+  glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
+  return (projection*modelview).get2d().inv() * TRectD(-1.0, -1.0, 1.0, 1.0);
+}
+
+//-----------------------------------------------------------------------------
+
 double tglGetTextWidth(const std::string &s, void *font) {
   double factor = 0.07;
   double w      = 0;

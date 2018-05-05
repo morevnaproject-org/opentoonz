@@ -105,6 +105,9 @@ inline void tglColor(const TPixelD &p) { glColor4d(p.r, p.g, p.b, p.m); }
 //! retrieve the square of pixel size from current GL_MODELVIEW matrix
 DVAPI double tglGetPixelSize2();
 
+//! retrieve the current viewport bounds in world coordinates
+DVAPI TRectD tglGetBounds();
+
 //! Draw text in string s at position p.
 
 DVAPI void tglDrawText(const TPointD &p, const std::string &s,
