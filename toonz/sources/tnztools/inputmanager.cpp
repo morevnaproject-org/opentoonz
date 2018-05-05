@@ -283,6 +283,12 @@ TInputManager::paintTracks() {
       newSavePoint.savePoint()->available = false;
       if (allFinished) {
         paintApply((int)m_savePoints.size(), subTracks);
+        // send to tool final
+        if (!subTracks.empty()) {
+          tool->paintTracks(subTracks);
+          for(TTrackList::const_iterator i = subTracks.begin(); i != subTracks.end(); ++i)
+            (*i)->resetChanges();
+        }
         for(std::vector<TTrackList>::iterator i = m_tracks.begin(); i != m_tracks.end(); ++i)
           i->clear();
         if (m_started) {
@@ -559,6 +565,20 @@ TInputManager::worldToTool() const
   { return toolToWorld().inv(); }
 
 
+TAffine
+TInputManager::worldToScreen() const {
+  return screenToWorld().inv();
+}
+
+
+TAffine
+TInputManager::screenToWorld() const {
+  if (TToolViewer *viewer = getViewer())
+    return viewer->get3dViewMatrix().get2d();
+  return TAffine();
+}
+
+
 void
 TInputManager::trackEvent(
   TInputState::DeviceId deviceId,
@@ -642,8 +662,12 @@ TInputManager::hoverEvent(const THoverList &hovers) {
     m_hovers[i+1].clear();
     m_modifiers[i]->modifyHovers(m_hovers[i], m_hovers[i+1]);
   }
-  if (isActive())
+  if (isActive()) {
+    TRectD bounds = calcDrawBounds();
+    if (!bounds.isEmpty())
+      getViewer()->GLInvalidateRect(bounds);
     getTool()->hoverEvent(*this);
+  }
 }
 
 
@@ -700,8 +724,11 @@ TInputManager::calcDrawBounds() {
       }
     }
 
-    if (!bounds.isEmpty())
-      bounds.enlarge(2.0);
+    if (!bounds.isEmpty()) {
+      bounds = toolToWorld()*bounds;
+      if (!bounds.isEmpty())
+        bounds.enlarge(4.0);
+    }
   }
   return bounds;
 }

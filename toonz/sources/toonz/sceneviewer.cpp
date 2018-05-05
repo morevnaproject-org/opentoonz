@@ -19,8 +19,9 @@
 #include "tools/toolcommandids.h"
 #include "tools/toolutils.h"
 #include "tools/inputmanager.h"
-#include "tools/modifiers/modifiertangents.h"
 #include "tools/modifiers/modifiertest.h"
+#include "tools/modifiers/modifiertangents.h"
+#include "tools/modifiers/modifierassistants.h"
 #include "tools/modifiers/modifiersegmentation.h"
 
 // TnzQt includes
@@ -616,6 +617,7 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
 
   m_inputManager->setViewer(this);
   m_inputManager->addModifier(new TModifierTangents());
+  m_inputManager->addModifier(new TModifierAssistants());
   m_inputManager->addModifier(new TModifierTest());
   m_inputManager->addModifier(new TModifierSegmentation(0.25));
 }
@@ -1719,11 +1721,10 @@ TRect SceneViewer::getActualClipRect(const TAffine &aff) {
   else if (m_clipRect.isEmpty())
     clipRect -= TPointD(viewerSize.lx / 2, viewerSize.ly / 2);
   else {
-    TRectD app = aff * (m_clipRect.enlarge(3));
-    clipRect =
-        TRectD(tceil(app.x0), tceil(app.y0), tfloor(app.x1), tfloor(app.y1));
+    clipRect = aff * (m_clipRect.enlarge(3));
   }
 
+  clipRect *= TRectD(viewerSize) - TPointD(viewerSize.lx/2, viewerSize.ly/2);
   return convert(clipRect);
 }
 
