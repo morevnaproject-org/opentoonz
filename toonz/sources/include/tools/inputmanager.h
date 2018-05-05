@@ -306,6 +306,13 @@ public:
 
   TAffine toolToWorld() const;
   TAffine worldToTool() const;
+  TAffine worldToScreen() const;
+  TAffine screenToWorld() const;
+
+  inline TAffine toolToScreen() const
+    { return toolToWorld() * worldToScreen(); }
+  inline TAffine screenToTool() const
+    { return screenToWorld() * worldToTool(); }
 
   void trackEvent(
     TInputState::DeviceId deviceId,

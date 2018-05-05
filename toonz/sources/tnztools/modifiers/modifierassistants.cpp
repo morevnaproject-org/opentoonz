@@ -13,6 +13,7 @@
 #include <toonz/tframehandle.h>
 
 // TnzCore includes
+#include <tgl.h>
 #include <tmetaimage.h>
 
 
@@ -39,12 +40,19 @@ TModifierAssistants::Modifier::calcPoint(double originalIndex) {
 //*****************************************************************************************
 
 
-TModifierAssistants::TModifierAssistants():
+TModifierAssistants::TModifierAssistants(bool drawOnly):
+  drawOnly(drawOnly),
   sensitiveLength(50.0) { }
 
 
-void
-TModifierAssistants::findGuidelines(const TPointD &position, TGuidelineList &outGuidelines) const {
+bool
+TModifierAssistants::scanAssistants(
+  const TPointD *positions,
+  int positionsCount,
+  TGuidelineList *outGuidelines,
+  bool draw ) const
+{
+  bool found = false;
   if (TInputManager *manager = getManager())
   if (TApplication *application = manager->getApplication())
   if (TTool *tool = manager->getTool())
@@ -52,6 +60,11 @@ TModifierAssistants::findGuidelines(const TPointD &position, TGuidelineList &out
   if (TXsheetHandle *XsheetHandle = application->getCurrentXsheet())
   if (TXsheet *Xsheet = XsheetHandle->getXsheet())
   {
+    TToolViewer *viewer = draw ? manager->getViewer() : NULL;
+    if (!viewer) draw = false;
+    bool findGuidelines = (positions && positionsCount > 0 && outGuidelines);
+    bool doSomething = findGuidelines || draw;
+
     int frame = frameHandle->getFrame();
     int count = Xsheet->getColumnCount();
     TAffine worldToTrack = manager->worldToTool();
@@ -63,14 +76,25 @@ TModifierAssistants::findGuidelines(const TPointD &position, TGuidelineList &out
       {
         TAffine imageToTrack = tool->getColumnMatrix(i)
                              * worldToTrack;
-        TMetaImage::Reader reader(*metaImage);
+        if (draw) { glPushMatrix(); tglMultMatrix(imageToTrack); }
 
+        TMetaImage::Reader reader(*metaImage);
         for(TMetaObjectRefList::const_iterator i = reader->begin(); i != reader->end(); ++i)
           if (*i)
           if (const TAssistant *assistant = (*i)->getHandler<TAssistant>())
-            assistant->getGuidelines(position, imageToTrack, outGuidelines);
+          {
+            found = true;
+            if (findGuidelines)
+              for(int i = 0; i < positionsCount; ++i)
+                assistant->getGuidelines(positions[i], imageToTrack, *outGuidelines);
+            if (draw) assistant->draw(viewer);
+            if (!doSomething) return true;
+          }
+
+        if (draw) glPopMatrix();
       }
   }
+  return found;
 }
 
 
@@ -83,7 +107,8 @@ TModifierAssistants::modifyTrack(
   if (!track.handler) {
     track.handler = new TTrackHandler(track);
     Modifier *modifier = new Modifier(*track.handler);
-    findGuidelines(track[0].position, modifier->guidelines);
+    if (!drawOnly)
+      scanAssistants(&track[0].position, 1, &modifier->guidelines, false);
 
     track.handler->tracks.push_back(new TTrack(modifier));
 
@@ -106,18 +131,15 @@ TModifierAssistants::modifyTrack(
       // select guideline
       bool longEnough = false;
       if (TInputManager *manager = getManager()) {
-        if (TToolViewer *viewer = manager->getViewer()) {
-          TAffine trackToScreen = manager->toolToWorld()
-                                * viewer->get3dViewMatrix().get2d().inv();
-          TGuidelineP guideline = TGuideline::findBest(modifier->guidelines, track, trackToScreen, longEnough);
-          if (guideline != modifier->guidelines.front())
-            for(int i = 1; i < (int)modifier->guidelines.size(); ++i)
-              if (modifier->guidelines[i] == guideline) {
-                std::swap(modifier->guidelines[i], modifier->guidelines.front());
-                start = 0;
-                break;
-              }
-        }
+        TAffine trackToScreen = manager->toolToScreen();
+        TGuidelineP guideline = TGuideline::findBest(modifier->guidelines, track, trackToScreen, longEnough);
+        if (guideline != modifier->guidelines.front())
+          for(int i = 1; i < (int)modifier->guidelines.size(); ++i)
+            if (modifier->guidelines[i] == guideline) {
+              std::swap(modifier->guidelines[i], modifier->guidelines.front());
+              start = 0;
+              break;
+            }
       }
       modifier->savePoint.setLock(!longEnough);
     } else {
@@ -133,12 +155,11 @@ TModifierAssistants::modifyTrack(
 }
 
 
-void
-TModifierAssistants::drawHover(const TPointD &hover) {
-  TGuidelineList guidelines;
-  findGuidelines(hover, guidelines);
-  for(TGuidelineList::const_iterator i = guidelines.begin(); i != guidelines.end(); ++i)
-    (*i)->draw();
+TRectD
+TModifierAssistants::calcDrawBounds(const TTrackList&, const THoverList&) {
+  if (scanAssistants(NULL, 0, NULL, false))
+    return TConsts::infiniteRectD;
+  return TRectD();
 }
 
 
@@ -154,4 +175,23 @@ TModifierAssistants::drawTrack(const TTrack &track) {
         (*i)->draw();
     }
   }
+}
+
+
+void
+TModifierAssistants::draw(const TTrackList &tracks, const THoverList &hovers) {
+  // draw assistants
+  TGuidelineList guidelines;
+  scanAssistants(
+    hovers.empty() ? NULL : &hovers.front(),
+    (int)hovers.size(),
+    &guidelines,
+    true );
+
+  // draw guidelines
+  for(TGuidelineList::const_iterator i = guidelines.begin(); i != guidelines.end(); ++i)
+    (*i)->draw();
+
+  // draw tracks
+  TInputModifier::drawTracks(tracks);
 }

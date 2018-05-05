@@ -17,7 +17,7 @@ TPointD
 TGuidelineLineBase::calcDirection(const TPointD &p0, const TPointD &p1) {
   TPointD d = p1 - p0;
   double k = norm2(d);
-  return k > TConsts::epsilon ? d*(1.0/k) : TPointD();
+  return k > TConsts::epsilon*TConsts::epsilon ? d*(1.0/sqrt(k)) : TPointD();
 }
 
 void
