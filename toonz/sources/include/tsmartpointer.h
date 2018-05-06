@@ -109,7 +109,6 @@ protected:
   T *m_pointer;
   T& reference() const
     { assert(m_pointer); return *m_pointer; }
-public:
   TSmartPointerBaseT() : m_pointer(0) {}
   TSmartPointerBaseT(const TSmartPointerBaseT &src) : m_pointer(src.m_pointer)
     { if (m_pointer) m_pointer->addRef(); }
@@ -117,9 +116,10 @@ public:
     { if (m_pointer) m_pointer->addRef(); }
   virtual ~TSmartPointerBaseT()
     { if (m_pointer) { m_pointer->release(); m_pointer = 0; } }
-  TSmartPointerBaseT& operator=(const TSmartPointerBaseT &src)
-    { set(src); return *this; }
 
+public:
+  const T* getConstPointer() const
+    { return m_pointer; }
   void set(T *pointer) {
     if (m_pointer != pointer) {
       // call 'addRef' before 'release'
@@ -137,14 +137,18 @@ public:
   operator bool() const
     { return m_pointer != 0; }
 
-  bool operator==(const TSmartPointerBaseT &p) const
-    { return m_pointer == p.m_pointer; }
-  bool operator!=(const TSmartPointerBaseT &p) const
-    { return m_pointer != p.m_pointer; }
-  bool operator<(const TSmartPointerBaseT &p) const
-    { return m_pointer < p.m_pointer; }
-  bool operator>(const TSmartPointerBaseT &p) const
-    { return m_pointer > p.m_pointer; }
+  template<class TT>
+  bool operator==(const TSmartPointerBaseT<TT> &p) const
+    { return m_pointer == p.getConstPointer(); }
+  template<class TT>
+  bool operator!=(const TSmartPointerBaseT<TT> &p) const
+    { return m_pointer != p.getConstPointer(); }
+  template<class TT>
+  bool operator<(const TSmartPointerBaseT<TT> &p) const
+    { return m_pointer < p.getConstPointer(); }
+  template<class TT>
+  bool operator>(const TSmartPointerBaseT<TT> &p) const
+    { return m_pointer > p.getConstPointer(); }
 
   bool operator==(const T *p) const
     { return m_pointer == p; }
@@ -198,15 +202,11 @@ class TDerivedSmartPointerT : public TSmartPointerT<DERIVED> {
 public:
   typedef TDerivedSmartPointerT<DERIVED, BASE> DerivedSmartPointer;
 
-  TDerivedSmartPointerT(){};
-  TDerivedSmartPointerT(DERIVED *pointer) : TSmartPointerT<DERIVED>(pointer) {}
-
-  TDerivedSmartPointerT(const TSmartPointerT<BASE> &p) {
-    TSmartPointerT<DERIVED>::m_pointer =
-        dynamic_cast<DERIVED *>(p.getPointer());
-    if (TSmartPointerT<DERIVED>::m_pointer)
-      TSmartPointerT<DERIVED>::m_pointer->addRef();
-  }
+  TDerivedSmartPointerT() { };
+  TDerivedSmartPointerT(DERIVED *pointer):
+    TSmartPointerT<DERIVED>(pointer) { }
+  TDerivedSmartPointerT(const TSmartPointerT<BASE> &p):
+    TSmartPointerT<DERIVED>(dynamic_cast<DERIVED*>(p.getPointer())) { }
 };
 
 //=========================================================
