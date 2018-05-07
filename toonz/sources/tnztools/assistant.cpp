@@ -56,7 +56,7 @@ TGuideline::calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &
     sumLength += length;
 
     double midStepLength = sumLength - 0.5*length;
-    if (midStepLength > TTrack::epsilon) {
+    if (midStepLength > TConsts::epsilon) {
       double weight = length*logNormalDistribuitionUnscaled(midStepLength, snapLenght, snapScale);
       sumWeight += weight;
 
@@ -69,7 +69,7 @@ TGuideline::calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &
     if (sumLength >= maxLength)
       { outLongEnough = true; break; }
   }
-  return sumWeight > TTrack::epsilon
+  return sumWeight > TConsts::epsilon
        ? sumDeviation/sumWeight
        : std::numeric_limits<double>::infinity();
 }

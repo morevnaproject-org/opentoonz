@@ -46,7 +46,7 @@ public:
   const int count;
   const double radius;
 
-  TModifierTest();
+  TModifierTest(int count, double radius);
 
   void modifyTrack(
     const TTrack &track,

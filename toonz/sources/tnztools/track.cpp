@@ -7,7 +7,6 @@
 //    Static fields
 //*****************************************************************************************
 
-const double TTrack::epsilon = 1e-9;
 TTrack::Id TTrack::m_lastId = 0;
 
 
@@ -69,7 +68,7 @@ TTrack::level() const
 
 int
 TTrack::floorIndex(double index, double *outFrac) const {
-  int i = (int)floor(index + epsilon);
+  int i = (int)floor(index + TConsts::epsilon);
   if (i > size() - 1) {
     if (outFrac) *outFrac = 0.0;
     return size() - 1;
@@ -85,22 +84,21 @@ TTrack::floorIndex(double index, double *outFrac) const {
 void
 TTrack::push_back(const TTrackPoint &point) {
   m_points.push_back(point);
-  if (size() == 1) return;
+  if (size() > 1) {
+    const TTrackPoint &prev = *(m_points.rbegin() + 1);
+    TTrackPoint &p = m_points.back();
 
-  const TTrackPoint &prev = *(m_points.rbegin() + 1);
-  TTrackPoint &p = m_points.back();
+    // fix originalIndex
+    if (p.originalIndex < prev.originalIndex)
+        p.originalIndex = prev.originalIndex;
 
-  // fix originalIndex
-  if (p.originalIndex < prev.originalIndex)
-      p.originalIndex = prev.originalIndex;
+    // fix time
+    p.time = std::max(p.time, prev.time + TToolTimer::step);
 
-  // fix time
-  p.time = std::max(p.time, prev.time + TToolTimer::step);
-
-  // calculate length
-  TPointD d = p.position - prev.position;
-  p.length = prev.length + sqrt(d.x*d.x + d.y*d.y);
-
+    // calculate length
+    TPointD d = p.position - prev.position;
+    p.length = prev.length + sqrt(d.x*d.x + d.y*d.y);
+  }
   ++pointsAdded;
 }
 
@@ -122,13 +120,13 @@ TTrack::calcPoint(double index) const {
 
 TPointD
 TTrack::calcTangent(double index, double distance) const {
-  double minDistance = 10.0*epsilon;
+  double minDistance = 10.0*TConsts::epsilon;
   if (distance < minDistance) distance = minDistance;
   TTrackPoint p = calcPoint(index);
   TTrackPoint pp = calcPoint(indexByLength(p.length - distance));
   TPointD dp = p.position - pp.position;
   double lenSqr = dp.x*dp.x + dp.y*dp.y;
-  return lenSqr > epsilon*epsilon ? dp*sqrt(1.0/lenSqr) : TPointD();
+  return lenSqr > TConsts::epsilon*TConsts::epsilon ? dp*(1.0/sqrt(lenSqr)) : TPointD();
 }
 
 double

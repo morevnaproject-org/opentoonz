@@ -13,13 +13,14 @@
 #include <toonz/dpiscale.h>
 
 // TnzCore includes
-#include "tgl.h"
+#include <tgl.h>
 
 
 //*****************************************************************************************
 //    static members
 //*****************************************************************************************
 
+static const bool debugInputManager = false;
 TInputState::TouchId TInputManager::m_lastTouchId = 0;
 
 
@@ -620,13 +621,16 @@ TInputManager::keyEvent(
   QKeyEvent *event )
 {
   bool result = false;
+  bool wasPressed = state.isKeyPressed(key);
   state.keyEvent(press, key, ticks);
   if (isActive()) {
     processTracks();
     result = getTool()->keyEvent(press, key, event, *this);
-    touchTracks();
-    processTracks();
-    //hoverEvent(getInputHovers());
+    if (wasPressed != press) {
+      touchTracks();
+      processTracks();
+      //hoverEvent(getInputHovers());
+    }
   }
   return result;
 }
@@ -639,12 +643,16 @@ TInputManager::buttonEvent(
   TInputState::Button button,
   TTimerTicks ticks )
 {
+  bool wasPressed = state.isButtonPressed(deviceId, button);
   state.buttonEvent(press, deviceId, button, ticks);
   if (isActive()) {
     processTracks();
     getTool()->buttonEvent(press, deviceId, button, *this);
-    touchTracks();
-    processTracks();
+    if (wasPressed != press) {
+      touchTracks();
+      processTracks();
+      //hoverEvent(getInputHovers());
+    }
   }
 }
 
@@ -706,6 +714,9 @@ TInputManager::leaveEvent() {
 
 TRectD
 TInputManager::calcDrawBounds() {
+  if (debugInputManager)
+    return TConsts::infiniteRectD;
+
   TRectD bounds;
   if (isActive()) {
     for(int i = 0; i < (int)m_modifiers.size(); ++i)
@@ -741,7 +752,7 @@ TInputManager::draw() {
   TToolViewer *viewer = getViewer();
 
   // paint not sent sub-tracks
-  if (m_savePointsSent < (int)m_savePoints.size()) {
+  if (debugInputManager || m_savePointsSent < (int)m_savePoints.size()) {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     tglEnableBlending();
     tglEnableLineSmooth(true, 0.5);
@@ -751,11 +762,12 @@ TInputManager::draw() {
     for(TTrackList::const_iterator ti = getOutputTracks().begin(); ti != getOutputTracks().end(); ++ti) {
       TTrack &track = **ti;
       if (TrackHandler *handler = dynamic_cast<TrackHandler*>(track.handler.getPointer())) {
-        int start = handler->saves[m_savePointsSent] - 1;
+        int start = debugInputManager ? 0 : handler->saves[m_savePointsSent] - 1;
         if (start < 0) start = 0;
         if (start + 1 < track.size()) {
           int level = m_savePointsSent;
           colorBlack[3] = (colorWhite[3] = 0.8);
+          double radius = 2.0;
           for(int i = start + 1; i < track.size(); ++i) {
             while(level < (int)handler->saves.size() && handler->saves[level] <= i)
               colorBlack[3] = (colorWhite[3] *= 0.8), ++level;
@@ -766,12 +778,20 @@ TInputManager::draw() {
 
             double k = norm2(d);
             if (k > TConsts::epsilon*TConsts::epsilon) {
-              double k = 0.5*pixelSize/sqrt(k);
+              k = 0.5*pixelSize/sqrt(k);
               d = TPointD(-k*d.y, k*d.x);
               glColor4dv(colorWhite);
               tglDrawSegment(a - d, b - d);
               glColor4dv(colorBlack);
               tglDrawSegment(a + d, b + d);
+              radius = 2.0;
+            } else {
+              radius += 2.0;
+            }
+
+            if (debugInputManager) {
+              glColor4d(0.0, 0.0, 0.0, 0.25);
+              tglDrawCircle(b, radius*pixelSize);
             }
           }
         }

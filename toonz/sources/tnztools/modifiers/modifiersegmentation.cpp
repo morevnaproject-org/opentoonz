@@ -10,8 +10,8 @@
 
 
 TModifierSegmentation::TModifierSegmentation(double precision):
-  precision(std::max(TTrack::epsilon, precision)),
-  precisionSqr(std::max(TTrack::epsilon, precision) * std::max(TTrack::epsilon, precision))
+  precision(std::max(TConsts::epsilon, precision)),
+  precisionSqr(std::max(TConsts::epsilon, precision) * std::max(TConsts::epsilon, precision))
 { }
 
 
@@ -49,16 +49,19 @@ TModifierSegmentation::modifyTrack(
         new TTrackModifier(*track.handler) ));
   }
 
-  if (!track.changed() || track.handler->tracks.empty())
+  if (track.handler->tracks.empty())
     return;
 
   TTrack &subTrack = *track.handler->tracks.front();
   outTracks.push_back(track.handler->tracks.front());
 
+  if (!track.changed())
+    return;
+
   // remove points
   int start = track.size() - track.pointsAdded;
   if (start < 0) start = 0;
-  int subStart = subTrack.ceilIndex(subTrack.indexByOriginalIndex(start-1)) + 1;
+  int subStart = subTrack.floorIndex(subTrack.indexByOriginalIndex(start-1)) + 1;
   subTrack.truncate(subStart);
 
   // add points
