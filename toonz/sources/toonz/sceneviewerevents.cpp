@@ -303,7 +303,7 @@ void SceneViewer::tabletEvent(QTabletEvent *e) {
 #endif
   } break;
   case QEvent::TabletMove: {
-#ifndef WIN32
+#ifndef _WIN32
     // for now OSX seems to fail to call enter/leaveEvent properly while
     // the tablet is floating
     bool isHoveringInsideViewer =
