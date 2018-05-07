@@ -180,11 +180,18 @@ TModifierAssistants::drawTrack(const TTrack &track) {
 
 void
 TModifierAssistants::draw(const TTrackList &tracks, const THoverList &hovers) {
+  THoverList allHovers;
+  allHovers.reserve(hovers.size() + tracks.size());
+  allHovers.insert(allHovers.end(), hovers.begin(), hovers.end());
+  for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
+    if ((*i)->handler && !(*i)->handler->tracks.empty() && !(*i)->handler->tracks.front()->empty())
+      allHovers.push_back( (*i)->handler->tracks.front()->back().position );
+
   // draw assistants
   TGuidelineList guidelines;
   scanAssistants(
-    hovers.empty() ? NULL : &hovers.front(),
-    (int)hovers.size(),
+    allHovers.empty() ? NULL : &allHovers.front(),
+    (int)allHovers.size(),
     &guidelines,
     true );
 
