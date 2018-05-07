@@ -154,8 +154,6 @@ class DVAPI TTrack : public TSmartObject {
 public:
   typedef long long Id;
 
-  static const double epsilon;
-
 private:
   static Id m_lastId;
 
@@ -206,11 +204,11 @@ public:
   inline int clampIndex(int index) const
     { return std::min(std::max(index, 0), size() - 1); }
   inline int floorIndexNoClamp(double index) const
-    { return (int)floor(index + epsilon); }
+    { return (int)floor(index + TConsts::epsilon); }
   inline int floorIndex(double index) const
     { return clampIndex(floorIndexNoClamp(index)); }
   inline int ceilIndexNoClamp(double index) const
-    { return (int)ceil(index - epsilon); }
+    { return (int)ceil(index - TConsts::epsilon); }
   inline int ceilIndex(double index) const
     { return clampIndex(ceilIndexNoClamp(index)); }
 
@@ -275,18 +273,18 @@ private:
     if (m_points.empty()) return 0.0;
     int a = 0;
     double aa = m_points[a].*Field;
-    if (value - aa <= 0.5*epsilon) return (double)a;
+    if (value - aa <= 0.5*TConsts::epsilon) return (double)a;
     int b = (int)m_points.size() - 1;
     double bb = m_points[b].*Field;
-    if (bb - value <= 0.5*epsilon) return (double)b;
+    if (bb - value <= 0.5*TConsts::epsilon) return (double)b;
     while(true) {
       int c = (a + b)/2;
       if (a == c) break;
       double cc = m_points[c].*Field;
-      if (cc - value > 0.5*epsilon)
+      if (cc - value > 0.5*TConsts::epsilon)
         { b = c; bb = cc; } else { a = c; aa = cc; }
     }
-    return bb - aa >= 0.5*epsilon ? (double)a + (value - aa)/(bb - aa) : (double)a;
+    return bb - aa >= 0.5*TConsts::epsilon ? (double)a + (value - aa)/(bb - aa) : (double)a;
   }
 
 public:
@@ -343,8 +341,8 @@ public:
   }
 
   static inline TTrackPoint interpolationLinear(const TTrackPoint &p0, const TTrackPoint &p1, double l) {
-    if (l <= epsilon) return p0;
-    if (l >= 1.0 - epsilon) return p1;
+    if (l <= TConsts::epsilon) return p0;
+    if (l >= 1.0 - TConsts::epsilon) return p1;
     return TTrackPoint(
       interpolationLinear(p0.position      , p1.position      , l),
       interpolationLinear(p0.pressure      , p1.pressure      , l),
@@ -361,12 +359,14 @@ public:
     const TTrackTangent &t1,
     double l )
   {
-    if (l <= epsilon) return p0;
-    if (l >= 1.0 - epsilon) return p1;
+    if (l <= TConsts::epsilon) return p0;
+    if (l >= 1.0 - TConsts::epsilon) return p1;
     return TTrackPoint(
       interpolationSpline(p0.position      , p1.position      , t0.position , t1.position , l),
-      interpolationSpline(p0.pressure      , p1.pressure      , t0.pressure , t1.pressure , l),
-      interpolationSpline(p0.tilt          , p1.tilt          , t0.tilt     , t1.tilt     , l),
+      interpolationLinear(p0.pressure      , p1.pressure      , l),
+      //interpolationSpline(p0.pressure      , p1.pressure      , t0.pressure , t1.pressure , l),
+      interpolationLinear(p0.tilt          , p1.tilt          , l),
+      //interpolationSpline(p0.tilt          , p1.tilt          , t0.tilt     , t1.tilt     , l),
       interpolationLinear(p0.originalIndex , p1.originalIndex , l),
       interpolationLinear(p0.time          , p1.time          , l),
       interpolationLinear(p0.length        , p1.length        , l) );
