@@ -13,13 +13,22 @@ TModifierTangents::Modifier::calcPoint(double originalIndex) {
   double frac;
   int i0 = original.floorIndex(originalIndex, &frac);
   int i1 = original.ceilIndex(originalIndex);
-  TTrackPoint p = i0 < 0 ? TTrackPoint()
-    : TTrack::interpolationSpline(
-        original[i0],
-        original[i1],
-        i0 < (int)tangents.size() ? tangents[i0] : TTrackTangent(),
-        i1 < (int)tangents.size() ? tangents[i1] : TTrackTangent(),
-        frac );
+
+  TTrackPoint p;
+  if (i0 >= 0) {
+    // calculate tangent length to make monotonic subdivisions,
+    // (because we don't have valid input time)
+    const TTrackPoint &p0 = original[i0];
+    const TTrackPoint &p1 = original[i1];
+    TTrackTangent t0 = i0 < (int)tangents.size() ? tangents[i0] : TTrackTangent();
+    TTrackTangent t1 = i1 < (int)tangents.size() ? tangents[i1] : TTrackTangent();
+    double l = fabs(p1.length - p0.length);
+    t0.position.x *= l;
+    t0.position.y *= l;
+    t1.position.x *= l;
+    t1.position.y *= l;
+    p = TTrack::interpolationSpline(p0, p1, t0, t1, frac);
+  }
   p.originalIndex = originalIndex;
   return p;
 }
@@ -28,6 +37,22 @@ TModifierTangents::Modifier::calcPoint(double originalIndex) {
 //*****************************************************************************************
 //    TModifierTangents implementation
 //*****************************************************************************************
+
+
+TTrackTangent
+TModifierTangents::calcLastTangent(const TTrack &track) const {
+  if (track.size() < 2) return TTrackTangent();
+  const TTrackPoint &p0 = track[track.size() - 2];
+  const TTrackPoint &p1 = track.back();
+
+  // calculate tangent (with normalized position)
+  // with valid points time normalization does not required
+  double dl = p1.length - p0.length;
+  return TTrackTangent(
+    dl > TConsts::epsilon ? (p1.position - p0.position)*(1.0/dl) : TPointD(),
+    p1.pressure - p0.pressure,
+    p1.tilt - p0.tilt );
+}
 
 
 void
@@ -60,7 +85,7 @@ TModifierTangents::modifyTrack(
 
   if (!track.changed() && subTrack.size() == track.size() - 1) {
     // add temporary point
-    modifier->tangents.push_back(TTrackTangent());
+    modifier->tangents.push_back(calcLastTangent(track));
     subTrack.push_back(track.back());
   } else {
     // apply permanent changes
@@ -90,12 +115,26 @@ TModifierTangents::modifyTrack(
         const TTrackPoint &p0 = track[index-1];
         const TTrackPoint &p1 = track[index];
         const TTrackPoint &p2 = track[index+1];
-        double dt = p2.time - p0.time;
-        double k = dt > TTrack::epsilon ? (p1.time - p0.time)/dt : 0.0;
+
+        // calculate tangents length by time
+        // for that we need read time of user input
+        // instead of time when message dispatched
+        //double dt = p2.time - p0.time;
+        //double k = dt > TConsts::epsilon ? (p1.time - p0.time)/dt : 0.0;
+        //TTrackTangent tangent(
+        //  (p2.position - p0.position)*k,
+        //  (p2.pressure - p0.pressure)*k,
+        //  (p2.tilt - p0.tilt)*k );
+
+        // calculate tangent (with normalized position)
+        TPointD d = p2.position - p0.position;
+        double k = norm2(d);
+        k = k > TConsts::epsilon*TConsts::epsilon ? 1.0/sqrt(k) : 0.0;
         TTrackTangent tangent(
-          (p2.position - p0.position)*k,
-          (p2.pressure - p0.pressure)*k,
-          (p2.tilt - p0.tilt)*k );
+          d*k,
+          (p2.pressure - p0.pressure)*0.5,
+          (p2.tilt - p0.tilt)*0.5 );
+
         modifier->tangents.push_back(tangent);
         subTrack.push_back(p1);
         ++index;
@@ -109,7 +148,7 @@ TModifierTangents::modifyTrack(
 
     if (track.finished()) {
       // finish
-      modifier->tangents.push_back(TTrackTangent());
+      modifier->tangents.push_back(calcLastTangent(track));
       subTrack.push_back(track.back());
     } else {
       // save key point

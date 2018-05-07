@@ -37,6 +37,8 @@ public:
     TTrackPoint calcPoint(double originalIndex) override;
   };
 
+  TTrackTangent calcLastTangent(const TTrack &track) const;
+
   void modifyTrack(
     const TTrack &track,
     const TInputSavePoint::Holder &savePoint,
