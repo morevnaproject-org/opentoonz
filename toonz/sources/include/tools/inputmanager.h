@@ -52,9 +52,9 @@ typedef TSmartPointerT<TInputModifier> TInputModifierP;
 //    TInputSavePoint definition
 //*****************************************************************************************
 
-class TInputSavePoint {
+class DVAPI TInputSavePoint {
 public:
-  class Holder {
+  class DVAPI Holder {
   private:
     TInputSavePoint *m_savePoint;
     bool m_lock = false;
@@ -150,7 +150,7 @@ public:
 //    TInputModifier definition
 //*****************************************************************************************
 
-class TInputModifier: public TSmartObject {
+class DVAPI TInputModifier: public TSmartObject {
 private:
   TInputManager *m_manager;
 
@@ -198,7 +198,7 @@ public:
 //    TInputManager definition
 //*****************************************************************************************
 
-class TInputManager: public QObject {
+class DVAPI TInputManager: public QObject {
   Q_OBJECT
 public:
   class TrackHandler: public TTrackHandler {

@@ -24,15 +24,15 @@
 //    TModifierTest definition
 //*****************************************************************************************
 
-class TModifierTest: public TInputModifier {
+class DVAPI TModifierTest: public TInputModifier {
 public:
-  class Handler: public TTrackHandler {
+  class DVAPI Handler: public TTrackHandler {
   public:
     std::vector<double> angles;
     Handler(const TTrack &original): TTrackHandler(original) { }
   };
 
-  class Modifier: public TTrackModifier {
+  class DVAPI Modifier: public TTrackModifier {
   public:
     double angle;
     double radius;
