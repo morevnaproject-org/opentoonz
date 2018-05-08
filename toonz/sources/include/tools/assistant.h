@@ -140,4 +140,14 @@ public:
   virtual void drawEdit(TToolViewer *viewer) const;
 };
 
+
+//*****************************************************************************************
+//    export template implementations for win32
+//*****************************************************************************************
+
+#ifdef _WIN32
+template class DVAPI TSmartPointerT<TGuideline>;
+#endif
+
+
 #endif
