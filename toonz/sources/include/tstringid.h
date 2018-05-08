@@ -54,7 +54,7 @@ public:
     { return iter->first; }
 
   inline operator bool () const
-    { return (bool)id(); }
+    { return id() != 0; }
   inline bool operator== (const TStringId &other) const
     { return id() == other.id(); }
   inline bool operator!= (const TStringId &other) const

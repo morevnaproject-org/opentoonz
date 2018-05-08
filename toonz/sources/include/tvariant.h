@@ -74,7 +74,7 @@ public:
     { insert(end(), x.begin(), x.end()); return *this; }
 
   inline bool isSubPathOf(const TVariantPath &other) const
-    { return compare(*this, 0, other, 0, (int)size()); }
+    { return compare(*this, 0, other, 0, (int)size()) == 0; }
   inline bool isBasePathOf(const TVariantPath &other) const
     { return other.isSubPathOf(*this); }
   inline int compare(const TVariantPath &other) const
