@@ -24,9 +24,9 @@
 //    TModifierAssistants definition
 //*****************************************************************************************
 
-class TModifierAssistants: public TInputModifier {
+class DVAPI TModifierAssistants: public TInputModifier {
 public:
-  class Modifier: public TTrackModifier {
+  class DVAPI Modifier: public TTrackModifier {
   public:
     bool initialized;
     TInputSavePoint::Holder savePoint;

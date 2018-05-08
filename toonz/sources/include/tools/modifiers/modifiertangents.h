@@ -24,9 +24,9 @@
 //    TModifierTangents definition
 //*****************************************************************************************
 
-class TModifierTangents: public TInputModifier {
+class DVAPI TModifierTangents: public TInputModifier {
 public:
-  class Modifier: public TTrackModifier {
+  class DVAPI Modifier: public TTrackModifier {
   public:
     explicit Modifier(TTrackHandler &handler):
       TTrackModifier(handler) { }
