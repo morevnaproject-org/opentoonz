@@ -26,9 +26,6 @@ set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTORCC OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Debug
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -Wextra")
-
 # C++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -104,12 +101,12 @@ qt5_wrap_ui(SOURCES src/color_dialog.ui src/color_palette_widget.ui)
 qt5_add_resources(SOURCES src/color_widgets.qrc)
 
 # Library
-add_library(${COLOR_WIDGETS_LIBRARY} SHARED ${SOURCES})
+add_library(${COLOR_WIDGETS_LIBRARY} SHARED ${HEADERS} ${SOURCES})
 target_link_libraries(${COLOR_WIDGETS_LIBRARY} Qt5::Widgets)
 
-add_subdirectory(gallery)
+#add_subdirectory(gallery)
 
 find_package(Qt5Designer)
 if(Qt5Designer_FOUND)
-    add_subdirectory(color_widgets_designer_plugin)
+#	add_subdirectory(color_widgets_designer_plugin)
 endif()
