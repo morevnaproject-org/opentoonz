@@ -37,6 +37,11 @@
 
 typedef std::vector<TPointD> THoverList;
 
+#ifdef _WIN32
+template class DVAPI TKeyHistoryT<TKey>;
+template class DVAPI TKeyHistoryT<Qt::MouseButton>;
+#endif
+
 //===================================================================
 
 
@@ -44,7 +49,7 @@ typedef std::vector<TPointD> THoverList;
 //    TKey definition
 //*****************************************************************************************
 
-class TKey {
+class DVAPI TKey {
 public:
   Qt::Key key;
   bool generic;
@@ -91,7 +96,7 @@ public:
 //    TInputState definition
 //*****************************************************************************************
 
-class TInputState {
+class DVAPI TInputState {
 public:
   typedef qint64 DeviceId;
   typedef long long TouchId;
