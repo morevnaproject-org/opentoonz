@@ -31,7 +31,7 @@ TModifierAssistants::Modifier::Modifier(TTrackHandler &handler):
 TTrackPoint
 TModifierAssistants::Modifier::calcPoint(double originalIndex) {
   TTrackPoint p = TTrackModifier::calcPoint(originalIndex);
-  return guidelines.empty() > 0 ? p : guidelines.front()->transformPoint(p);
+  return guidelines.empty() ? p : guidelines.front()->transformPoint(p);
 }
 
 

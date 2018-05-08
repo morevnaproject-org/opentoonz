@@ -291,12 +291,12 @@ TAffine4 TAffine4::scale(double x, double y, double z) {
 
 TAffine4 TAffine4::rotation(double x, double y, double z, double angle) {
   TAffine4 r;
-  double k = sqrt(x*x + y*y + z*z);
-  if (k > TConsts::epsilon) {
-    double s = sin(angle);
+  double k = x*x + y*y + z*z;
+  if (k > TConsts::epsilon*TConsts::epsilon) {
+	k = 1.0 / sqrt(k);
+	double s = sin(angle);
     double c = cos(angle);
     double ic = 1.0 - c;
-    double k = 1.0/k;
     x *= k;
     y *= k;
     z *= k;
