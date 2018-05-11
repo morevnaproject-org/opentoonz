@@ -26,6 +26,7 @@ set(HEADERS
     ffmpeg/tiio_ffmpeg.h
     sprite/tiio_sprite.h
     mesh/tiio_mesh.h
+    tzm/tiio_tzm.h
 )
 
 set(SOURCES
@@ -58,6 +59,7 @@ set(SOURCES
     ffmpeg/tiio_ffmpeg.cpp
     sprite/tiio_sprite.cpp
     mesh/tiio_mesh.cpp
+    tzm/tiio_tzm.cpp
 )
 
 if(BUILD_TARGET_WIN)

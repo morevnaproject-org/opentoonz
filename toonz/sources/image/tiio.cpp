@@ -71,6 +71,7 @@
 #include "./avi/tiio_avi.h"
 #include "./pli/tiio_pli.h"
 #include "./tzl/tiio_tzl.h"
+#include "./tzm/tiio_tzm.h"
 #include "./svg/tiio_svg.h"
 #include "./ffmpeg/tiio_gif.h"
 #include "./ffmpeg/tiio_webm.h"
@@ -129,6 +130,9 @@ void initImageIo(bool lightVersion) {
     TLevelReader::define("mesh", TLevelReaderMesh::create);
     TFileType::declare("mesh", TFileType::MESH_IMAGE);
 
+    TLevelWriter::define("tzm", tzm::createWriter, false);
+    TLevelReader::define("tzm", tzm::createReader);
+    TFileType::declare("tzm", TFileType::META_LEVEL);
   }  // !lightversion
 
   TFileType::declare("tpl", TFileType::PALETTE_LEVEL);

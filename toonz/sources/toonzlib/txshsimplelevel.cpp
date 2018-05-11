@@ -973,6 +973,8 @@ void TXshSimpleLevel::loadData(TIStream &is) {
       type = TZI_XSHLEVEL;
     else if (ext == "mesh")
       type = MESH_XSHLEVEL;
+    else if (ext == "tzm")
+      type = META_XSHLEVEL;
     else
       type = OVL_XSHLEVEL;
   }
