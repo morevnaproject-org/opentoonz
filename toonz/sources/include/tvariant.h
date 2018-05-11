@@ -4,8 +4,10 @@
 #define TVARIANT_INCLUDED
 
 #include <tcommon.h>
+#include <texception.h>
 #include <tstringid.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -25,6 +27,18 @@
 class TVariant;
 typedef std::vector<TVariant> TVariantList;
 typedef std::map<TStringId, TVariant> TVariantMap;
+
+//-------------------------------------------------------------------
+
+class TVariantSyntaxException final: public TException {
+public:
+  explicit TVariantSyntaxException(
+    int row = 0,
+    int col = 0,
+    const std::string &msg = std::string()
+  ):
+    TException(std::to_string(row) + ":" + std::to_string(col) + ": " + msg) { }
+};
 
 //-------------------------------------------------------------------
 
@@ -287,7 +301,7 @@ public:
   inline const TVariant& operator[] (const std::string &field) const
     { return (*this)[TStringId::find(field)]; }
   inline TVariant& operator[] (const std::string &field)
-    { return (*this)[TStringId::find(field)]; }
+    { return (*this)[TStringId(field)]; }
   inline void remove(const std::string &field)
     { remove(TStringId::find(field)); }
 
@@ -363,7 +377,11 @@ public:
   size_t getMemSize() const;
 
   // serialization
-  // TODO:
+  void toStream(std::ostream &stream, bool pretty = false, int level = 0) const;
+  void fromStream(std::istream &stream, int *currentRow = 0, int *currentCol = 0);
+
+  std::string toString(bool pretty = false, int level = 0) const;
+  void fromString(const std::string &str, int *currentRow = 0, int *currentCol = 0);
 };
 
 #endif
