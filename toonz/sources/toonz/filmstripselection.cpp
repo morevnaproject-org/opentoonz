@@ -55,9 +55,11 @@ void TFilmstripSelection::enableCommands() {
   int type       = sl->getType();
   TFilePath path = sl->getPath();
 
-  bool doEnable =
-      (type == PLI_XSHLEVEL || type == TZP_XSHLEVEL || type == MESH_XSHLEVEL ||
-       (type == OVL_XSHLEVEL && path.getType() != "psd"));
+  bool doEnable = ( type == PLI_XSHLEVEL
+                 || type == TZP_XSHLEVEL
+                 || type == MESH_XSHLEVEL
+                 || type == META_XSHLEVEL
+                 || (type == OVL_XSHLEVEL && path.getType() != "psd") );
 
   TRasterImageP ri = (TRasterImageP)sl->getSimpleLevel()->getFrame(
       sl->getSimpleLevel()->getFirstFid(), false);
