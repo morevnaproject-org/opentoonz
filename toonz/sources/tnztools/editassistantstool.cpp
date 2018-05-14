@@ -29,7 +29,8 @@
 
 class EditAssistantsUndo final : public ToolUtils::TToolUndo {
 private:
-  bool m_isAssistantCreated;
+  bool m_isCreated;
+  bool m_isRemoved;
   TMetaObjectP m_metaObject;
   TVariant m_oldData;
   TVariant m_newData;
@@ -39,12 +40,14 @@ public:
   EditAssistantsUndo(
     TXshSimpleLevel *level,
     const TFrameId &frameId,
-    bool isAssistantCreated,
+    bool isCreated,
+    bool isRemoved,
     TMetaObjectR metaObject,
     TVariant oldData
   ):
     ToolUtils::TToolUndo(level, frameId),
-    m_isAssistantCreated(isAssistantCreated),
+    m_isCreated(isCreated),
+    m_isRemoved(isRemoved),
     m_metaObject(metaObject.getPointer()),
     m_oldData(oldData),
     m_newData(m_metaObject->data()),
@@ -56,32 +59,35 @@ public:
   QString getToolName() override
     { return QString("Edit Assistants Tool"); }
 
-  void undo() const override {
-    if (TMetaImage *metaImage = dynamic_cast<TMetaImage*>(m_level->getFrame(m_frameId, true).getPointer())) {
-      TMetaImage::Writer writer(*metaImage);
-      if (m_isAssistantCreated) {
+  void process(bool remove, const TVariant &data) const {
+    if (TMetaImage *metaImage = dynamic_cast<TMetaImage*>(m_level->getFrame(m_frameId, true).getPointer()))
+    {
+      { // wrap writer
+        TMetaImage::Writer writer(*metaImage);
+        bool found = false;
         for(TMetaObjectRefList::iterator i = writer->begin(); i != writer->end(); ++i)
-          if (*i == m_metaObject) { writer->erase(i); break; }
-      } else {
-        m_metaObject->data() = m_oldData;
-        if (TMetaObjectHandler *handler = m_metaObject->getHandler<TMetaObjectHandler>())
-          handler->fixData();
+          if (*i == m_metaObject) {
+            if (remove) writer->erase(i);
+            found = true;
+            break;
+          }
+        if (!remove) {
+          if (!found)
+            writer->push_back(TMetaObjectR(m_metaObject.getPointer()));
+          m_metaObject->data() = data;
+          if (TMetaObjectHandler *handler = m_metaObject->getHandler<TMetaObjectHandler>())
+            handler->fixData();
+        }
       }
       notifyImageChanged();
     }
   }
 
-  void redo() const override {
-    if (TMetaImage *metaImage = dynamic_cast<TMetaImage*>(m_level->getFrame(m_frameId, true).getPointer())) {
-      TMetaImage::Writer writer(*metaImage);
-      m_metaObject->data() = m_newData;
-      if (TMetaObjectHandler *handler = m_metaObject->getHandler<TMetaObjectHandler>())
-        handler->fixData();
-      if (m_isAssistantCreated)
-        writer->push_back(TMetaObjectR(m_metaObject.getPointer()));
-      notifyImageChanged();
-    }
-  }
+  void undo() const override
+    { process(m_isCreated, m_oldData); }
+
+  void redo() const override
+    { process(m_isRemoved, m_newData); }
 };
 
 
@@ -264,16 +270,55 @@ public:
           getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
           getCurrentFid(),
           m_currentAssistantCreated,
+          false,
           obj,
           m_currentAssistantBackup ));
+        m_currentAssistantCreated = false;
       }
     }
-    m_assistantType.setIndex(0);
     notifyImageChanged();
+    m_assistantType.setIndex(0);
     getApplication()->getCurrentTool()->notifyToolChanged();
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
     m_dragging = false;
+  }
+
+  bool keyEvent(
+    bool press,
+    TInputState::Key key,
+    QKeyEvent *event,
+    const TInputManager &manager )
+  {
+    if (key == TKey(Qt::Key_Delete)) {
+      if (!m_dragging)
+      if (m_currentAssistantIndex >= 0)
+      if (TMetaImage *mi = dynamic_cast<TMetaImage*>(getImage(true)))
+      {
+        { // wrap writer
+          TMetaImage::Writer writer(*mi);
+          if (m_currentAssistantIndex < (int)writer->size())
+          if (TMetaObjectR obj = (*writer)[m_currentAssistantIndex])
+          if (TAssistant *assistant = obj->getHandler<TAssistant>())
+          {
+            writer->erase(writer->begin() + m_currentAssistantIndex);
+            TUndoManager::manager()->add(new EditAssistantsUndo(
+              getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
+              getCurrentFid(),
+              false,
+              true,
+              obj,
+              obj->data() ));
+          }
+        }
+        resetCurrentPoint();
+        notifyImageChanged();
+        getApplication()->getCurrentTool()->notifyToolChanged();
+        getViewer()->GLInvalidateAll();
+      }
+      return true;
+    }
+    return false;
   }
 
   void draw() override {
