@@ -489,6 +489,9 @@ return true if the method execution can have changed the current tool
 
   virtual TPropertyGroup *getProperties(int) { return 0; }
 
+  virtual bool onPropertyChanged(std::string propertyName, bool addToUndo) {
+    return onPropertyChanged(propertyName);
+  }
   /*!
           Does the tasks associated to changes in \p propertyName and returns \p
      true;
