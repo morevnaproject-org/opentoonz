@@ -60,7 +60,7 @@ public:
     { return !isIndex(); }
   inline int index() const
     { return m_index; }
-  inline int field() const
+  inline TStringId field() const
     { return m_field; }
 
   inline bool operator== (const TVariantPathEntry &other) const
