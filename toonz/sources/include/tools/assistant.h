@@ -10,6 +10,7 @@
 #include <tsmartpointer.h>
 #include <tgeometry.h>
 #include <tmetaimage.h>
+#include <tproperty.h>
 
 // std includes
 #include <vector>
@@ -31,6 +32,9 @@
 //==============================================================
 
 //  Forward declarations
+
+class TProperty;
+class TPropertyGroup;
 
 class TToolViewer;
 class TAssistant;
@@ -90,11 +94,15 @@ public:
 
 class DVAPI TAssistant : public TMetaObjectHandler {
 protected:
+  const TStringId m_idEnabled;
   const TStringId m_idPoints;
   const TStringId m_idX;
   const TStringId m_idY;
+  const TStringId m_idMagnetism;
 
   TAssistantPointList m_points;
+
+  mutable TPropertyGroup m_properties;
 
 public:
   TAssistant(TMetaObject &object);
@@ -110,16 +118,33 @@ public:
   void movePoint(int index, const TPointD &position);
   void setPointSelection(int index, bool selected) const;
 
+  bool getEnabled() const
+    { return data()[m_idEnabled].getBool(); }
+  void setEnabled(bool x)
+    { if (getEnabled() != x) data()[m_idEnabled].setBool(x); }
+
+  double getMagnetism() const
+    { return data()[m_idMagnetism].getDouble(); }
+  void setMagnetism(double x)
+    { if (getMagnetism() != x) data()[m_idMagnetism].setDouble(x); }
+
   inline void selectPoint(int index) const
     { setPointSelection(index, true); }
   inline void deselectPoint(int index) const
     { setPointSelection(index, false); }
   inline void selectAll() const
-    { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, false); }
+    { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, true); }
   inline void deselectAll() const
     { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, false); }
 
+  TPropertyGroup& getProperties() const
+    { return m_properties; }
+  void propertyChanged(const TStringId &name)
+    { LockEvents lock(*this); onPropertyChanged(name); }
+
 protected:
+  //! usually called when meta-object created
+  void onSetDefaults() override;
   //! called when part of variant data changed
   void onDataChanged(const TVariant &value) override;
   //! load object data from variant
@@ -130,9 +155,17 @@ protected:
   virtual void onMovePoint(int index, const TPointD &position);
   //! save object data to variant
   virtual void onFixData();
+  //! load all properties from variant
+  virtual void updateProperties();
+  //! load single property from variant
+  virtual void updateProperty(const TStringId &name, const TVariant &value);
+  //! put value from property to variant
+  virtual void onPropertyChanged(const TStringId &name);
 
   void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
+
+  void addProperty(TProperty *p, const std::string &title);
 
 public:
   virtual void getGuidelines(const TPointD &position, const TAffine &toTool, TGuidelineList &outGuidelines) const;
