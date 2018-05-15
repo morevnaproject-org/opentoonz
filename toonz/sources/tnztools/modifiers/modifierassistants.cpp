@@ -79,7 +79,7 @@ TModifierAssistants::scanAssistants(
         if (draw) { glPushMatrix(); tglMultMatrix(imageToTrack); }
 
         TMetaImage::Reader reader(*metaImage);
-        for(TMetaObjectRefList::const_iterator i = reader->begin(); i != reader->end(); ++i)
+        for(TMetaObjectListCW::iterator i = reader->begin(); i != reader->end(); ++i)
           if (*i)
           if (const TAssistant *assistant = (*i)->getHandler<TAssistant>())
           {

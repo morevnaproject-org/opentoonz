@@ -5,16 +5,23 @@
 
 //---------------------------------------------------------
 
-TMetaObject::TMetaObject(const TStringId &typeName):
+TMetaObject::TMetaObject(const TMetaObject &other):
   m_handler(),
-  m_data(*this)
+  m_data(*this, other.data())
+    { setType(other.getType()); }
+
+//---------------------------------------------------------
+
+TMetaObject::TMetaObject(const TStringId &typeName, const TVariant &data):
+  m_handler(),
+  m_data(*this, data)
     { setType(typeName); }
 
 //---------------------------------------------------------
 
-TMetaObject::TMetaObject(const std::string &typeName):
+TMetaObject::TMetaObject(const std::string &typeName, const TVariant &data):
   m_handler(),
-  m_data(*this)
+  m_data(*this, data)
     { setType(typeName); }
 
 //---------------------------------------------------------
@@ -40,6 +47,18 @@ TMetaObject::setType(const TStringId &name) {
 void
 TMetaObject::onVariantChanged(const TVariant &value)
   { if (m_handler) m_handler->dataChanged(value); }
+
+//---------------------------------------------------------
+
+void
+TMetaObject::setDefaults()
+  { m_data.reset(); if (m_handler) m_handler->setDefaults(); }
+
+//---------------------------------------------------------
+
+TMetaObject*
+TMetaObject::clone() const
+  { return new TMetaObject(*this); }
 
 //---------------------------------------------------------
 
@@ -74,9 +93,13 @@ TMetaImage::TMetaImage()
 
 //---------------------------------------------------------
 
-TMetaImage::TMetaImage(const TMetaImage &other):
-  m_objects(*Reader(other))
-  { }
+TMetaImage::TMetaImage(const TMetaImage &other) {
+  Reader reader(other);
+  m_objects.reserve(reader->size());
+  for(TMetaObjectListCW::iterator i = reader->begin(); i != reader->end(); ++i)
+    if (*i)
+      m_objects.push_back( TMetaObjectP((*i)->clone()) );
+}
 
 //---------------------------------------------------------
 
