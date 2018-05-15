@@ -2559,6 +2559,7 @@ void ToolOptions::showEvent(QShowEvent *) {
   if (currTool) {
     onToolSwitched();
     connect(currTool, SIGNAL(toolSwitched()), SLOT(onToolSwitched()));
+    connect(currTool, SIGNAL(toolOptionsBoxChanged()), SLOT(onToolOptionsBoxChanged()));
     connect(currTool, SIGNAL(toolChanged()), SLOT(onToolChanged()));
   }
 
@@ -2589,6 +2590,19 @@ void ToolOptions::hideEvent(QShowEvent *) {
 
   TXshLevelHandle *currLevel = app->getCurrentLevel();
   if (currLevel) currLevel->disconnect(this);
+}
+
+//-----------------------------------------------------------------------------
+
+void ToolOptions::onToolOptionsBoxChanged() {
+  TTool *tool = TTool::getApplication()->getCurrentTool()->getTool();
+  std::map<TTool *, ToolOptionsBox *>::iterator it = m_panels.find(tool);
+  if (it != m_panels.end()) {
+    ToolOptionsBox *panel = it->second;
+    m_panels.erase(it);
+    layout()->removeWidget(panel);
+  }
+  onToolSwitched();
 }
 
 //-----------------------------------------------------------------------------
