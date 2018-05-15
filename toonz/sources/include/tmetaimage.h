@@ -7,6 +7,7 @@
 #include "tthreadmessage.h"
 #include "tsmartpointer.h"
 #include "tvariant.h"
+#include "tconstwrapper.h"
 
 #include <QReadLocker>
 #include <QWriteLocker>
@@ -28,9 +29,11 @@
 
 class TMetaObject;
 class TMetaObjectHandler;
-typedef TSmartPointerT<TMetaObject> TMetaObjectP;
-typedef TSmartRefT<TMetaObject> TMetaObjectR;
-typedef std::vector<TMetaObjectR> TMetaObjectRefList;
+typedef TSmartPointerT<TMetaObject> TMetaObjectP;  //!< smart pointer to TMetaObject
+typedef TMetaObjectP::Holder        TMetaObjectH;  //!< smart holder of TMetaObject
+typedef TMetaObjectP::Const         TMetaObjectPC; //!< smart pointer to constant TMetaObject
+typedef std::vector<TMetaObjectP> TMetaObjectList;
+typedef TConstArrayWrapperT<TMetaObjectPC, TMetaObjectP> TMetaObjectListCW; // TMetaObjectListConstWrapper
 
 //-------------------------------------------------------------------
 
@@ -56,9 +59,11 @@ private:
   TMetaObjectHandler *m_handler;
   TVariant m_data;
 
+  TMetaObject(const TMetaObject &other);
+
 public:
-  explicit TMetaObject(const TStringId &typeName = TStringId());
-  explicit TMetaObject(const std::string &typeName);
+  explicit TMetaObject(const TStringId &typeName = TStringId(), const TVariant &data = TVariant());
+  explicit TMetaObject(const std::string &typeName, const TVariant &data = TVariant());
   ~TMetaObject();
 
   void setType(const TStringId &name);
@@ -75,6 +80,8 @@ public:
   inline TVariant& data()
     { return m_data; }
 
+  void setDefaults();
+
   template<typename T>
   const T* getHandler() const
     { return dynamic_cast<const T*>(m_handler); }
@@ -82,7 +89,12 @@ public:
   T* getHandler()
     { return dynamic_cast<T*>(m_handler); }
 
+  TMetaObjectHandler* handler() { return m_handler; }
+  const TMetaObjectHandler* handler() const { return m_handler; }
+
   void onVariantChanged(const TVariant &value) override;
+
+  virtual TMetaObject* clone() const;
 
   static Registry& registry();
   static void registerType(const TStringId &name, Fabric fabric);
@@ -96,9 +108,18 @@ public:
 //-------------------------------------------------------------------
 
 class DVAPI TMetaObjectHandler {
+protected:
+  class LockEvents {
+  public:
+    TMetaObjectHandler &owner;
+    explicit LockEvents(TMetaObjectHandler &owner):
+      owner(owner) { ++owner.m_locks; }
+    ~LockEvents() { --owner.m_locks; }
+  };
+
 private:
   TMetaObject &m_object;
-  TAtomicVar m_fixingData;
+  TAtomicVar m_locks;
 
 public:
   TMetaObjectHandler(TMetaObject &object):
@@ -115,18 +136,17 @@ public:
     { return object().data(); }
 
 protected:
+  virtual void onSetDefaults() { }
   virtual void onDataChanged(const TVariant &value) { }
   virtual void onFixData() { }
 
 public:
+  void setDefaults()
+    { onSetDefaults(); }
   void dataChanged(const TVariant &value)
-    { if (m_fixingData == 0) onDataChanged(value); }
-
-  void fixData() {
-    ++m_fixingData;
-    if (m_fixingData == 1) onFixData();
-    --m_fixingData;
-  }
+    { if (m_locks == 0) onDataChanged(value); }
+  void fixData()
+    { LockEvents lock(*this); onFixData(); }
 };
 
 //-------------------------------------------------------------------
@@ -138,16 +158,19 @@ public:
   class Reader: public QReadLocker {
   private:
     const TMetaImage &m_image;
+    const TMetaObjectListCW m_objects;
   public:
     Reader(const TMetaImage &image):
-      QReadLocker(&image.m_rwLock), m_image(image) { }
+      QReadLocker(&image.m_rwLock),
+      m_image(image),
+      m_objects(image.m_objects) { }
     const TMetaImage& image() const
       { return m_image; }
-    const TMetaObjectRefList& get() const
-      { return m_image.m_objects; }
-    const TMetaObjectRefList& operator*() const
+    const TMetaObjectListCW& get() const
+      { return m_objects; }
+    const TMetaObjectListCW& operator*() const
       { return get(); }
-    const TMetaObjectRefList* operator->() const
+    const TMetaObjectListCW* operator->() const
       { return &get(); }
   };
 
@@ -159,20 +182,21 @@ public:
       QWriteLocker(&image.m_rwLock), m_image(image) { }
     TMetaImage& image() const
       { return m_image; }
-    TMetaObjectRefList& get() const
+    TMetaObjectList& get() const
       { return m_image.m_objects; }
-    TMetaObjectRefList& operator*() const
+    TMetaObjectList& operator*() const
       { return get(); }
-    TMetaObjectRefList* operator->() const
+    TMetaObjectList* operator->() const
       { return &get(); }
   };
 
 private:
   mutable QReadWriteLock m_rwLock;
-  TMetaObjectRefList m_objects;
+  TMetaObjectList m_objects;
+
+  TMetaImage(const TMetaImage &other);
 
   //! not implemented
-  TMetaImage(const TMetaImage &other);
   TMetaImage &operator=(const TMetaImage &) { return *this; }
 
 public:
