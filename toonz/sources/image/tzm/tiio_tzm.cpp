@@ -58,7 +58,7 @@ namespace {
         TVariant &frameData = m_data["frames"][frameId.expand()];
         TVariant &objectsData = frameData["objects"];
         objectsData.setType(TVariant::List);
-        for(TMetaObjectRefList::const_iterator i = reader->begin(); i != reader->end(); ++i) {
+        for(TMetaObjectListCW::iterator i = reader->begin(); i != reader->end(); ++i) {
           if (*i) {
             TVariant &objectData = objectsData[ objectsData.size() ];
             objectData["type"].setString( (*i)->getTypeName() );
@@ -162,7 +162,7 @@ namespace {
             for(int j = 0; j < objectsData.size(); ++j) {
               const TVariant &objectData = objectsData[j];
               if (!objectData["type"].getString().empty()) {
-                TMetaObjectR obj( new TMetaObject(objectData["type"].getString()) );
+                TMetaObjectP obj( new TMetaObject(objectData["type"].getString()) );
                 obj->data() = objectData["data"];
                 writer->push_back(obj);
               }
