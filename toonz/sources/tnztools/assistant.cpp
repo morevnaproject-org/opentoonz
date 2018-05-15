@@ -2,6 +2,7 @@
 #include <tools/assistant.h>
 
 #include <tgl.h>
+#include <tproperty.h>
 
 #include <limits>
 
@@ -122,10 +123,34 @@ TAssistantPoint::TAssistantPoint(
 
 TAssistant::TAssistant(TMetaObject &object):
   TMetaObjectHandler(object),
+  m_idEnabled("enabled"),
   m_idPoints("points"),
   m_idX("x"),
-  m_idY("y")
-{ }
+  m_idY("y"),
+  m_idMagnetism("magnetism")
+{
+  addProperty( new TBoolProperty(m_idEnabled.str(), getEnabled()),
+               "Enabled" );
+  addProperty( new TDoubleProperty(m_idMagnetism.str(), 0.0, 1.0, getMagnetism()),
+               "Magnetism" );
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::addProperty(TProperty *p, const std::string &title) {
+  p->setUINameOrig(title);
+  p->setQStringName( QString::fromStdString(title) );
+  m_properties.add(p);
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::onSetDefaults() {
+  setEnabled(true);
+  setMagnetism(1.0);
+}
 
 //---------------------------------------------------------------------------------------------------
 
@@ -171,6 +196,9 @@ TAssistant::onDataChanged(const TVariant &value) {
       pointData[m_idX].getDouble(),
       pointData[m_idY].getDouble() );
     movePoint(entry.index(), position);
+  } else
+  if (data().getChildPathEntry(value, entry) && entry.isField()) {
+    updateProperty(entry.field(), data()[entry.field()]);
   }
 }
 
@@ -186,6 +214,7 @@ TAssistant::onAllDataChanged() {
       pointData[m_idY].getDouble() );
   }
   fixPoints();
+  updateProperties();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -209,6 +238,64 @@ TAssistant::onFixData() {
     TVariant& pointData = pointsData[i];
     pointData[m_idX].setDouble( m_points[i].position.x );
     pointData[m_idY].setDouble( m_points[i].position.y );
+  }
+  setMagnetism( std::max(0.0, std::min(1.0, getMagnetism())) );
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::updateProperties() {
+  const TVariantMap &map = data().getMap();
+  for(TVariantMap::const_iterator i = map.begin(); i != map.end(); ++i)
+    if (i->first != m_idPoints)
+      updateProperty(i->first, i->second);
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::updateProperty(const TStringId &name, const TVariant &value) {
+  TProperty *property = m_properties.getProperty(name);
+  if (!property)
+    return;
+
+  if (TBoolProperty *boolProperty = dynamic_cast<TBoolProperty*>(property)) {
+    boolProperty->setValue( value.getBool() );
+  } else
+  if (TDoubleProperty *doubleProperty = dynamic_cast<TDoubleProperty*>(property)) {
+    doubleProperty->setValue( value.getDouble() );
+  } else
+  if (TStringProperty *stringProperty = dynamic_cast<TStringProperty*>(property)) {
+    stringProperty->setValue( to_wstring(value.getString()) );
+  } else
+  if (TEnumProperty *enumProperty = dynamic_cast<TEnumProperty*>(property)) {
+    enumProperty->setValue( to_wstring(value.getString()) );
+  }
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::onPropertyChanged(const TStringId &name) {
+  TProperty *property = m_properties.getProperty(name);
+  if (!property)
+    return;
+
+  if (name == m_idPoints)
+    return;
+
+  if (TBoolProperty *boolProperty = dynamic_cast<TBoolProperty*>(property)) {
+    data()[name].setBool( boolProperty->getValue() );
+  } else
+  if (TDoubleProperty *doubleProperty = dynamic_cast<TDoubleProperty*>(property)) {
+    data()[name].setDouble( doubleProperty->getValue() );
+  } else
+  if (TStringProperty *stringProperty = dynamic_cast<TStringProperty*>(property)) {
+    data()[name].setString( to_string(stringProperty->getValue()) );
+  } else
+  if (TEnumProperty *enumProperty = dynamic_cast<TEnumProperty*>(property)) {
+    data()[name].setString( to_string(enumProperty->getValue()) );
   }
 }
 
