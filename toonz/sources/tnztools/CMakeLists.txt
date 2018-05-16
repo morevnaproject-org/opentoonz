@@ -51,6 +51,7 @@ set(HEADERS
     ../include/tools/modifiers/modifiertangents.h
     ../include/tools/modifiers/modifiersegmentation.h
     ../include/tools/modifiers/modifierassistants.h
+    assistants/guidelineline.h
 )
 
 set(SOURCES

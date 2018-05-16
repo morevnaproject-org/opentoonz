@@ -12,6 +12,9 @@
 #include <tmetaimage.h>
 #include <tproperty.h>
 
+// Qt includes
+#include <QCoreApplication>
+
 // std includes
 #include <vector>
 #include <string>
@@ -46,6 +49,7 @@ typedef std::vector<TGuidelineP> TGuidelineList;
 typedef std::vector<TAssistantPoint> TAssistantPointList;
 
 //===================================================================
+
 
 //*****************************************************************************************
 //    TGuideline definition
@@ -88,11 +92,79 @@ public:
   TAssistantPoint(Type type, const TPointD &position, double radius);
 };
 
+
+//*****************************************************************************************
+//    TAssistantType definition
+//*****************************************************************************************
+
+class DVAPI TAssistantType: public TMetaObjectType {
+public:
+  TAssistantType(const TStringId &name):
+    TMetaObjectType(name) { }
+  TMetaObjectHandler* createHandler(TMetaObject &obj) const override;
+  virtual TAssistant* createAssistant(TMetaObject &obj) const
+    { return 0; }
+};
+
+
+//*****************************************************************************************
+//    TAssistantTypeT definition
+//*****************************************************************************************
+
+template<typename T>
+class TAssistantTypeT: public TAssistantType {
+public:
+  typedef T Type;
+
+  explicit TAssistantTypeT(
+    const TStringId &name,
+    const TStringId &alias1 = TStringId(),
+    const TStringId &alias2 = TStringId(),
+    const TStringId &alias3 = TStringId(),
+    const TStringId &alias4 = TStringId(),
+    const TStringId &alias5 = TStringId()
+  ):
+    TAssistantType(TStringId(name))
+  {
+    if (alias1) registerAlias(alias1);
+    if (alias2) registerAlias(alias2);
+    if (alias3) registerAlias(alias3);
+    if (alias4) registerAlias(alias4);
+    if (alias5) registerAlias(alias5);
+  }
+
+  explicit TAssistantTypeT(
+    const std::string &name,
+    const std::string &alias1 = std::string(),
+    const std::string &alias2 = std::string(),
+    const std::string &alias3 = std::string(),
+    const std::string &alias4 = std::string(),
+    const std::string &alias5 = std::string()
+  ):
+    TAssistantType(TStringId(name))
+  {
+    if (!alias1.empty()) registerAlias(TStringId(alias1));
+    if (!alias2.empty()) registerAlias(TStringId(alias2));
+    if (!alias3.empty()) registerAlias(TStringId(alias3));
+    if (!alias4.empty()) registerAlias(TStringId(alias4));
+    if (!alias5.empty()) registerAlias(TStringId(alias5));
+  }
+
+  TAssistant* createAssistant(TMetaObject &obj) const override
+    { return new Type(obj); }
+  QString getLocalName() const override {
+    QString localName = Type::getLocalName();
+    return localName.isEmpty() ? QString::fromStdString(name.str()) : localName;
+  }
+};
+
+
 //*****************************************************************************************
 //    TAssistant definition
 //*****************************************************************************************
 
 class DVAPI TAssistant : public TMetaObjectHandler {
+  Q_DECLARE_TR_FUNCTIONS(TAssistant)
 protected:
   const TStringId m_idEnabled;
   const TStringId m_idPoints;
@@ -108,6 +180,9 @@ public:
   TAssistant(TMetaObject &object);
 
   static const TPointD& blank();
+
+  static QString getLocalName()
+    { return QString(); }
 
   inline const TAssistantPointList& points() const
     { return m_points; }
@@ -165,9 +240,11 @@ protected:
   void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
 
-  void addProperty(TProperty *p, const std::string &title);
+  void addProperty(TProperty *p);
+  void setTranslation(const TStringId &name, const QString &localName) const;
 
 public:
+  virtual void updateTranslation() const;
   virtual void getGuidelines(const TPointD &position, const TAffine &toTool, TGuidelineList &outGuidelines) const;
   virtual void draw(TToolViewer *viewer) const;
   virtual void drawEdit(TToolViewer *viewer) const;
