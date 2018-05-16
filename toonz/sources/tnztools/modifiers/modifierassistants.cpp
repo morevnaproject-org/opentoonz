@@ -92,7 +92,7 @@ TModifierAssistants::scanAssistants(
             if (findGuidelines)
               for(int i = 0; i < positionsCount; ++i)
                 assistant->getGuidelines(positions[i], imageToTrack, *outGuidelines);
-            if (draw) assistant->draw(viewer);
+            if (draw) assistant->draw(viewer, !drawOnly);
             if (!doSomething) return true;
           }
 
@@ -187,7 +187,8 @@ void
 TModifierAssistants::draw(const TTrackList &tracks, const THoverList &hovers) {
   THoverList allHovers;
   allHovers.reserve(hovers.size() + tracks.size());
-  allHovers.insert(allHovers.end(), hovers.begin(), hovers.end());
+  if (tracks.empty()) // hide hovers if track exists
+    allHovers.insert(allHovers.end(), hovers.begin(), hovers.end());
   for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i)
     if ((*i)->handler && !(*i)->handler->tracks.empty() && !(*i)->handler->tracks.front()->empty())
       allHovers.push_back( (*i)->handler->tracks.front()->back().position );
@@ -203,7 +204,7 @@ TModifierAssistants::draw(const TTrackList &tracks, const THoverList &hovers) {
 
   // draw guidelines
   for(TGuidelineList::const_iterator i = guidelines.begin(); i != guidelines.end(); ++i)
-    (*i)->draw();
+    (*i)->draw(false, !drawOnly);
 
   // draw tracks
   TInputModifier::drawTracks(tracks);

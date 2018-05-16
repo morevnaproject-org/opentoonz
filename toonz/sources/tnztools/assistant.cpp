@@ -12,10 +12,20 @@
 //************************************************************************
 
 void
-TGuideline::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool active) const {
+TGuideline::drawSegment(
+  const TPointD &p0,
+  const TPointD &p1,
+  double pixelSize,
+  bool active,
+  bool enabled ) const
+{
   double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
   double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
-  if (!active) colorBlack[3] = (colorWhite[3] *= 0.5);
+
+  if (!this->enabled || !enabled)
+    colorBlack[3] = (colorWhite[3] = 0.25);
+  else if (!active)
+    colorBlack[3] = (colorWhite[3] = 0.75);
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
@@ -38,7 +48,7 @@ TGuideline::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, 
 double
 TGuideline::calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &outLongEnough) const {
   outLongEnough = false;
-  if (track.size() < 2)
+  if (!enabled || track.size() < 2)
     return std::numeric_limits<double>::infinity();
 
   const double snapLenght = 20.0;
@@ -320,9 +330,11 @@ TAssistant::onPropertyChanged(const TStringId &name) {
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const {
+TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool enabled) const {
   double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
   double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+  if (!enabled || !this->getEnabled())
+    colorBlack[3] = (colorWhite[3] *= 0.5);
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
@@ -400,7 +412,7 @@ TAssistant::getGuidelines(const TPointD &position, const TAffine &toTool, TGuide
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::draw(TToolViewer *viewer) const
+TAssistant::draw(TToolViewer *viewer, bool enabled) const
   { }
 
 //---------------------------------------------------------------------------------------------------
