@@ -147,17 +147,24 @@ public:
   bool operator>=(const T *p) const { return m_pointer >= p; }
 
   template<class TT>
-  bool operator==(const TSmartHolderT<TT> &p) const { return p == m_pointer; }
+  bool equal(const TT *p) const { return m_pointer == p; }
   template<class TT>
-  bool operator!=(const TSmartHolderT<TT> &p) const { return p != m_pointer; }
+  bool less(const TT *p) const { return m_pointer < p; }
   template<class TT>
-  bool operator< (const TSmartHolderT<TT> &p) const { return p >  m_pointer; }
+  bool greater(const TT *p) const { return m_pointer > p; }
+
   template<class TT>
-  bool operator> (const TSmartHolderT<TT> &p) const { return p <  m_pointer; }
+  bool operator==(const TSmartHolderT<TT> &p) const { return p.equal(m_pointer); }
   template<class TT>
-  bool operator<=(const TSmartHolderT<TT> &p) const { return p >= m_pointer; }
+  bool operator!=(const TSmartHolderT<TT> &p) const { return !p.equal(m_pointer); }
   template<class TT>
-  bool operator>=(const TSmartHolderT<TT> &p) const { return p <= m_pointer; }
+  bool operator< (const TSmartHolderT<TT> &p) const { return p.greater(m_pointer); }
+  template<class TT>
+  bool operator> (const TSmartHolderT<TT> &p) const { return p.less(m_pointer); }
+  template<class TT>
+  bool operator<=(const TSmartHolderT<TT> &p) const { return !p.less(m_pointer); }
+  template<class TT>
+  bool operator>=(const TSmartHolderT<TT> &p) const { return !p.greater(m_pointer); }
 };
 
 //=========================================================
