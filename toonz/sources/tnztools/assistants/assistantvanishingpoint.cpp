@@ -33,6 +33,7 @@ public:
   {
     outGuidelines.push_back(TGuidelineP(
       new TGuidelineInfiniteLine(
+        getMagnetism(),
         toTool*m_points.front().position,
         position )));
   }
