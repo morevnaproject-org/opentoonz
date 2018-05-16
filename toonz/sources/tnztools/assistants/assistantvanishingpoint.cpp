@@ -33,18 +33,19 @@ public:
   {
     outGuidelines.push_back(TGuidelineP(
       new TGuidelineInfiniteLine(
+        getEnabled(),
         getMagnetism(),
         toTool*m_points.front().position,
         position )));
   }
 
-  void draw(TToolViewer *viewer) const override {
+  void draw(TToolViewer *viewer, bool enabled) const override {
     double pixelSize = sqrt(tglGetPixelSize2());
     const TPointD &p = m_points.front().position;
     TPointD dx(20.0*pixelSize, 0.0);
     TPointD dy(0.0, 10.0*pixelSize);
-    drawSegment(p-dx-dy, p+dx+dy, pixelSize);
-    drawSegment(p-dx+dy, p+dx-dy, pixelSize);
+    drawSegment(p-dx-dy, p+dx+dy, pixelSize, enabled);
+    drawSegment(p-dx+dy, p+dx-dy, pixelSize, enabled);
   }
 };
 
