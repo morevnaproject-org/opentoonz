@@ -41,7 +41,8 @@ private:
     const TPointD *positions,
     int positionsCount,
     TGuidelineList *outGuidelines,
-    bool draw ) const;
+    bool draw,
+    bool enabledOnly ) const;
 
 public:
   const bool drawOnly;

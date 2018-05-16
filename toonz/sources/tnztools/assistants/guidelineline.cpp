@@ -10,8 +10,8 @@
 //    TGuidelineLineBase implementation
 //*****************************************************************************************
 
-TGuidelineLineBase::TGuidelineLineBase(const TPointD &p0, const TPointD &p1):
-  p0(p0), p1(p1) { }
+TGuidelineLineBase::TGuidelineLineBase(double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuideline(magnetism), p0(p0), p1(p1) { }
 
 TPointD
 TGuidelineLineBase::calcDirection(const TPointD &p0, const TPointD &p1) {
@@ -60,8 +60,8 @@ TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool 
 //    TGuidelineLine implementation
 //*****************************************************************************************
 
-TGuidelineLine::TGuidelineLine(const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(p0, p1),
+TGuidelineLine::TGuidelineLine(double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(magnetism, p0, p1),
   dir(calcDirection(p0, p1)),
   dist(norm(p1 - p0)) { }
 
@@ -81,8 +81,8 @@ TGuidelineLine::draw(bool active) const
 //    TGuidelineInfiniteLine implementation
 //*****************************************************************************************
 
-TGuidelineInfiniteLine::TGuidelineInfiniteLine(const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(p0, p1),
+TGuidelineInfiniteLine::TGuidelineInfiniteLine(double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(magnetism, p0, p1),
   dir(calcDirection(p0, p1)) { }
 
 TTrackPoint
@@ -101,8 +101,8 @@ TGuidelineInfiniteLine::draw(bool active) const
 //    TGuidelineRay implementation
 //*****************************************************************************************
 
-TGuidelineRay::TGuidelineRay(const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(p0, p1),
+TGuidelineRay::TGuidelineRay(double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(magnetism, p0, p1),
   dir(calcDirection(p0, p1)) { }
 
 TTrackPoint
