@@ -57,8 +57,13 @@ typedef std::vector<TAssistantPoint> TAssistantPointList;
 
 class DVAPI TGuideline : public TSmartObject {
 public:
+  const double magnetism;
+  TGuideline(double magnetism): magnetism(magnetism) { }
+
   virtual TTrackPoint transformPoint(const TTrackPoint &point) const
     { return point; }
+  TTrackPoint smoothTransformPoint(const TTrackPoint &point, double magnetism = 1.0) const
+    { return TTrack::interpolationLinear(point, transformPoint(point), magnetism*this->magnetism); }
   virtual void draw(bool active) const
     { }
   void draw() const
