@@ -10,8 +10,8 @@
 //    TGuidelineLineBase implementation
 //*****************************************************************************************
 
-TGuidelineLineBase::TGuidelineLineBase(double magnetism, const TPointD &p0, const TPointD &p1):
-  TGuideline(magnetism), p0(p0), p1(p1) { }
+TGuidelineLineBase::TGuidelineLineBase(bool enabled, double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuideline(enabled, magnetism), p0(p0), p1(p1) { }
 
 TPointD
 TGuidelineLineBase::calcDirection(const TPointD &p0, const TPointD &p1) {
@@ -40,7 +40,7 @@ TGuidelineLineBase::truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPoi
 }
 
 void
-TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool ray, bool active) const {
+TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool ray, bool active, bool enabled) const {
   TAffine4 modelview, projection;
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
   glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
@@ -52,7 +52,7 @@ TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool 
 
   double pixelSize = sqrt(tglGetPixelSize2());
   TAffine matrixInv = matrix.inv();
-  drawSegment((ray ? p0 : matrixInv*pp0), matrixInv*pp1, pixelSize, active);
+  drawSegment((ray ? p0 : matrixInv*pp0), matrixInv*pp1, pixelSize, active, enabled);
 }
 
 
@@ -60,8 +60,8 @@ TGuidelineLineBase::drawInliniteLine(const TPointD &p0, const TPointD &p1, bool 
 //    TGuidelineLine implementation
 //*****************************************************************************************
 
-TGuidelineLine::TGuidelineLine(double magnetism, const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(magnetism, p0, p1),
+TGuidelineLine::TGuidelineLine(bool enabled, double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(enabled, magnetism, p0, p1),
   dir(calcDirection(p0, p1)),
   dist(norm(p1 - p0)) { }
 
@@ -73,16 +73,16 @@ TGuidelineLine::transformPoint(const TTrackPoint &point) const {
 }
 
 void
-TGuidelineLine::draw(bool active) const
-  { drawSegment(p0, p1, sqrt(tglGetPixelSize2()), active); }
+TGuidelineLine::draw(bool active, bool enabled) const
+  { drawSegment(p0, p1, sqrt(tglGetPixelSize2()), active, enabled); }
 
 
 //*****************************************************************************************
 //    TGuidelineInfiniteLine implementation
 //*****************************************************************************************
 
-TGuidelineInfiniteLine::TGuidelineInfiniteLine(double magnetism, const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(magnetism, p0, p1),
+TGuidelineInfiniteLine::TGuidelineInfiniteLine(bool enabled, double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(enabled, magnetism, p0, p1),
   dir(calcDirection(p0, p1)) { }
 
 TTrackPoint
@@ -93,16 +93,16 @@ TGuidelineInfiniteLine::transformPoint(const TTrackPoint &point) const {
 }
 
 void
-TGuidelineInfiniteLine::draw(bool active) const
-  { drawInliniteLine(p0, p1, false, active); }
+TGuidelineInfiniteLine::draw(bool active, bool enabled) const
+  { drawInliniteLine(p0, p1, false, active, enabled); }
 
 
 //*****************************************************************************************
 //    TGuidelineRay implementation
 //*****************************************************************************************
 
-TGuidelineRay::TGuidelineRay(double magnetism, const TPointD &p0, const TPointD &p1):
-  TGuidelineLineBase(magnetism, p0, p1),
+TGuidelineRay::TGuidelineRay(bool enabled, double magnetism, const TPointD &p0, const TPointD &p1):
+  TGuidelineLineBase(enabled, magnetism, p0, p1),
   dir(calcDirection(p0, p1)) { }
 
 TTrackPoint
@@ -113,6 +113,6 @@ TGuidelineRay::transformPoint(const TTrackPoint &point) const {
 }
 
 void
-TGuidelineRay::draw(bool active) const
-  { drawInliniteLine(p0, p1, true, active); }
+TGuidelineRay::draw(bool active, bool enabled) const
+  { drawInliniteLine(p0, p1, true, active, enabled); }
 

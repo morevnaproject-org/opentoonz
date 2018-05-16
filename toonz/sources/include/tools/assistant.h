@@ -57,19 +57,31 @@ typedef std::vector<TAssistantPoint> TAssistantPointList;
 
 class DVAPI TGuideline : public TSmartObject {
 public:
+  const bool enabled;
   const double magnetism;
-  TGuideline(double magnetism): magnetism(magnetism) { }
+
+  TGuideline(bool enabled, double magnetism):
+    enabled(enabled), magnetism(magnetism) { }
 
   virtual TTrackPoint transformPoint(const TTrackPoint &point) const
     { return point; }
-  TTrackPoint smoothTransformPoint(const TTrackPoint &point, double magnetism = 1.0) const
-    { return TTrack::interpolationLinear(point, transformPoint(point), magnetism*this->magnetism); }
-  virtual void draw(bool active) const
+  virtual void draw(bool active, bool enabled) const
     { }
-  void draw() const
-    { draw(false); }
+  void draw(bool active = false) const
+    { draw(active, true); }
 
-  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool active) const;
+  TTrackPoint smoothTransformPoint(const TTrackPoint &point, double magnetism = 1.0) const {
+    return enabled
+         ? TTrack::interpolationLinear(point, transformPoint(point), magnetism*this->magnetism)
+         : point;
+  }
+
+  void drawSegment(
+    const TPointD &p0,
+    const TPointD &p1,
+    double pixelSize,
+    bool active,
+    bool enabled = true) const;
 
   double calcTrackWeight(const TTrack &track, const TAffine &toScreen, bool &outLongEnough) const;
   static TGuidelineP findBest(const TGuidelineList &guidelines, const TTrack &track, const TAffine &toScreen, bool &outLongEnough);
@@ -242,7 +254,7 @@ protected:
   //! put value from property to variant
   virtual void onPropertyChanged(const TStringId &name);
 
-  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const;
+  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool enabled = true) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
 
   void addProperty(TProperty *p);
@@ -251,7 +263,8 @@ protected:
 public:
   virtual void updateTranslation() const;
   virtual void getGuidelines(const TPointD &position, const TAffine &toTool, TGuidelineList &outGuidelines) const;
-  virtual void draw(TToolViewer *viewer) const;
+  virtual void draw(TToolViewer *viewer, bool enabled) const;
+  void draw(TToolViewer *viewer) const { draw(viewer, true); }
   virtual void drawEdit(TToolViewer *viewer) const;
 };
 
