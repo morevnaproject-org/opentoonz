@@ -71,17 +71,12 @@ public:
 
   TProperty(const std::string &name):
     m_name(name),
-    m_uiNameOrig(name),
     m_qstringName(QString::fromStdString(name))
     { }
 
   virtual ~TProperty() {}
 
   virtual TProperty *clone() const = 0;
-
-  // Used only for translation in Qt. Original not translated name.
-  const std::string& getUINameOrig() const { return m_uiNameOrig; }
-  void setUINameOrig(const std::string &str) { m_uiNameOrig = str; }
 
   // Used only for translation in Qt
   QString getQStringName() const { return m_qstringName; }
@@ -104,7 +99,6 @@ public:
 
 private:
   TStringId m_name;
-  std::string m_uiNameOrig;
   QString m_qstringName;
   std::string m_id;
   std::vector<Listener *> m_listeners;
