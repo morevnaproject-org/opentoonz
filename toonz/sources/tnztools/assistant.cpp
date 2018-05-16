@@ -118,6 +118,15 @@ TAssistantPoint::TAssistantPoint(
 
 
 //************************************************************************
+//    TAssistantType implementation
+//************************************************************************
+
+TMetaObjectHandler*
+TAssistantType::createHandler(TMetaObject &obj) const
+  { return createAssistant(obj); }
+
+
+//************************************************************************
 //    TAssistant implementation
 //************************************************************************
 
@@ -129,19 +138,28 @@ TAssistant::TAssistant(TMetaObject &object):
   m_idY("y"),
   m_idMagnetism("magnetism")
 {
-  addProperty( new TBoolProperty(m_idEnabled.str(), getEnabled()),
-               "Enabled" );
-  addProperty( new TDoubleProperty(m_idMagnetism.str(), 0.0, 1.0, getMagnetism()),
-               "Magnetism" );
+  addProperty( new TBoolProperty(m_idEnabled.str(), getEnabled()) );
+  addProperty( new TDoubleProperty(m_idMagnetism.str(), 0.0, 1.0, getMagnetism()) );
 }
 
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::addProperty(TProperty *p, const std::string &title) {
-  p->setUINameOrig(title);
-  p->setQStringName( QString::fromStdString(title) );
-  m_properties.add(p);
+TAssistant::addProperty(TProperty *p)
+  { m_properties.add(p); }
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::setTranslation(const TStringId &name, const QString &localName) const
+  { m_properties.getProperty(name)->setQStringName( localName ); }
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::updateTranslation() const {
+  setTranslation(m_idEnabled, tr("Enabled"));
+  setTranslation(m_idMagnetism, tr("Magnetism"));
 }
 
 //---------------------------------------------------------------------------------------------------

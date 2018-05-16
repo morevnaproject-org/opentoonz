@@ -9,6 +9,7 @@
 #include "tvariant.h"
 #include "tconstwrapper.h"
 
+#include <QString>
 #include <QReadLocker>
 #include <QWriteLocker>
 #include <QReadWriteLock>
@@ -37,27 +38,51 @@ typedef TConstArrayWrapperT<TMetaObjectPC, TMetaObjectP> TMetaObjectListCW; // T
 
 //-------------------------------------------------------------------
 
+class DVAPI TMetaObjectType {
+public:
+  const TStringId name;
+
+  TMetaObjectType(const TStringId &name);
+  virtual ~TMetaObjectType();
+
+  void registerAlias(const TStringId &alias);
+  void unregisterAlias(const TStringId &alias);
+
+  virtual TMetaObjectHandler* createHandler(TMetaObject &obj) const
+    { return 0; }
+  virtual QString getLocalName() const
+    { return QString::fromStdString(name.str()); }
+};
+
+//-------------------------------------------------------------------
+
 class DVAPI TMetaObject: public TSmartObject, public TVariantOwner {
 public:
   typedef TMetaObjectHandler* (*Fabric)(TMetaObject&);
-  typedef std::map<TStringId, Fabric> Registry;
+  typedef std::map<TStringId, const TMetaObjectType*> Registry;
 
-  template<typename T>
-  class Registrator {
-  public:
-    typedef T Type;
-    static TMetaObjectHandler* fabric(TMetaObject &obj)
-      { return new Type(obj); }
-    Registrator(const std::string &typeName)
-      { registerType(typeName, fabric); }
-    Registrator(const TStringId &typeName)
-      { registerType(typeName, fabric); }
+  struct LinkedList {
+    TMetaObject *first, *last;
+    LinkedList(): first(), last() { }
   };
+  typedef std::map<TStringId, LinkedList> LinkedMap;
+  typedef LinkedMap::iterator LinkedMapEntry;
 
 private:
-  TStringId m_type;
+  LinkedMapEntry m_typeLink;
+  TMetaObject *m_previous, *m_next;
+  const TMetaObjectType *m_typeDesc;
   TMetaObjectHandler *m_handler;
   TVariant m_data;
+
+  static Registry& registry();
+  static LinkedMap& linkedMap();
+
+  static void rewrapAll(const TStringId &type);
+  void rewrap(const TStringId &type);
+
+  void linkToType(const TStringId &type);
+  void unlinkFromType();
 
   TMetaObject(const TMetaObject &other);
 
@@ -71,10 +96,13 @@ public:
     { setType(TStringId(name)); }
   inline void resetType()
     { setType(TStringId()); }
+
+  inline const TMetaObjectType* getTypeDesc() const
+    { return m_typeDesc; }
   inline const TStringId& getType() const
-    { return m_type; }
+    { return m_typeLink->first; }
   inline const std::string& getTypeName() const
-    { return m_type.str(); }
+    { return getType().str(); }
   inline const TVariant& data() const
     { return m_data; }
   inline TVariant& data()
@@ -96,13 +124,12 @@ public:
 
   virtual TMetaObject* clone() const;
 
-  static Registry& registry();
-  static void registerType(const TStringId &name, Fabric fabric);
-  static void unregisterType(const TStringId &name);
-  inline static void registerType(const std::string &name, Fabric fabric)
-    { registerType(TStringId(name), fabric); }
-  inline static void unregisterType(const std::string &name)
-    { unregisterType(TStringId::find(name)); }
+public:
+  static const Registry& getRegistry() { return registry(); }
+  static void registerType(const TStringId &name, const TMetaObjectType &type); //!< register new or add alias
+  static void unregisterType(const TStringId &name); //!< unregister single alias
+  static void unregisterType(const TMetaObjectType &type); //!< unregister all aliases
+  static const TMetaObjectType* findType(const TStringId &name);
 };
 
 //-------------------------------------------------------------------
@@ -119,17 +146,30 @@ protected:
 
 private:
   TMetaObject &m_object;
+  const TMetaObjectType &m_typeDesc;
   TAtomicVar m_locks;
 
 public:
   TMetaObjectHandler(TMetaObject &object):
-    m_object(object) { }
+    m_object(object),
+    m_typeDesc(*m_object.getTypeDesc())
+      { assert(m_object.getTypeDesc()); }
   virtual ~TMetaObjectHandler() { }
 
+  inline const TMetaObjectType& getTypeDesc() const
+    { return m_typeDesc; }
+  inline const TStringId& getType() const
+    { return getTypeDesc().name; }
+  inline const std::string& getTypeName() const
+    { return getType().str(); }
   inline const TMetaObject& object() const
     { return m_object; }
   inline TMetaObject& object()
     { return m_object; }
+  inline const TStringId& getAlias() const
+    { return object().getType(); }
+  inline const std::string& getAliasName() const
+    { return getAlias().str(); }
   inline const TVariant& data() const
     { return object().data(); }
   inline TVariant& data()
