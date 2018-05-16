@@ -98,20 +98,16 @@ public:
 
 class EditAssistantsTool final : public TTool {
   Q_DECLARE_TR_FUNCTIONS(EditAssistantsTool)
-public:
-  typedef std::map<TStringId, std::string> TypeMap;
-
+protected:
   enum Mode {
     ModeImage,
     ModeAssistant,
     ModePoint
   };
 
-protected:
   TPropertyGroup m_allProperties;
   TPropertyGroup m_toolProperties;
   TEnumProperty m_assistantType;
-  TypeMap m_typeToName;
   TStringId m_newAssisnantType;
 
   bool           m_dragging;
@@ -151,9 +147,6 @@ public:
     m_writeAssistant()
   {
     bind(MetaImage);
-    m_assistantType.setUINameOrig("Assistant Type");
-    addAssistantType("", "--");
-    addAssistantType("assistantVanishingPoint", "Vanishing Point");
     m_toolProperties.bind(m_assistantType);
     updateTranslation();
   }
@@ -168,35 +161,45 @@ public:
   void onImageChanged() override
     { getViewer()->GLInvalidateAll(); }
 
+  void updateAssistantTypes() {
+    std::wstring value = m_assistantType.getValue();
+
+    m_assistantType.deleteAllValues();
+    m_assistantType.addValueWithUIName(L"", tr("--"));
+
+    const TMetaObject::Registry &registry = TMetaObject::getRegistry();
+    for(TMetaObject::Registry::const_iterator i = registry.begin(); i != registry.end(); ++i)
+      if (const TAssistantType *assistantType = dynamic_cast<const TAssistantType*>(i->second))
+        if (assistantType->name)
+          m_assistantType.addValueWithUIName(
+            to_wstring(assistantType->name.str()),
+            assistantType->getLocalName() );
+
+    if (m_assistantType.indexOf(value) >= 0)
+      m_assistantType.setValue(value);
+  }
+
   TPropertyGroup* getProperties(int) override {
     m_allProperties.clear();
     for(int i = 0; i < m_toolProperties.getPropertyCount(); ++i)
       m_allProperties.bind( *m_toolProperties.getProperty(i) );
     if (Closer closer = read(ModeAssistant)) {
+      m_readAssistant->updateTranslation();
       TPropertyGroup &assistantProperties = m_readAssistant->getProperties();
       for(int i = 0; i < assistantProperties.getPropertyCount(); ++i)
         m_allProperties.bind( *assistantProperties.getProperty(i) );
     }
-    updateTranslation();
     return &m_allProperties;
   }
 
-  void addAssistantType(const std::string &typeName, const std::string &name) {
-    if (m_typeToName.insert( TypeMap::value_type(TStringId(typeName), name) ).second)
-      m_assistantType.addValueWithUIName(
-        to_wstring(typeName),
-        QString::fromStdString(name) );
-  }
+  void onActivate() override
+    { updateAssistantTypes(); }
 
   void updateTranslation() override {
-    for(TypeMap::const_iterator i = m_typeToName.begin(); i != m_typeToName.end(); ++i)
-      m_assistantType.setItemUIName(
-        to_wstring(i->first.str()),
-        tr(i->second.c_str()) );
-    for(int i = 0; i < m_allProperties.getPropertyCount(); ++i) {
-      TProperty *p = m_allProperties.getProperty(i);
-      p->setQStringName( tr( p->getUINameOrig().c_str() ) );
-    }
+    m_assistantType.setQStringName( tr("Assistant Type") );
+    updateAssistantTypes();
+    if (Closer closer = read(ModeAssistant))
+      m_readAssistant->updateTranslation();
   }
 
   bool onPropertyChanged(std::string name, bool addToUndo) override {
@@ -317,7 +320,6 @@ protected:
   Closer::Args write(Mode mode, bool touch = false)
     { openWrite(mode, touch); return Closer::Args(*this); }
 
-public:
   void updateOptionsBox()
     { getApplication()->getCurrentTool()->notifyToolOptionsBoxChanged(); }
 
@@ -346,7 +348,7 @@ public:
         for(int j = 0; j < assistant->pointsCount() && m_currentAssistantIndex < 0; ++j) {
           const TAssistantPoint &p = assistant->points()[j];
           TPointD offset = p.position - position;
-          if (norm(offset) <= p.radius*pixelSize) {
+          if (norm2(offset) <= p.radius*p.radius*pixelSize*pixelSize) {
             m_currentAssistant.set(*i);
             m_currentAssistantIndex = i - (*m_reader)->begin();
             m_currentPointIndex = j;
@@ -388,6 +390,7 @@ public:
     return success;
   }
 
+public:
   void leftButtonDown(const TTrackPoint& point, const TTrack&) override {
     apply();
     m_dragging = true;
