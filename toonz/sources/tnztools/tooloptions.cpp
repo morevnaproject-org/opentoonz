@@ -1887,51 +1887,11 @@ BrushToolOptionsBox::BrushToolOptionsBox(QWidget *parent, TTool *tool,
                              TStroke::OutlineOptions::MITER_JOIN);
   }
   hLayout()->addStretch(1);
-  filterControls();
-}
-
-//-----------------------------------------------------------------------------
-
-void BrushToolOptionsBox::filterControls() {
-  // show or hide widgets which modify imported brush (mypaint)
-
-  bool showModifiers = false;
-  if (m_tool->getTargetType() & TTool::RasterImage) {
-    FullColorBrushTool *fullColorBrushTool =
-        dynamic_cast<FullColorBrushTool *>(m_tool);
-    showModifiers = fullColorBrushTool->getBrushStyle();
-  } else if (m_tool->getTargetType() & TTool::ToonzImage) {
-    ToonzRasterBrushTool *toonzRasterBrushTool =
-        dynamic_cast<ToonzRasterBrushTool *>(m_tool);
-    showModifiers = toonzRasterBrushTool->isMyPaintStyleSelected();
-  } else {  // (m_tool->getTargetType() & TTool::Vectors)
-    m_snapSensitivityCombo->setHidden(!m_snapCheckbox->isChecked());
-    return;
-  }
-
-  for (QMap<std::string, QLabel *>::iterator it = m_labels.begin();
-       it != m_labels.end(); it++) {
-    bool isModifier = (it.key().substr(0, 8) == "Modifier");
-    bool isCommon   = (it.key() == "Pressure" || it.key() == "Preset:");
-    bool visible    = isCommon || (isModifier == showModifiers);
-    it.value()->setVisible(visible);
-  }
-
-  for (QMap<std::string, ToolOptionControl *>::iterator it = m_controls.begin();
-       it != m_controls.end(); it++) {
-    bool isModifier = (it.key().substr(0, 8) == "Modifier");
-    bool isCommon   = (it.key() == "Pressure" || it.key() == "Preset:");
-    bool visible    = isCommon || (isModifier == showModifiers);
-    if (QWidget *widget = dynamic_cast<QWidget *>(it.value()))
-      widget->setVisible(visible);
-  }
 }
 
 //-----------------------------------------------------------------------------
 
 void BrushToolOptionsBox::updateStatus() {
-  filterControls();
-
   QMap<std::string, ToolOptionControl *>::iterator it;
   for (it = m_controls.begin(); it != m_controls.end(); it++)
     it.value()->updateStatus();
