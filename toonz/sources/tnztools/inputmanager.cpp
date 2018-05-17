@@ -592,8 +592,9 @@ TInputManager::trackEvent(
 {
   if (isActive() && getInputTracks().empty()) {
     TToolViewer *viewer = getTool()->getViewer();
-    if (getTool()->preLeftButtonDown())
-      getTool()->setViewer(viewer);
+    // TODO:
+    //if (getTool()->preLeftButtonDown())
+    //  getTool()->setViewer(viewer);
     updateDpiScale();
   }
 
