@@ -156,7 +156,7 @@ public:
     m_writeImage(),
     m_writeAssistant()
   {
-    bind(MetaImage);
+    bind(MetaImage | EmptyTarget);
     m_toolProperties.bind(m_assistantType);
     updateTranslation();
   }

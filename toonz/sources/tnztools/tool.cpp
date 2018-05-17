@@ -51,7 +51,7 @@ namespace {
 // Global variables
 
 typedef std::pair<std::string, TTool::ToolTargetType> ToolKey;
-typedef std::map<ToolKey, TTool *> ToolTable;
+typedef std::multimap<ToolKey, TTool *> ToolTable;
 ToolTable *toolTable = 0;
 
 std::set<std::string> *toolNames = 0;
@@ -145,10 +145,36 @@ TTool::TTool(std::string name)
 
 TTool *TTool::getTool(std::string toolName, ToolTargetType targetType) {
   if (!toolTable) return 0;
-  ToolTable::iterator it =
-      toolTable->find(std::make_pair(toolName, targetType));
-  if (it == toolTable->end()) return 0;
-  return it->second;
+
+  // if to this name and target type was assigned more then one tool
+  // then select tool which more compatible with default target type
+
+  int defTarget = 0;
+  switch(Preferences::instance()->getDefLevelType()) {
+  case PLI_XSHLEVEL:  defTarget = VectorImage; break;
+  case TZP_XSHLEVEL:  defTarget = ToonzImage;  break;
+  case OVL_XSHLEVEL:  defTarget = RasterImage; break;
+  case META_XSHLEVEL: defTarget = MetaImage;   break;
+  default:            defTarget = 0;           break;
+  }
+
+  bool isDefault = false;
+  int target = 0;
+  TTool *tool = 0;
+
+  std::pair<ToolTable::iterator, ToolTable::iterator> range =
+    toolTable->equal_range(std::make_pair(toolName, targetType));
+  for(ToolTable::iterator it = range.first; it != range.second; ++it) {
+    int t = it->second->getTargetType();
+    bool d = (bool)(t & defTarget);
+    if (!tool || (d && !isDefault) || (d == isDefault && t > target)) {
+      isDefault = d;
+      target = t;
+      tool = it->second;
+    }
+  }
+
+  return tool;
 }
 
 //-----------------------------------------------------------------------------
@@ -166,6 +192,8 @@ void TTool::bind(int targetType) {
 
     // Initialize with the dummy tool
     toolTable->insert(
+        std::make_pair(std::make_pair(name, EmptyTarget), &theDummyTool));
+    toolTable->insert(
         std::make_pair(std::make_pair(name, ToonzImage), &theDummyTool));
     toolTable->insert(
         std::make_pair(std::make_pair(name, VectorImage), &theDummyTool));
@@ -182,16 +210,24 @@ void TTool::bind(int targetType) {
                           toolSelector, &ToolSelector::selectTool));
   }
 
+  if (targetType & EmptyTarget)
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, EmptyTarget), this));
   if (targetType & ToonzImage)
-    (*toolTable)[std::make_pair(name, ToonzImage)] = this;
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, ToonzImage), this));
   if (targetType & VectorImage)
-    (*toolTable)[std::make_pair(name, VectorImage)] = this;
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, VectorImage), this));
   if (targetType & RasterImage)
-    (*toolTable)[std::make_pair(name, RasterImage)] = this;
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, RasterImage), this));
   if (targetType & MeshImage)
-    (*toolTable)[std::make_pair(name, MeshImage)] = this;
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, MeshImage), this));
   if (targetType & MetaImage)
-    (*toolTable)[std::make_pair(name, MetaImage)] = this;
+    toolTable->insert(
+      std::make_pair(std::make_pair(name, MetaImage), this));
 }
 
 //-----------------------------------------------------------------------------
@@ -459,7 +495,26 @@ TImage *TTool::touchImage() {
 
     // animation sheet disabled or empty column. autoCreate is enabled: we must
     // create a new level
-    int levelType    = pref->getDefLevelType();
+
+    // select one from supported level types
+    // default level type is preffered
+
+    int levelType = pref->getDefLevelType();
+    int toolLevelType = UNKNOWN_XSHLEVEL;
+    bool found = false;
+
+    if ( m_targetType & MetaImage )
+      { toolLevelType = META_XSHLEVEL; found = found || toolLevelType == levelType; }
+    if ( m_targetType & RasterImage )
+      { toolLevelType = OVL_XSHLEVEL;  found = found || toolLevelType == levelType; }
+    if ( m_targetType & ToonzImage )
+      { toolLevelType = TZP_XSHLEVEL;  found = found || toolLevelType == levelType; }
+    if ( m_targetType & VectorImage )
+      { toolLevelType = PLI_XSHLEVEL;  found = found || toolLevelType == levelType; }
+
+    if (toolLevelType == UNKNOWN_XSHLEVEL) return 0;
+    if (!found) levelType = toolLevelType;
+
     TXshLevel *xl    = scene->createNewLevel(levelType);
     sl               = xl->getSimpleLevel();
     m_isLevelCreated = true;
