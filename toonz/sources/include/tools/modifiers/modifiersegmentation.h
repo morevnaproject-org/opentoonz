@@ -28,15 +28,16 @@
 //*****************************************************************************************
 
 class DVAPI TModifierSegmentation: public TInputModifier {
-public:
-  const double precision;
-  const double precisionSqr;
-
 private:
+  TPointD m_step;
+
   void addSegments(TTrack &track, const TTrackPoint &p0, const TTrackPoint &p1, int level = 0);
 
 public:
-  TModifierSegmentation(double precision = 1.0);
+  explicit TModifierSegmentation(const TPointD &step = TPointD(1.0, 1.0));
+
+  void setStep(const TPointD &step);
+  const TPointD& getStep() const { return m_step; }
 
   void modifyTrack(
     const TTrack &track,

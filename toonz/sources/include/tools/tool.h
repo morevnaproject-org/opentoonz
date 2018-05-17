@@ -297,6 +297,15 @@ public:
     AllTargets = 0xffffffff,
   };
 
+  enum ToolModifier  //!<  Set of modifiers which can be applied to user input for this tool
+  { NoModifiers          = 0x0,
+    ModifierTangents     = 0x1, //!< If enabled then 'segmentation' will do spline interpolation instead of linear
+    ModifierAssistants   = 0x2, //!< Show and snable assistants, see also: isAssistantsEnabled()
+    ModifierCustom       = 0x4, //!< Enable other modifiers, see also: isCustomModifiersEnabled()
+    ModifierSegmentation = 0x8, //!< Enable interpolation, see also: getInterpolationStep()
+  };
+  typedef long long ToolModifiers;
+
 public:
   static TTool *getTool(std::string toolName, ToolTargetType targetType);
 
@@ -341,10 +350,23 @@ public:
   TTool(std::string toolName);
   virtual ~TTool() {}
 
+  std::string getName() const { return m_name; }
   virtual ToolType getToolType() const = 0;
   ToolTargetType getTargetType() const { return (ToolTargetType)m_targetType; }
 
-  std::string getName() const { return m_name; }
+  //! See ToolModifiers
+  virtual ToolModifiers getToolModifiers() const { return ModifierAssistants; }
+
+  //! If return false then Assistants will deactivated but visible,
+  //! see ModifierAssistants
+  virtual bool isAssistantsEnabled() const { return false; }
+
+  //! If return false then Custom Modifiers will deactivated but visible,
+  //! see ModifierCustom
+  virtual bool isCustomModifiersEnabled() const { return false; }
+
+  //! Set step for Segmentation Modifier (see ModifierSegmentation)
+  virtual TPointD getInterpolationStep() const { return TPointD(1.0, 1.0); }
 
   /*! \details  The default returns a generic box containing the options
           for property group 0).

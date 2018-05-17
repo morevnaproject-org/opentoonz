@@ -43,6 +43,7 @@ public:
   };
 
 public:
+  bool enabled;
   const int count;
   const double radius;
 

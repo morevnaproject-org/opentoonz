@@ -457,12 +457,32 @@ public:
 } resetShiftTraceCommand;
 
 //=============================================================================
+// SceneViewer::Modifiers
+//-----------------------------------------------------------------------------
+
+class SceneViewer::Modifiers {
+public:
+  TSmartPointerT<TModifierTangents>     tangents;
+  TSmartPointerT<TModifierAssistants>   assistants;
+  TSmartPointerT<TModifierTest>         test;
+  TSmartPointerT<TModifierSegmentation> segmentation;
+
+  Modifiers():
+    tangents     ( new TModifierTangents() ),
+    assistants   ( new TModifierAssistants() ),
+    test         ( new TModifierTest(5, 40.0) ),
+    segmentation ( new TModifierSegmentation() )
+      { }
+};
+
+//=============================================================================
 // SceneViewer
 //-----------------------------------------------------------------------------
 
 SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     : GLWidgetForHighDpi(parent)
     , m_inputManager(new TInputManager())
+    , m_modifiers(new Modifiers())
     , m_hovers(1)
     , m_pressure(0)
     , m_lastMousePos(0, 0)
@@ -536,10 +556,52 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     m_lutCalibrator = new LutCalibrator();
 
   m_inputManager->setViewer(this);
-  m_inputManager->addModifier(new TModifierTangents());
-  m_inputManager->addModifier(new TModifierAssistants());
-  m_inputManager->addModifier(new TModifierTest(5, 40.0));
-  m_inputManager->addModifier(new TModifierSegmentation());
+}
+
+//-----------------------------------------------------------------------------
+
+SceneViewer::~SceneViewer() {
+  if (m_fbo) delete m_fbo;
+  delete m_modifiers;
+
+  // release all the registered context (once when exit the software)
+  std::set<TGlContext>::iterator ct, cEnd(l_contexts.end());
+  for (ct = l_contexts.begin(); ct != cEnd; ++ct)
+    TGLDisplayListsManager::instance()->releaseContext(*ct);
+  l_contexts.clear();
+}
+
+//-----------------------------------------------------------------------------
+
+void SceneViewer::rebuildModifiers() {
+  updateModifiers();
+
+  TTool *tool = TApp::instance()->getCurrentTool()->getTool();
+  TTool::ToolModifiers modifiers = tool ? tool->getToolModifiers() : TTool::NoModifiers;
+
+  m_inputManager->clearModifiers();
+  if (TTool::ModifierTangents & modifiers)
+    m_inputManager->addModifier( m_modifiers->tangents.getPointer() );
+  if (TTool::ModifierAssistants & modifiers)
+    m_inputManager->addModifier( m_modifiers->assistants.getPointer() );
+  if (TTool::ModifierCustom & modifiers)
+    m_inputManager->addModifier( m_modifiers->test.getPointer() );
+  if (TTool::ModifierSegmentation & modifiers)
+    m_inputManager->addModifier( m_modifiers->segmentation.getPointer() );
+}
+
+//-----------------------------------------------------------------------------
+
+void SceneViewer::updateModifiers() {
+  if (TTool *tool = TApp::instance()->getCurrentTool()->getTool()) {
+    m_modifiers->assistants->drawOnly = !tool->isAssistantsEnabled();
+    m_modifiers->test->enabled = tool->isCustomModifiersEnabled();
+    m_modifiers->segmentation->setStep(tool->getInterpolationStep());
+  } else {
+    m_modifiers->assistants->drawOnly = true;
+    m_modifiers->test->enabled = false;
+    m_modifiers->segmentation->setStep(TPointD(1.0, 1.0));
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -552,18 +614,6 @@ void SceneViewer::setVisual(const ImagePainter::VisualSettings &settings) {
   m_visualSettings.m_sceneProperties =
       TApp::instance()->getCurrentScene()->getScene()->getProperties();
   if (repaint) GLInvalidateAll();
-}
-
-//-----------------------------------------------------------------------------
-
-SceneViewer::~SceneViewer() {
-  if (m_fbo) delete m_fbo;
-
-  // release all the registered context (once when exit the software)
-  std::set<TGlContext>::iterator ct, cEnd(l_contexts.end());
-  for (ct = l_contexts.begin(); ct != cEnd; ++ct)
-    TGLDisplayListsManager::instance()->releaseContext(*ct);
-  l_contexts.clear();
 }
 
 //-------------------------------------------------------------------------------
@@ -2233,6 +2283,7 @@ void SceneViewer::onFrameSwitched() {
 void SceneViewer::onToolChanged() {
   TTool *tool = TApp::instance()->getCurrentTool()->getTool();
   if (tool) setToolCursor(this, tool->getCursorId());
+  updateModifiers();
   GLInvalidateAll();
 }
 
