@@ -60,6 +60,7 @@ TModifierTest::Modifier::calcPoint(double originalIndex) {
 
 
 TModifierTest::TModifierTest(int count, double radius):
+  enabled(),
   count(count),
   radius(radius)
 { }
@@ -73,7 +74,7 @@ TModifierTest::modifyTrack(
 {
   const double segmentSize = 2.0*M_PI/10.0;
 
-  if (!track.handler) {
+  if (!track.handler && enabled) {
     if (track.getKeyState(track.front().time).isPressed(TKey(Qt::Key_T))) {
       // TModifierTest::Handler for spiro
       track.handler = new Handler(track);

@@ -160,6 +160,8 @@ public:
     { return ToolCursor::StrokeSelectCursor; }
   void onImageChanged() override
     { getViewer()->GLInvalidateAll(); }
+  ToolModifiers getToolModifiers() const override
+    { return ModifierAssistants; }
 
   void updateAssistantTypes() {
     std::wstring value = m_assistantType.getValue();

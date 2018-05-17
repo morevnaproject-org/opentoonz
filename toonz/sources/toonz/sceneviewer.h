@@ -66,7 +66,10 @@ class SceneViewer final : public GLWidgetForHighDpi,
                           public Previewer::Listener {
   Q_OBJECT
 
+  class Modifiers;
+
   TInputManager *m_inputManager;
+  Modifiers *m_modifiers;
   std::vector<TPointD> m_hovers;
 
   double m_pressure;
@@ -327,6 +330,9 @@ protected:
 
   void showEvent(QShowEvent *) override;
   void hideEvent(QHideEvent *) override;
+
+  void rebuildModifiers();
+  void updateModifiers();
 
   /*TODO*/ void gestureEvent(QGestureEvent *e);
   /*TODO*/ void touchEvent(QTouchEvent *e, int type);

@@ -45,8 +45,8 @@ private:
     bool enabledOnly ) const;
 
 public:
-  const bool drawOnly;
-  const double sensitiveLength;
+  bool drawOnly;
+  double sensitiveLength;
 
   explicit TModifierAssistants(bool drawOnly = false);
 
