@@ -10,6 +10,7 @@
 // TnzLib includes
 #include <toonz/tapplication.h>
 #include <toonz/txshlevelhandle.h>
+#include <toonz/txsheethandle.h>
 
 // TnzCore includes
 #include <tgl.h>
@@ -41,14 +42,16 @@ public:
   EditAssistantsUndo(
     TXshSimpleLevel *level,
     const TFrameId &frameId,
-    bool isCreated,
-    bool isRemoved,
+    bool frameCreated,
+    bool levelCreated,
+    bool objectCreated,
+    bool objectRemoved,
     TMetaObjectP metaObject,
     TVariant oldData
   ):
-    ToolUtils::TToolUndo(level, frameId),
-    m_isCreated(isCreated),
-    m_isRemoved(isRemoved),
+    ToolUtils::TToolUndo(level, frameId, frameCreated, levelCreated),
+    m_isCreated(objectCreated),
+    m_isRemoved(objectRemoved),
     m_metaObject(metaObject),
     m_oldData(oldData),
     m_newData(m_metaObject->data()),
@@ -80,15 +83,22 @@ public:
             m_metaObject->handler()->fixData();
         }
       }
-      notifyImageChanged();
     }
   }
 
-  void undo() const override
-    { process(m_isCreated, m_oldData); }
+  void undo() const override {
+    removeLevelAndFrameIfNeeded();
+    process(m_isCreated, m_oldData);
+    TTool::getApplication()->getCurrentXsheet()->notifyXsheetChanged();
+    notifyImageChanged();
+  }
 
-  void redo() const override
-    { process(m_isRemoved, m_newData); }
+  void redo() const override {
+    insertLevelAndFrameIfNeeded();
+    process(m_isRemoved, m_newData);
+    TTool::getApplication()->getCurrentXsheet()->notifyXsheetChanged();
+    notifyImageChanged();
+  }
 };
 
 
@@ -373,12 +383,16 @@ protected:
         TUndoManager::manager()->add(new EditAssistantsUndo(
           getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
           getCurrentFid(),
+          m_isFrameCreated,
+          m_isLevelCreated,
           m_currentAssistantCreated,
           false,
           m_writeObject,
           m_currentAssistantBackup ));
         m_currentAssistantCreated = false;
         m_currentAssistantChanged = false;
+        m_isFrameCreated = false;
+        m_isLevelCreated = false;
         success = true;
       }
     }
@@ -393,6 +407,11 @@ protected:
   }
 
 public:
+  bool preLeftButtonDown() override {
+    touchImage();
+    return true;
+  }
+
   void leftButtonDown(const TTrackPoint& point, const TTrack&) override {
     apply();
     m_dragging = true;
@@ -467,16 +486,17 @@ public:
           TUndoManager::manager()->add(new EditAssistantsUndo(
             getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
             getCurrentFid(),
-            false,
-            true,
+            false, // frameCreated
+            false, // levelCreated
+            false, // objectCreated
+            true,  // objectRemoved
             m_writeObject,
             m_writeObject->data() ));
           success = true;
         }
 
-        if (success) {
+        if (success)
           notifyImageChanged();
-        }
 
         resetCurrentPoint();
         getApplication()->getCurrentTool()->notifyToolChanged();
