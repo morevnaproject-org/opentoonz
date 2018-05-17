@@ -43,6 +43,7 @@ struct BrushData final : public TPersist {
   int m_cap, m_join, m_miter, m_drawOrder;
   double m_modifierSize, m_modifierOpacity;
   bool m_modifierEraser, m_modifierLockAlpha;
+  bool m_assistants;
 
   BrushData();
   BrushData(const std::wstring &name);

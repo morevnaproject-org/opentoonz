@@ -53,8 +53,7 @@ public:
     { return LevelWriteTool; }
   ToolModifiers getToolModifiers() const override
     { return ModifierTangents | ModifierAssistants | ModifierCustom | ModifierSegmentation; }
-  bool isAssistantsEnabled() const override
-    { return true; }
+  bool isAssistantsEnabled() const override;
   bool isCustomModifiersEnabled() const override
     { return true; }
 
@@ -109,6 +108,7 @@ protected:
   TDoubleProperty     m_modifierOpacity;
   TBoolProperty       m_modifierEraser;
   TBoolProperty       m_modifierLockAlpha;
+  TBoolProperty       m_assistants;
   TEnumProperty       m_preset;
 
   TPixel32 m_currentColor;
