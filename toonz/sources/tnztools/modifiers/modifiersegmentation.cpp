@@ -9,10 +9,15 @@
 //*****************************************************************************************
 
 
-TModifierSegmentation::TModifierSegmentation(double precision):
-  precision(std::max(TConsts::epsilon, precision)),
-  precisionSqr(std::max(TConsts::epsilon, precision) * std::max(TConsts::epsilon, precision))
-{ }
+TModifierSegmentation::TModifierSegmentation(const TPointD &step)
+  { setStep(step); }
+
+
+void
+TModifierSegmentation::setStep(const TPointD &step) {
+  m_step.x = std::max(TConsts::epsilon, fabs(step.x));
+  m_step.y = std::max(TConsts::epsilon, fabs(step.y));
+}
 
 
 void
@@ -25,7 +30,7 @@ TModifierSegmentation::addSegments(
   static const int maxRecursion = 10;
   TPointD d = p1.position - p0.position;
 
-  if (level >= maxRecursion || d.x*d.x + d.y*d.y <= precisionSqr) {
+  if (level >= maxRecursion || (fabs(d.x) <= m_step.x && fabs(d.y) <= m_step.y)) {
     track.push_back(p1);
     return;
   }

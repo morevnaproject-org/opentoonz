@@ -49,7 +49,14 @@ private:
 public:
   FullColorBrushTool(std::string name);
 
-  ToolType getToolType() const override { return TTool::LevelWriteTool; }
+  ToolType getToolType() const override
+    { return LevelWriteTool; }
+  ToolModifiers getToolModifiers() const override
+    { return ModifierTangents | ModifierAssistants | ModifierCustom | ModifierSegmentation; }
+  bool isAssistantsEnabled() const override
+    { return true; }
+  bool isCustomModifiersEnabled() const override
+    { return true; }
 
   ToolOptionsBox *createOptionsBox() override;
 
