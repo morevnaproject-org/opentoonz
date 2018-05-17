@@ -309,6 +309,7 @@ int TApp::getCurrentImageType() {
         cell = xsh->getCell(r0, col);
       } else /*-- Columnが空の場合 --*/
       {
+        return TImage::NONE;
 #ifdef LINETEST
         return TImage::RASTER;
 #else
@@ -336,12 +337,13 @@ int TApp::getCurrentImageType() {
     case MESH_XSHLEVEL:
       return TImage::MESH;
     case PLI_XSHLEVEL:
-    default:
       return TImage::VECTOR;
+    default:
+      return TImage::NONE;
     }
   }
 
-  return TImage::VECTOR;
+  return TImage::NONE;
 }
 
 //-----------------------------------------------------------------------------
