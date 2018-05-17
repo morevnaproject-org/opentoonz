@@ -46,7 +46,7 @@ class TGuideline;
 
 typedef TSmartPointerT<TGuideline> TGuidelineP;
 typedef std::vector<TGuidelineP> TGuidelineList;
-typedef std::vector<TAssistantPoint> TAssistantPointList;
+typedef std::map<TStringId, TAssistantPoint> TAssistantPointMap;
 
 //===================================================================
 
@@ -97,16 +97,19 @@ public:
   enum Type {
     Circle,
     CircleFill,
-    CircleCross
+    CircleCross,
+    CircleGrid
   };
 
+  const TStringId name;
   Type type;
   TPointD position;
-  mutable bool selected;
   double radius;
+  bool visible;
 
-  explicit TAssistantPoint(Type type = Circle, const TPointD &position = TPointD());
-  TAssistantPoint(Type type, const TPointD &position, double radius);
+  mutable bool selected;
+
+  explicit TAssistantPoint(const TStringId &name);
 };
 
 
@@ -189,26 +192,29 @@ protected:
   const TStringId m_idY;
   const TStringId m_idMagnetism;
 
-  TAssistantPointList m_points;
+  TAssistantPointMap m_points;
+  TAssistantPoint* m_basePoint;
 
   mutable TPropertyGroup m_properties;
 
 public:
   TAssistant(TMetaObject &object);
 
-  static const TPointD& blank();
-
   static QString getLocalName()
     { return QString(); }
 
-  inline const TAssistantPointList& points() const
+  inline const TAssistantPointMap& points() const
     { return m_points; }
-  inline const int pointsCount() const
-    { return (int)m_points.size(); }
+
+  inline const TAssistantPoint* findPoint(const TStringId &name) const {
+    TAssistantPointMap::const_iterator i = points().find(name);
+    return i == points().end() ? 0 : &i->second;
+  }
 
   void fixPoints();
-  void movePoint(int index, const TPointD &position);
-  void setPointSelection(int index, bool selected) const;
+  void movePoint(const TStringId &name, const TPointD &position);
+  void setPointSelection(const TStringId &name, bool selected) const;
+  void setAllPointsSelection(bool selected) const;
 
   bool getEnabled() const
     { return data()[m_idEnabled].getBool(); }
@@ -220,21 +226,51 @@ public:
   void setMagnetism(double x)
     { if (getMagnetism() != x) data()[m_idMagnetism].setDouble(x); }
 
-  inline void selectPoint(int index) const
-    { setPointSelection(index, true); }
-  inline void deselectPoint(int index) const
-    { setPointSelection(index, false); }
+  inline void selectPoint(const TStringId &name) const
+    { setPointSelection(name, true); }
+  inline void deselectPoint(const TStringId &name) const
+    { setPointSelection(name, false); }
   inline void selectAll() const
-    { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, true); }
+    { setAllPointsSelection(true); }
   inline void deselectAll() const
-    { for(int i = 0; i < pointsCount(); ++i) setPointSelection(i, false); }
+  { setAllPointsSelection(false); }
 
   TPropertyGroup& getProperties() const
     { return m_properties; }
   void propertyChanged(const TStringId &name)
     { LockEvents lock(*this); onPropertyChanged(name); }
 
+  const TAssistantPoint& getBasePoint() const;
+
 protected:
+  TAssistantPoint& addPoint(
+    const TStringId &name,
+    TAssistantPoint::Type type,
+    const TPointD &position,
+    bool visible,
+    double radius );
+
+  TAssistantPoint& addPoint(
+    const TStringId &name,
+    TAssistantPoint::Type type = TAssistantPoint::Circle,
+    const TPointD &position    = TPointD(),
+    bool visible               = true );
+
+  inline TAssistantPoint& addPoint(
+    const std::string &name,
+    TAssistantPoint::Type type,
+    const TPointD &position,
+    bool visible,
+    double radius )
+      { return addPoint(TStringId(name), type, position, visible, radius); }
+
+  inline TAssistantPoint& addPoint(
+    const std::string &name,
+    TAssistantPoint::Type type = TAssistantPoint::Circle,
+    const TPointD &position    = TPointD(),
+    bool visible               = true )
+      { return addPoint(TStringId(name), type, position, visible); }
+
   //! usually called when meta-object created
   void onSetDefaults() override;
   //! called when part of variant data changed
@@ -244,7 +280,7 @@ protected:
   //! fix positions of all points (as like as all points moved)
   virtual void onFixPoints();
   //! try to move point
-  virtual void onMovePoint(int index, const TPointD &position);
+  virtual void onMovePoint(TAssistantPoint &point, const TPointD &position);
   //! save object data to variant
   virtual void onFixData();
   //! load all properties from variant

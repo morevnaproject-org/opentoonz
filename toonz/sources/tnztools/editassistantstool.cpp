@@ -33,6 +33,7 @@ class EditAssistantsUndo final : public ToolUtils::TToolUndo {
 private:
   bool m_isCreated;
   bool m_isRemoved;
+  int m_index;
   TMetaObjectP m_metaObject;
   TVariant m_oldData;
   TVariant m_newData;
@@ -46,12 +47,14 @@ public:
     bool levelCreated,
     bool objectCreated,
     bool objectRemoved,
+    int index,
     TMetaObjectP metaObject,
     TVariant oldData
   ):
     ToolUtils::TToolUndo(level, frameId, frameCreated, levelCreated),
     m_isCreated(objectCreated),
     m_isRemoved(objectRemoved),
+    m_index(index),
     m_metaObject(metaObject),
     m_oldData(oldData),
     m_newData(m_metaObject->data()),
@@ -64,24 +67,23 @@ public:
     { return QString("Edit Assistants Tool"); }
 
   void process(bool remove, const TVariant &data) const {
-    if (TMetaImage *metaImage = dynamic_cast<TMetaImage*>(m_level->getFrame(m_frameId, true).getPointer()))
-    {
-      { // wrap writer
-        TMetaImage::Writer writer(*metaImage);
-        bool found = false;
-        for(TMetaObjectList::iterator i = writer->begin(); i != writer->end(); ++i)
-          if ((*i) == m_metaObject) {
-            if (remove) writer->erase(i);
-            found = true;
-            break;
-          }
-        if (!remove) {
-          if (!found)
-            writer->push_back(m_metaObject);
-          m_metaObject->data() = data;
-          if (m_metaObject->handler())
-            m_metaObject->handler()->fixData();
+    if (TMetaImage *metaImage = dynamic_cast<TMetaImage*>(m_level->getFrame(m_frameId, true).getPointer())) {
+      TMetaImage::Writer writer(*metaImage);
+      bool found = false;
+      for(TMetaObjectList::iterator i = writer->begin(); i != writer->end(); ++i)
+        if ((*i) == m_metaObject) {
+          if (remove) writer->erase(i);
+          found = true;
+          break;
         }
+      if (!remove) {
+        if (!found)
+          writer->insert(
+            writer->begin() + std::max(0, std::min((int)writer->size(), m_index)),
+            m_metaObject );
+        m_metaObject->data() = data;
+        if (m_metaObject->handler())
+          m_metaObject->handler()->fixData();
       }
     }
   }
@@ -126,7 +128,7 @@ protected:
   bool           m_currentAssistantChanged;
   int            m_currentAssistantIndex;
   TVariant       m_currentAssistantBackup;
-  int            m_currentPointIndex;
+  TStringId      m_currentPointName;
   TPointD        m_currentPointOffset;
   TPointD        m_currentPosition;
 
@@ -148,7 +150,6 @@ public:
     m_currentAssistantCreated(),
     m_currentAssistantChanged(),
     m_currentAssistantIndex(-1),
-    m_currentPointIndex(-1),
     m_reader(),
     m_readImage(),
     m_readAssistant(),
@@ -247,7 +248,7 @@ protected:
 
     if ( (mode >= ModeAssistant && !m_currentAssistant)
       || (mode >= ModeAssistant && m_currentAssistantIndex < 0)
-      || (mode >= ModePoint && m_currentPointIndex < 0) ) return false;
+      || (mode >= ModePoint && !m_currentPointName) ) return false;
 
     m_readImage = dynamic_cast<TMetaImage*>(getImage(true));
     if (m_readImage) {
@@ -261,7 +262,7 @@ protected:
         m_readAssistant = m_readObject->getHandler<TAssistant>();
         if (mode == ModeAssistant) return true;
 
-        if (m_currentPointIndex < m_readAssistant->pointsCount()) {
+        if (m_readAssistant->findPoint(m_currentPointName)) {
           if (mode == ModePoint) return true;
         }
       }
@@ -283,7 +284,7 @@ protected:
 
     if ( (mode >= ModeAssistant && !m_currentAssistant)
       || (mode >= ModeAssistant && m_currentAssistantIndex < 0)
-      || (mode >= ModePoint && m_currentPointIndex < 0) ) return false;
+      || (mode >= ModePoint && !m_currentPointName) ) return false;
 
     m_writeImage = dynamic_cast<TMetaImage*>(getImage(true));
     if (m_writeImage) {
@@ -296,7 +297,7 @@ protected:
         m_writeObject = (**m_writer)[m_currentAssistantIndex];
         m_writeAssistant = m_writeObject->getHandler<TAssistant>();
         if ( (mode == ModeAssistant)
-          || (mode == ModePoint && m_currentPointIndex < m_writeAssistant->pointsCount()) )
+          || (mode == ModePoint && m_writeAssistant->findPoint(m_currentPointName)) )
         {
           if (touch) this->touch();
           return true;
@@ -341,7 +342,7 @@ protected:
     m_currentAssistantCreated = false;
     m_currentAssistantChanged = false;
     m_currentAssistantIndex = -1;
-    m_currentPointIndex = -1;
+    m_currentPointName.reset();
     m_currentPointOffset = TPointD();
     m_currentAssistantBackup.reset();
     if (updateOptionsBox) this->updateOptionsBox();
@@ -357,13 +358,14 @@ protected:
         if (!assistant) continue;
 
         assistant->deselectAll();
-        for(int j = 0; j < assistant->pointsCount() && m_currentAssistantIndex < 0; ++j) {
-          const TAssistantPoint &p = assistant->points()[j];
+        const TAssistantPointMap &points = assistant->points();
+        for(TAssistantPointMap::const_iterator j = points.begin(); j != points.end() && m_currentAssistantIndex < 0; ++j) {
+          const TAssistantPoint &p = j->second;
           TPointD offset = p.position - position;
-          if (norm2(offset) <= p.radius*p.radius*pixelSize*pixelSize) {
+          if (p.visible && norm2(offset) <= p.radius*p.radius*pixelSize*pixelSize) {
             m_currentAssistant.set(*i);
             m_currentAssistantIndex = i - (*m_reader)->begin();
-            m_currentPointIndex = j;
+            m_currentPointName = j->first;
             m_currentPointOffset = offset;
             assistant->selectAll();
           }
@@ -387,6 +389,7 @@ protected:
           m_isLevelCreated,
           m_currentAssistantCreated,
           false,
+          m_currentAssistantIndex,
           m_writeObject,
           m_currentAssistantBackup ));
         m_currentAssistantCreated = false;
@@ -421,17 +424,15 @@ public:
       if (Closer closer = write(ModeImage)) {
         TMetaObjectP object(new TMetaObject(m_newAssisnantType));
         if (TAssistant *assistant = object->getHandler<TAssistant>()) {
-          if (assistant->pointsCount()) {
-            assistant->setDefaults();
-            assistant->movePoint(0, point.position);
-            m_currentAssistantCreated = true;
-            m_currentAssistantChanged = true;
-            m_currentAssistantIndex = (int)(*m_writer)->size();
-            m_currentAssistant = object;
-            m_currentPointIndex = 0;
-            m_currentPointOffset = TPointD();
-            m_currentAssistantBackup = assistant->data();
-          }
+          assistant->setDefaults();
+          assistant->movePoint(assistant->getBasePoint().name, point.position);
+          m_currentAssistantCreated = true;
+          m_currentAssistantChanged = true;
+          m_currentAssistantIndex = (int)(*m_writer)->size();
+          m_currentAssistant = object;
+          m_currentPointName = assistant->getBasePoint().name;
+          m_currentPointOffset = TPointD();
+          m_currentAssistantBackup = assistant->data();
           (*m_writer)->push_back(object);
         }
       }
@@ -450,7 +451,7 @@ public:
   void leftButtonDrag(const TTrackPoint& point, const TTrack&) override {
     if (Closer closer = write(ModePoint, true))
       m_writeAssistant->movePoint(
-        m_currentPointIndex,
+        m_currentPointName,
         point.position + m_currentPointOffset);
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
@@ -459,7 +460,7 @@ public:
   void leftButtonUp(const TTrackPoint &point, const TTrack&) override {
     if (Closer closer = write(ModePoint, true))
       m_writeAssistant->movePoint(
-        m_currentPointIndex,
+        m_currentPointName,
         point.position + m_currentPointOffset);
 
     apply();
@@ -490,6 +491,7 @@ public:
             false, // levelCreated
             false, // objectCreated
             true,  // objectRemoved
+            m_currentAssistantIndex,
             m_writeObject,
             m_writeObject->data() ));
           success = true;

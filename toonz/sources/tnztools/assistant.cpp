@@ -5,6 +5,7 @@
 #include <tproperty.h>
 
 #include <limits>
+#include <cassert>
 
 
 //************************************************************************
@@ -105,25 +106,12 @@ TGuideline::findBest(const TGuidelineList &guidelines, const TTrack &track, cons
 //    TAssistantPoint implementation
 //************************************************************************
 
-TAssistantPoint::TAssistantPoint(
-  Type type,
-  const TPointD &position
-):
-  type(type),
+TAssistantPoint::TAssistantPoint(const TStringId &name):
+  name(name),
+  type(Circle),
   position(position),
   radius(10.0),
-  selected() { }
-
-//---------------------------------------------------------------------------------------------------
-
-TAssistantPoint::TAssistantPoint(
-  Type type,
-  const TPointD &position,
-  double radius
-):
-  type(type),
-  position(position),
-  radius(radius),
+  visible(true),
   selected() { }
 
 
@@ -151,6 +139,43 @@ TAssistant::TAssistant(TMetaObject &object):
   addProperty( new TBoolProperty(m_idEnabled.str(), getEnabled()) );
   addProperty( new TDoubleProperty(m_idMagnetism.str(), 0.0, 1.0, getMagnetism()) );
 }
+
+//---------------------------------------------------------------------------------------------------
+
+TAssistantPoint&
+TAssistant::addPoint(
+  const TStringId &name,
+  TAssistantPoint::Type type,
+  const TPointD &position,
+  bool visible,
+  double radius )
+{
+  assert(!m_points.count(name));
+  TAssistantPoint &p = m_points.insert(
+    TAssistantPointMap::value_type(name, TAssistantPoint(name)) ).first->second;
+  p.type     = type;
+  p.position = position;
+  p.radius   = radius;
+  p.visible  = visible;
+  if (!m_basePoint) m_basePoint = &p;
+  return p;
+}
+
+//---------------------------------------------------------------------------------------------------
+
+TAssistantPoint&
+TAssistant::addPoint(
+  const TStringId &name,
+  TAssistantPoint::Type type,
+  const TPointD &position,
+  bool visible )
+    { return addPoint(name, type, position, visible, 10.0); }
+
+//---------------------------------------------------------------------------------------------------
+
+const TAssistantPoint&
+TAssistant::getBasePoint() const
+  { assert(m_basePoint); return *m_basePoint; }
 
 //---------------------------------------------------------------------------------------------------
 
@@ -182,14 +207,6 @@ TAssistant::onSetDefaults() {
 
 //---------------------------------------------------------------------------------------------------
 
-const TPointD&
-TAssistant::blank() {
-  static TPointD point;
-  return point;
-}
-
-//---------------------------------------------------------------------------------------------------
-
 void
 TAssistant::fixPoints()
   { onFixPoints(); }
@@ -197,15 +214,26 @@ TAssistant::fixPoints()
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::movePoint(int index, const TPointD &position)
-  { if (index >= 0 && index < (int)m_points.size()) onMovePoint(index, position); }
+TAssistant::movePoint(const TStringId &name, const TPointD &position) {
+  TAssistantPointMap::iterator i = m_points.find(name);
+  if (i != m_points.end())
+    onMovePoint(i->second, position);
+}
 
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::setPointSelection(int index, bool selected)  const {
-  if (index >= 0 && index < pointsCount())
-    m_points[index].selected = selected;
+TAssistant::setPointSelection(const TStringId &name, bool selected)  const {
+  if (const TAssistantPoint *p = findPoint(name))
+    p->selected = selected;
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::setAllPointsSelection(bool selected) const {
+  for(TAssistantPointMap::const_iterator i = points().begin(); i != points().end(); ++i)
+    i->second.selected = selected;
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -218,12 +246,12 @@ TAssistant::onDataChanged(const TVariant &value) {
   if (&value == &data() || &value == &pointsData)
     onAllDataChanged();
   else
-  if (pointsData.getChildPathEntry(value, entry) && entry.isIndex()) {
+  if (pointsData.getChildPathEntry(value, entry) && entry.isField()) {
     const TVariant& pointData = pointsData[entry];
     TPointD position = TPointD(
       pointData[m_idX].getDouble(),
       pointData[m_idY].getDouble() );
-    movePoint(entry.index(), position);
+    movePoint(entry.field(), position);
   } else
   if (data().getChildPathEntry(value, entry) && entry.isField()) {
     updateProperty(entry.field(), data()[entry.field()]);
@@ -235,9 +263,9 @@ TAssistant::onDataChanged(const TVariant &value) {
 void
 TAssistant::onAllDataChanged() {
   const TVariant& pointsData = data()[m_idPoints];
-  for(int i = 0; i < pointsCount(); ++i) {
-    const TVariant& pointData = pointsData[i];
-    m_points[i].position = TPointD(
+  for(TAssistantPointMap::iterator i = m_points.begin(); i != m_points.end(); ++i) {
+    const TVariant& pointData = pointsData[i->first];
+    i->second.position = TPointD(
       pointData[m_idX].getDouble(),
       pointData[m_idY].getDouble() );
   }
@@ -254,18 +282,18 @@ TAssistant::onFixPoints()
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::onMovePoint(int index, const TPointD &position)
-  { m_points[index].position = position; }
+TAssistant::onMovePoint(TAssistantPoint &point, const TPointD &position)
+  { point.position = position; }
 
 //---------------------------------------------------------------------------------------------------
 
 void
 TAssistant::onFixData() {
   TVariant& pointsData = data()[m_idPoints];
-  for(int i = 0; i < pointsCount(); ++i) {
-    TVariant& pointData = pointsData[i];
-    pointData[m_idX].setDouble( m_points[i].position.x );
-    pointData[m_idY].setDouble( m_points[i].position.y );
+  for(TAssistantPointMap::const_iterator i = points().begin(); i != points().end(); ++i) {
+    TVariant& pointData = pointsData[i->first];
+    pointData[m_idX].setDouble( i->second.position.x );
+    pointData[m_idY].setDouble( i->second.position.y );
   }
   setMagnetism( std::max(0.0, std::min(1.0, getMagnetism())) );
 }
@@ -356,6 +384,8 @@ TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, 
 
 void
 TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
+  if (!point.visible) return;
+
   double radius = point.radius;
   double crossSize = 1.2*radius;
 
@@ -422,8 +452,8 @@ TAssistant::drawEdit(TToolViewer *viewer) const {
   // paint all points
   draw(viewer);
   double pixelSize = sqrt(tglGetPixelSize2());
-  for(int i = 0; i < pointsCount(); ++i)
-    drawPoint(m_points[i], pixelSize);
+  for(TAssistantPointMap::const_iterator i = points().begin(); i != points().end(); ++i)
+    drawPoint(i->second, pixelSize);
 }
 
 //---------------------------------------------------------------------------------------------------
