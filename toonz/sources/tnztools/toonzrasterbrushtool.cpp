@@ -2133,7 +2133,8 @@ BrushData::BrushData()
     , m_modifierSize(0.0)
     , m_modifierOpacity(0.0)
     , m_modifierEraser(0.0)
-    , m_modifierLockAlpha(0.0) {}
+    , m_modifierLockAlpha(0.0)
+    , m_assistants(false) {}
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -2151,7 +2152,8 @@ BrushData::BrushData(const std::wstring &name)
     , m_modifierSize(0.0)
     , m_modifierOpacity(0.0)
     , m_modifierEraser(0.0)
-    , m_modifierLockAlpha(0.0) {}
+    , m_modifierLockAlpha(0.0)
+    , m_assistants(false) {}
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -2192,6 +2194,9 @@ void BrushData::saveData(TOStream &os) {
   os.openChild("Modifier_LockAlpha");
   os << (int)m_modifierLockAlpha;
   os.closeChild();
+  os.openChild("Assistants");
+  os << (int)m_assistants;
+  os.closeChild();
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -2227,6 +2232,8 @@ void BrushData::loadData(TIStream &is) {
       is >> val, m_modifierEraser = val, is.matchEndTag();
     else if (tagName == "Modifier_LockAlpha")
       is >> val, m_modifierLockAlpha = val, is.matchEndTag();
+    else if (tagName == "Assistants")
+      is >> val, m_assistants = val, is.matchEndTag();
     else
       is.skipCurrentTag();
   }
