@@ -106,8 +106,9 @@ TGuideline::findBest(const TGuidelineList &guidelines, const TTrack &track, cons
 //    TAssistantPoint implementation
 //************************************************************************
 
-TAssistantPoint::TAssistantPoint(const TStringId &name):
+TAssistantPoint::TAssistantPoint(const TStringId &name, const TPointD &defPosition):
   name(name),
+  defPosition(defPosition),
   type(Circle),
   position(position),
   radius(10.0),
@@ -134,7 +135,8 @@ TAssistant::TAssistant(TMetaObject &object):
   m_idPoints("points"),
   m_idX("x"),
   m_idY("y"),
-  m_idMagnetism("magnetism")
+  m_idMagnetism("magnetism"),
+  m_basePoint()
 {
   addProperty( new TBoolProperty(m_idEnabled.str(), getEnabled()) );
   addProperty( new TDoubleProperty(m_idMagnetism.str(), 0.0, 1.0, getMagnetism()) );
@@ -146,15 +148,15 @@ TAssistantPoint&
 TAssistant::addPoint(
   const TStringId &name,
   TAssistantPoint::Type type,
-  const TPointD &position,
+  const TPointD &defPosition,
   bool visible,
   double radius )
 {
   assert(!m_points.count(name));
   TAssistantPoint &p = m_points.insert(
-    TAssistantPointMap::value_type(name, TAssistantPoint(name)) ).first->second;
+    TAssistantPointMap::value_type(name, TAssistantPoint(name, defPosition)) ).first->second;
+  m_pointsOrder.push_back(&p);
   p.type     = type;
-  p.position = position;
   p.radius   = radius;
   p.visible  = visible;
   if (!m_basePoint) m_basePoint = &p;
@@ -167,9 +169,9 @@ TAssistantPoint&
 TAssistant::addPoint(
   const TStringId &name,
   TAssistantPoint::Type type,
-  const TPointD &position,
+  const TPointD &defPosition,
   bool visible )
-    { return addPoint(name, type, position, visible, 10.0); }
+    { return addPoint(name, type, defPosition, visible, 10.0); }
 
 //---------------------------------------------------------------------------------------------------
 
@@ -203,6 +205,10 @@ void
 TAssistant::onSetDefaults() {
   setEnabled(true);
   setMagnetism(1.0);
+  for(TAssistantPointMap::iterator i = m_points.begin(); i != m_points.end(); ++i)
+    i->second.position = i->second.defPosition;
+  fixPoints();
+  fixData();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -210,6 +216,16 @@ TAssistant::onSetDefaults() {
 void
 TAssistant::fixPoints()
   { onFixPoints(); }
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::move(const TPointD &position) {
+  TPointD d = position - getBasePoint().position;
+  for(TAssistantPointMap::iterator i = m_points.begin(); i != m_points.end(); ++i)
+    i->second.position += d;
+  fixPoints();
+}
 
 //---------------------------------------------------------------------------------------------------
 
@@ -254,8 +270,15 @@ TAssistant::onDataChanged(const TVariant &value) {
     movePoint(entry.field(), position);
   } else
   if (data().getChildPathEntry(value, entry) && entry.isField()) {
-    updateProperty(entry.field(), data()[entry.field()]);
+    onDataFieldChanged(entry.field(), data()[entry.field()]);
   }
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::onDataFieldChanged(const TStringId &name, const TVariant &value) {
+  updateProperty(name, value);
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -377,6 +400,33 @@ TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, 
     glColor4dv(colorBlack);
     tglDrawSegment(p0 + d, p1 + d);
   }
+  glPopAttrib();
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void
+TAssistant::drawDot(const TPointD &p, bool enabled) const {
+  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+  if (!enabled || !this->getEnabled())
+    colorBlack[3] = (colorWhite[3] *= 0.5);
+
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
+  tglEnableBlending();
+
+  glColor4dv(colorWhite);
+  tglEnablePointSmooth(3.0);
+  glBegin(GL_POINTS);
+  glVertex2d(p.x, p.y);
+  glEnd();
+
+  glColor4dv(colorBlack);
+  tglEnablePointSmooth(2.0);
+  glBegin(GL_POINTS);
+  glVertex2d(p.x, p.y);
+  glEnd();
+
   glPopAttrib();
 }
 

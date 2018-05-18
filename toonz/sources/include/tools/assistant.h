@@ -47,6 +47,7 @@ class TGuideline;
 typedef TSmartPointerT<TGuideline> TGuidelineP;
 typedef std::vector<TGuidelineP> TGuidelineList;
 typedef std::map<TStringId, TAssistantPoint> TAssistantPointMap;
+typedef std::vector<const TAssistantPoint*> TAssistantPointOrder;
 
 //===================================================================
 
@@ -102,6 +103,8 @@ public:
   };
 
   const TStringId name;
+  const TPointD defPosition;
+
   Type type;
   TPointD position;
   double radius;
@@ -109,7 +112,7 @@ public:
 
   mutable bool selected;
 
-  explicit TAssistantPoint(const TStringId &name);
+  explicit TAssistantPoint(const TStringId &name, const TPointD &defPosition = TPointD());
 };
 
 
@@ -193,6 +196,7 @@ protected:
   const TStringId m_idMagnetism;
 
   TAssistantPointMap m_points;
+  TAssistantPointOrder m_pointsOrder;
   TAssistantPoint* m_basePoint;
 
   mutable TPropertyGroup m_properties;
@@ -205,6 +209,8 @@ public:
 
   inline const TAssistantPointMap& points() const
     { return m_points; }
+  inline const TAssistantPointOrder& pointsOrder() const
+    { return m_pointsOrder; }
 
   inline const TAssistantPoint* findPoint(const TStringId &name) const {
     TAssistantPointMap::const_iterator i = points().find(name);
@@ -212,6 +218,7 @@ public:
   }
 
   void fixPoints();
+  void move(const TPointD &position);
   void movePoint(const TStringId &name, const TPointD &position);
   void setPointSelection(const TStringId &name, bool selected) const;
   void setAllPointsSelection(bool selected) const;
@@ -246,35 +253,37 @@ protected:
   TAssistantPoint& addPoint(
     const TStringId &name,
     TAssistantPoint::Type type,
-    const TPointD &position,
+    const TPointD &defPosition,
     bool visible,
     double radius );
 
   TAssistantPoint& addPoint(
     const TStringId &name,
     TAssistantPoint::Type type = TAssistantPoint::Circle,
-    const TPointD &position    = TPointD(),
+    const TPointD &defPosition = TPointD(),
     bool visible               = true );
 
   inline TAssistantPoint& addPoint(
     const std::string &name,
     TAssistantPoint::Type type,
-    const TPointD &position,
+    const TPointD &defPosition,
     bool visible,
     double radius )
-      { return addPoint(TStringId(name), type, position, visible, radius); }
+      { return addPoint(TStringId(name), type, defPosition, visible, radius); }
 
   inline TAssistantPoint& addPoint(
     const std::string &name,
     TAssistantPoint::Type type = TAssistantPoint::Circle,
-    const TPointD &position    = TPointD(),
+    const TPointD &defPosition = TPointD(),
     bool visible               = true )
-      { return addPoint(TStringId(name), type, position, visible); }
+      { return addPoint(TStringId(name), type, defPosition, visible); }
 
   //! usually called when meta-object created
   void onSetDefaults() override;
   //! called when part of variant data changed
   void onDataChanged(const TVariant &value) override;
+  //! called when field of root struct of variant data changed
+  virtual void onDataFieldChanged(const TStringId &name, const TVariant &value);
   //! load object data from variant
   virtual void onAllDataChanged();
   //! fix positions of all points (as like as all points moved)
@@ -291,6 +300,7 @@ protected:
   virtual void onPropertyChanged(const TStringId &name);
 
   void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool enabled = true) const;
+  void drawDot(const TPointD &p, bool enabled = true) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
 
   void addProperty(TProperty *p);
