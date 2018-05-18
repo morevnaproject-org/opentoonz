@@ -67,8 +67,6 @@ public:
     return TPointT(x - a.x, y - a.y);
   };
   inline TPointT operator-() const { return TPointT(-x, -y); };
-
-  bool operator!=(const TPointT &p) const { return x != p.x || y != p.y; }
 };
 
 template <class T>
@@ -142,6 +140,10 @@ template class DVAPI TPointT<double>;
 template <class T>
 inline bool operator==(const TPointT<T> &p0, const TPointT<T> &p1) {
   return p0.x == p1.x && p0.y == p1.y;
+}
+template<class T>
+inline bool operator!=(const TPointT<T> &p0, const TPointT<T> &p1) {
+  return p0.x != p1.x && p0.y != p1.y;
 }
 
 //-----------------------------------------------------------------------------
@@ -222,6 +224,9 @@ inline double tdistance2(const TPointD &p1, const TPointD &p2) {
 
 inline bool operator==(const TPointD &p0, const TPointD &p1) {
   return tdistance2(p0, p1) < TConsts::epsilon * TConsts::epsilon;
+}
+inline bool operator!=(const TPointD &p0, const TPointD &p1) {
+  return !(p0 == p1);
 }
 
 /*!
