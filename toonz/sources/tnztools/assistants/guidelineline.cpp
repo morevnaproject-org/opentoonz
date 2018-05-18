@@ -28,14 +28,24 @@ TGuidelineLineBase::truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPoi
     // horizontal
     if (fabs(d.x) < TConsts::epsilon) return;
     double k = d.y/d.x;
-    p1 = TPointD(bounds.x1, p0.y + k*(bounds.x1 - p0.x));
-    p0 = TPointD(bounds.x0, p0.y + k*(bounds.x0 - p0.x));
+    if (d.x > 0.0) {
+      p1 = TPointD(bounds.x0, p0.y + k*(bounds.x0 - p0.x));
+      p0 = TPointD(bounds.x1, p0.y + k*(bounds.x1 - p0.x));
+    } else {
+      p1 = TPointD(bounds.x1, p0.y + k*(bounds.x1 - p0.x));
+      p0 = TPointD(bounds.x0, p0.y + k*(bounds.x0 - p0.x));
+    }
   } else {
     // vertical
     if (fabs(d.y) < TConsts::epsilon) return;
     double k = d.x/d.y;
-    p1 = TPointD(p0.x + k*(bounds.y1 - p0.y), bounds.y1);
-    p0 = TPointD(p0.x + k*(bounds.y0 - p0.y), bounds.y0);
+    if (d.y > 0.0) {
+      p1 = TPointD(p0.x + k*(bounds.y0 - p0.y), bounds.y0);
+      p0 = TPointD(p0.x + k*(bounds.y1 - p0.y), bounds.y1);
+    } else {
+      p1 = TPointD(p0.x + k*(bounds.y1 - p0.y), bounds.y1);
+      p0 = TPointD(p0.x + k*(bounds.y0 - p0.y), bounds.y0);
+    }
   }
 }
 
