@@ -186,23 +186,24 @@ void TTool::bind(int targetType) {
 
   if (!toolNames) toolNames = new std::set<std::string>();
 
+  ToolTargetType targets[] = {
+    EmptyTarget,
+    ToonzImage,
+    VectorImage,
+    RasterImage,
+    MeshImage,
+    MetaImage };
+  int targetsCount = sizeof(targets)/sizeof(*targets);
+
   std::string name = getName();
   if (toolNames->count(name) == 0) {
     toolNames->insert(name);
 
     // Initialize with the dummy tool
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, EmptyTarget), &theDummyTool));
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, ToonzImage), &theDummyTool));
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, VectorImage), &theDummyTool));
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, RasterImage), &theDummyTool));
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, MeshImage), &theDummyTool));
-    toolTable->insert(
-        std::make_pair(std::make_pair(name, MetaImage), &theDummyTool));
+    for(int i = 0; i < targetsCount; ++i)
+      if (!toolTable->count(std::make_pair(name, targets[i])))
+        toolTable->insert(
+          std::make_pair(std::make_pair(name, targets[i]), &theDummyTool));
 
     ToolSelector *toolSelector = new ToolSelector(name);
     CommandManager::instance()->setHandler(
@@ -210,24 +211,10 @@ void TTool::bind(int targetType) {
                           toolSelector, &ToolSelector::selectTool));
   }
 
-  if (targetType & EmptyTarget)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, EmptyTarget), this));
-  if (targetType & ToonzImage)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, ToonzImage), this));
-  if (targetType & VectorImage)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, VectorImage), this));
-  if (targetType & RasterImage)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, RasterImage), this));
-  if (targetType & MeshImage)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, MeshImage), this));
-  if (targetType & MetaImage)
-    toolTable->insert(
-      std::make_pair(std::make_pair(name, MetaImage), this));
+  for(int i = 0; i < targetsCount; ++i)
+    if (targetType & targets[i])
+      toolTable->insert(
+        std::make_pair(std::make_pair(name, targets[i]), this));
 }
 
 //-----------------------------------------------------------------------------
