@@ -99,7 +99,8 @@ public:
     Circle,
     CircleFill,
     CircleCross,
-    CircleGrid
+    CircleDots,
+    CircleDoubleDots,
   };
 
   const TStringId name;
@@ -245,7 +246,7 @@ public:
   TPropertyGroup& getProperties() const
     { return m_properties; }
   void propertyChanged(const TStringId &name)
-    { LockEvents lock(*this); onPropertyChanged(name); }
+    { onPropertyChanged(name); }
 
   const TAssistantPoint& getBasePoint() const;
 
@@ -299,9 +300,17 @@ protected:
   //! put value from property to variant
   virtual void onPropertyChanged(const TStringId &name);
 
-  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool enabled = true) const;
-  void drawDot(const TPointD &p, bool enabled = true) const;
+  double getDrawingAlpha(bool enabled = true) const;
+  double getDrawingGridAlpha() const;
+
+  void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, double alpha) const;
+  void drawDot(const TPointD &p, double alpha) const;
   void drawPoint(const TAssistantPoint &point, double pixelSize) const;
+
+  inline void drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize) const
+    { drawSegment(p0, p1, pixelSize, getDrawingAlpha()); }
+  inline void drawDot(const TPointD &p) const
+    { drawDot(p, getDrawingAlpha()); }
 
   void addProperty(TProperty *p);
   void setTranslation(const TStringId &name, const QString &localName) const;
