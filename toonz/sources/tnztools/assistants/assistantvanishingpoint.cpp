@@ -155,12 +155,13 @@ public:
   }
 
   void onMovePoint(TAssistantPoint &point, const TPointD &position) override {
-    if (&point == &getBasePoint())
-      { move(position); return; }
-
     TPointD previousCenter = m_center.position;
     TPointD previous = point.position;
     point.position = position;
+    if (&point == &m_center) {
+      fixSidePoint(m_a0, m_a1);
+      fixSidePoint(m_b0, m_b1);
+    } else
     if (&point == &m_a0) {
       fixSidePoint(m_a0, m_a1, previous);
       fixSidePoint(m_b0, m_b1);
@@ -215,7 +216,8 @@ public:
   void drawSimpleGrid() const {
     if (m_gridRays <= 0) return;
 
-    double alpha = getDrawingGridAlpha();
+    // common data about viewport
+    const TRectD oneBox(-1.0, -1.0, 1.0, 1.0);
     TAffine4 modelview, projection;
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
     glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
@@ -223,8 +225,9 @@ public:
     TAffine matrixInv = matrix.inv();
     double pixelSize = sqrt(tglGetPixelSize2());
 
+    // initial calculations
+    double alpha = getDrawingGridAlpha();
     const TPointD &p = m_center.position;
-    const TRectD oneBox(-1.0, -1.0, 1.0, 1.0);
     TPointD dp = m_grid0.position - p;
     double step = M_2PI/(double)m_gridRays;
 
@@ -242,7 +245,7 @@ public:
         angles[i] = atan(matrixInv*corners[i] - p) + M_2PI;
         for(int j = 0; j < i; ++j) {
           double d = fabs(angles[i] - angles[j]);
-          if (d > M_PI) d = M_PI - d;
+          if (d > M_PI) d = M_2PI - d;
           if (d > da) da = d, a0 = angles[i], a1 = angles[j];
         }
       }
@@ -271,7 +274,86 @@ public:
   }
 
   void drawPerspectiveGrid() const {
-    // TODO:
+    // initial calculations
+    const double minStep = 5.0;
+    double alpha = getDrawingGridAlpha();
+    const TPointD &center = m_center.position;
+
+    TPointD step = m_grid1.position - m_grid0.position;
+    double stepLen2 = norm2(step);
+    double stepLen = sqrt(stepLen2);
+    if (stepLen <= minStep) return;
+    TPointD stepProj = step*(1.0/stepLen2);
+
+    TPointD dp = center - m_grid0.position;
+    double startX = dp*stepProj;
+    TPointD zeroPoint = m_grid0.position + step*startX;
+    TPointD cz = zeroPoint - center;
+    double czLen2 = norm2(cz);
+    double czLen = sqrt(czLen2);
+    if (czLen <= TConsts::epsilon) return;
+    TPointD zeroProj = cz*(1.0/czLen2);
+
+    double smallK = minStep/stepLen;
+    TPointD smallGrid0 = center - dp*smallK;
+    TPointD smallStep = step*smallK;
+    TPointD smallStepProj = stepProj*(1/smallK);
+
+    // common data about viewport
+    const TRectD oneBox(-1.0, -1.0, 1.0, 1.0);
+    TAffine4 modelview, projection;
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
+    glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
+    TAffine matrix = (projection*modelview).get2d();
+    TAffine matrixInv = matrix.inv();
+    double pixelSize = sqrt(tglGetPixelSize2());
+
+    // calculate bounds
+    bool found = false;
+    double minx = 0.0, maxx = 0.0;
+    TPointD p0 = matrix*(smallGrid0);
+    TPointD p1 = matrix*(smallGrid0 + smallStep);
+    if (TGuidelineLineBase::truncateInfiniteLine(oneBox, p0, p1)) {
+      p0 = matrixInv*p0;
+      p1 = matrixInv*p1;
+      minx = (p0 - smallGrid0)*smallStepProj;
+      maxx = (p1 - smallGrid0)*smallStepProj;
+      if (maxx < minx) std::swap(maxx, minx);
+      found = true;
+    }
+    if (!oneBox.contains(matrix*center)) {
+      TPointD corners[4] = {
+        TPointD(oneBox.x0, oneBox.y0),
+        TPointD(oneBox.x0, oneBox.y1),
+        TPointD(oneBox.x1, oneBox.y0),
+        TPointD(oneBox.x1, oneBox.y1) };
+      for(int i = 0; i < 4; ++i) {
+        TPointD p = matrixInv*corners[i] - center;
+        double k = p*zeroProj;
+        if (k < TConsts::epsilon) continue;
+        double x = startX + (p*stepProj)/k;
+        if (!found || x < minx) minx = x;
+        if (!found || x > maxx) maxx = x;
+        found = true;
+      }
+      if (maxx <= minx) return;
+    }
+
+    // draw grid
+    if (maxx - minx > 1e6) return;
+    for(double x = ceil(minx); x < maxx; ++x) {
+      TPointD p = smallGrid0 + smallStep*x - center;
+      TPointD p0 = matrix*(center + p);
+      TPointD p1 = matrix*(center + p*2.0);
+      if (TGuidelineLineBase::truncateInfiniteRay(oneBox, p0, p1))
+        drawSegment(matrixInv*p0, matrixInv*p1, pixelSize, alpha);
+    }
+
+    // draw horizon
+    p0 = matrix*(center);
+    p1 = matrix*(center + step);
+    if (TGuidelineLineBase::truncateInfiniteLine(oneBox, p0, p1))
+      drawSegment(matrixInv*p0, matrixInv*p1, pixelSize, alpha);
   }
 
   void draw(TToolViewer *viewer, bool enabled) const override {
