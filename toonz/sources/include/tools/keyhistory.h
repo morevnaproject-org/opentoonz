@@ -186,7 +186,7 @@ public:
     }
 
     StateHolder get(double time) const {
-      TTimerTicks dticks = (TTimerTicks)ceil(TToolTimer::frequency*(time + m_timeOffset));
+      TTimerTicks dticks = (TTimerTicks)ceil(TToolTimer::frequency*(time + m_timeOffset - TConsts::epsilon));
       StatePointer state = m_history->get(m_ticks + dticks);
       return StateHolder(state, m_ticks, m_timeOffset + time);
     }
