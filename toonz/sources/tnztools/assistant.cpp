@@ -380,12 +380,22 @@ TAssistant::onPropertyChanged(const TStringId &name) {
 
 //---------------------------------------------------------------------------------------------------
 
+double
+TAssistant::getDrawingAlpha(bool enabled) const
+  { return enabled && this->getEnabled() ? 0.5 : 0.25; }
+
+//---------------------------------------------------------------------------------------------------
+
+double
+TAssistant::getDrawingGridAlpha() const
+  { return 0.2; }
+
+//---------------------------------------------------------------------------------------------------
+
 void
-TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, bool enabled) const {
-  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
-  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
-  if (!enabled || !this->getEnabled())
-    colorBlack[3] = (colorWhite[3] *= 0.5);
+TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, double alpha) const {
+  double colorBlack[4] = { 0.0, 0.0, 0.0, alpha };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, alpha };
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
@@ -406,17 +416,15 @@ TAssistant::drawSegment(const TPointD &p0, const TPointD &p1, double pixelSize, 
 //---------------------------------------------------------------------------------------------------
 
 void
-TAssistant::drawDot(const TPointD &p, bool enabled) const {
-  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
-  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
-  if (!enabled || !this->getEnabled())
-    colorBlack[3] = (colorWhite[3] *= 0.5);
+TAssistant::drawDot(const TPointD &p, double alpha) const {
+  double colorBlack[4] = { 0.0, 0.0, 0.0, alpha };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, alpha };
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
 
   glColor4dv(colorWhite);
-  tglEnablePointSmooth(3.0);
+  tglEnablePointSmooth(4.0);
   glBegin(GL_POINTS);
   glVertex2d(p.x, p.y);
   glEnd();
@@ -439,9 +447,10 @@ TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
   double radius = point.radius;
   double crossSize = 1.2*radius;
 
-  double colorBlack[4] = { 0.0, 0.0, 0.0, 0.5 };
-  double colorGray[4]  = { 0.5, 0.5, 0.5, 0.5 };
-  double colorWhite[4] = { 1.0, 1.0, 1.0, 0.5 };
+  double alpha = 0.5;
+  double colorBlack[4] = { 0.0, 0.0, 0.0, alpha };
+  double colorGray[4]  = { 0.5, 0.5, 0.5, alpha };
+  double colorWhite[4] = { 1.0, 1.0, 1.0, alpha };
   double width = 0.5;
 
   if (point.selected) {
@@ -461,6 +470,8 @@ TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
 
   TPointD crossDx(pixelSize*crossSize, 0.0);
   TPointD crossDy(0.0, pixelSize*crossSize);
+  TPointD gridDx(pixelSize*radius, 0.0);
+  TPointD gridDy(0.0, pixelSize*radius);
 
   // back line
   tglEnableLineSmooth(true, 2.0*std::max(1.0, width));
@@ -468,7 +479,7 @@ TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
   if (point.type == TAssistantPoint::CircleCross) {
     tglDrawSegment(point.position - crossDx, point.position + crossDx);
     tglDrawSegment(point.position - crossDy, point.position + crossDy);
-  }
+  } else
   tglDrawCircle(point.position, radius*pixelSize);
 
   // front line
@@ -479,6 +490,27 @@ TAssistant::drawPoint(const TAssistantPoint &point, double pixelSize) const {
     tglDrawSegment(point.position - crossDy, point.position + crossDy);
   }
   tglDrawCircle(point.position, radius*pixelSize);
+
+  // dots
+  switch(point.type) {
+  case TAssistantPoint::CircleDoubleDots:
+    drawDot(point.position - gridDx*0.5, alpha);
+    drawDot(point.position + gridDx*0.5, alpha);
+    drawDot(point.position - gridDy*0.5, alpha);
+    drawDot(point.position + gridDy*0.5, alpha);
+    //no break
+  case TAssistantPoint::CircleDots:
+    drawDot(point.position - gridDx, alpha);
+    drawDot(point.position + gridDx, alpha);
+    drawDot(point.position - gridDy, alpha);
+    drawDot(point.position + gridDy, alpha);
+    //no break
+  case TAssistantPoint::Circle:
+    drawDot(point.position, alpha);
+    break;
+  default:
+    break;
+  }
 
   glPopAttrib();
 }
