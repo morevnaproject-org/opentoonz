@@ -123,6 +123,7 @@ protected:
   TStringId m_newAssisnantType;
 
   bool           m_dragging;
+  bool           m_dragAllPoints;
   TMetaObjectH   m_currentAssistant;
   bool           m_currentAssistantCreated;
   bool           m_currentAssistantChanged;
@@ -147,6 +148,7 @@ public:
     TTool("T_EditAssistants"),
     m_assistantType("AssistantType"),
     m_dragging(),
+    m_dragAllPoints(),
     m_currentAssistantCreated(),
     m_currentAssistantChanged(),
     m_currentAssistantIndex(-1),
@@ -421,9 +423,10 @@ public:
     return true;
   }
 
-  void leftButtonDown(const TTrackPoint& point, const TTrack&) override {
+  void leftButtonDown(const TTrackPoint& point, const TTrack &track) override {
     apply();
     m_dragging = true;
+    m_dragAllPoints = false;
     if (m_newAssisnantType) {
       // create assistant
       resetCurrentPoint(false);
@@ -433,6 +436,7 @@ public:
           assistant->setDefaults();
           assistant->move(point.position);
           assistant->selectAll();
+          m_dragAllPoints = true;
           m_currentAssistantCreated = true;
           m_currentAssistantChanged = true;
           m_currentAssistantIndex = (int)(*m_writer)->size();
@@ -450,6 +454,12 @@ public:
       double pixelSize = 0.5*( sqrt(matrix.a11*matrix.a11 + matrix.a21*matrix.a21)
                              + sqrt(matrix.a12*matrix.a12 + matrix.a22*matrix.a22) );
       findCurrentPoint(point.position, pixelSize);
+      if (track.getKeyState(point.time).isPressed(TKey::shift))
+        if (Closer closer = read(ModePoint)) {
+          m_currentPointName = m_readAssistant->getBasePoint().name;
+          m_currentPointOffset = m_readAssistant->getBasePoint().position - point.position;
+          m_dragAllPoints = true;
+        }
     }
 
     m_currentPosition = point.position;
@@ -457,7 +467,7 @@ public:
   }
 
   void leftButtonDrag(const TTrackPoint& point, const TTrack&) override {
-    if (m_currentAssistantCreated) {
+    if (m_dragAllPoints) {
       if (Closer closer = write(ModeAssistant, true))
         m_writeAssistant->move( point.position + m_currentPointOffset );
     } else {
@@ -472,8 +482,10 @@ public:
 
   void leftButtonUp(const TTrackPoint &point, const TTrack&) override {
     if (m_currentAssistantCreated) {
-      if (Closer closer = write(ModeAssistant, true))
+      if (Closer closer = write(ModeAssistant, true)) {
+        m_writeAssistant->getBasePoint();
         m_writeAssistant->move( point.position + m_currentPointOffset );
+      }
     } else {
       if (Closer closer = write(ModePoint, true))
         m_writeAssistant->movePoint(
@@ -487,6 +499,7 @@ public:
     emit getApplication()->getCurrentTool()->toolChanged();
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
+    m_dragAllPoints = false;
     m_dragging = false;
   }
 
