@@ -58,7 +58,7 @@ TGuidelineLineBase::truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPoi
   if (bounds.isEmpty()) return false;
   TPointD d = p0 - p1;
   TDimensionD size = bounds.getSize();
-  if (fabs(d.x)*(bounds.y1 - bounds.y0) > fabs(d.y)*(bounds.x1 - bounds.x0)) {
+  if (fabs(d.x)*size.ly > fabs(d.y)*size.lx) {
     // horizontal
     if (!fitX     (p0.x, p0.y, p1.x, p1.y, bounds.x0, bounds.x1)) return false;
     if (!truncateX(p0.y, p0.x, p1.y, p1.x, bounds.y0, bounds.y1)) return false;
@@ -71,19 +71,28 @@ TGuidelineLineBase::truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPoi
 }
 
 bool
-TGuidelineLineBase::truncateInfiniteRay(const TRectD &bounds, TPointD &p0, TPointD &p1) {
+TGuidelineLineBase::truncateRay(const TRectD &bounds, TPointD &p0, TPointD &p1) {
   if (bounds.isEmpty()) return false;
   TRectD b(bounds);
-  if (p0.x <= p1.x && b.x0 <= p0.x) b.x0 = p0.x;
-  if (p0.x >  p1.x && b.x1 >  p0.x) b.x1 = p0.x;
-  if (p0.y <= p1.y && b.y0 <= p0.y) b.y0 = p0.y;
-  if (p0.y >  p1.y && b.y1 >  p0.y) b.y1 = p0.y;
+
+  if (p0.x <= p1.x) { if (b.x0 < p0.x) b.x0 = p0.x; }
+               else { if (b.x1 > p0.x) b.x1 = p0.x; }
+  if (p0.y <= p1.y) { if (b.y0 < p0.y) b.y0 = p0.y; }
+               else { if (b.y1 > p0.y) b.y1 = p0.y; }
+
+  if (b.isEmpty()) return false;
+  return truncateInfiniteLine(b, p0, p1);
+}
+
+bool
+TGuidelineLineBase::truncateLine(const TRectD &bounds, TPointD &p0, TPointD &p1) {
+  TRectD b = bounds * boundingBox(p0, p1);
   if (b.isEmpty()) return false;
   return truncateInfiniteLine(b, p0, p1);
 }
 
 void
-TGuidelineLineBase::drawInfiniteLine(const TPointD &p0, const TPointD &p1, bool ray, bool active, bool enabled) const {
+TGuidelineLineBase::drawLine(const TPointD &p0, const TPointD &p1, bool restrict0, bool restrict1, bool active, bool enabled) const {
   TAffine4 modelview, projection;
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
   glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
@@ -91,9 +100,11 @@ TGuidelineLineBase::drawInfiniteLine(const TPointD &p0, const TPointD &p1, bool 
   TAffine matrix = (projection*modelview).get2d();
   TPointD pp0 = matrix*p0;
   TPointD pp1 = matrix*p1;
-  if ( ray
-     ? !truncateInfiniteRay (TRectD(-1.0, -1.0, 1.0, 1.0), pp0, pp1)
-     : !truncateInfiniteLine(TRectD(-1.0, -1.0, 1.0, 1.0), pp0, pp1) ) return;
+  const TRectD oneBox(-1.0, -1.0, 1.0, 1.0);
+  if ( restrict0 && restrict1 ? !truncateLine(oneBox, pp0, pp1)
+     : restrict0              ? !truncateRay (oneBox, pp0, pp1)
+     : restrict1              ? !truncateRay (oneBox, pp1, pp0) // pp1 first
+     :                  !truncateInfiniteLine(oneBox, pp0, pp1) ) return;
 
   double pixelSize = sqrt(tglGetPixelSize2());
   TAffine matrixInv = matrix.inv();
@@ -119,7 +130,7 @@ TGuidelineLine::transformPoint(const TTrackPoint &point) const {
 
 void
 TGuidelineLine::draw(bool active, bool enabled) const
-  { drawSegment(p0, p1, sqrt(tglGetPixelSize2()), active, enabled); }
+  { drawLine(p0, p1, true, true, active, enabled); }
 
 
 //*****************************************************************************************
@@ -139,7 +150,7 @@ TGuidelineInfiniteLine::transformPoint(const TTrackPoint &point) const {
 
 void
 TGuidelineInfiniteLine::draw(bool active, bool enabled) const
-  { drawInfiniteLine(p0, p1, false, active, enabled); }
+  { drawLine(p0, p1, false, false, active, enabled); }
 
 
 //*****************************************************************************************
@@ -159,5 +170,5 @@ TGuidelineRay::transformPoint(const TTrackPoint &point) const {
 
 void
 TGuidelineRay::draw(bool active, bool enabled) const
-  { drawInfiniteLine(p0, p1, true, active, enabled); }
+  { drawLine(p0, p1, true, false, active, enabled); }
 

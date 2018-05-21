@@ -32,10 +32,11 @@ public:
   const TPointD p1;
 
   TGuidelineLineBase(bool enabled, double magnetism, const TPointD &p0, const TPointD &p1);
-  void drawInfiniteLine(const TPointD &p0, const TPointD &p1, bool ray, bool active, bool enabled) const;
+  void drawLine(const TPointD &p0, const TPointD &p1, bool restrict0, bool restrict1, bool active, bool enabled) const;
   static TPointD calcDirection(const TPointD &p0, const TPointD &p1);
   static bool truncateInfiniteLine(const TRectD &bounds, TPointD &p0, TPointD &p1);
-  static bool truncateInfiniteRay(const TRectD &bounds, TPointD &p0, TPointD &p1);
+  static bool truncateRay(const TRectD &bounds, TPointD &p0, TPointD &p1);
+  static bool truncateLine(const TRectD &bounds, TPointD &p0, TPointD &p1);
 };
 
 
