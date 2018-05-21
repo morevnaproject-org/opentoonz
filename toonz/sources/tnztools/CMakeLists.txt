@@ -123,6 +123,7 @@ set(SOURCES
     modifiers/modifierassistants.cpp
     assistants/guidelineline.cpp
     assistants/assistantvanishingpoint.cpp
+    assistants/assistantline.cpp
     editassistantstool.cpp
 )
 
