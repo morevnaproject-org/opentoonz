@@ -266,6 +266,8 @@ void tglEnableLineSmooth(bool enable, double lineSize) {
 
 void tglEnablePointSmooth(double pointSize) {
   glEnable(GL_BLEND);
+  glEnable(GL_POINT_SMOOTH);
+  glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
   glPointSize(pointSize);
 }
 
