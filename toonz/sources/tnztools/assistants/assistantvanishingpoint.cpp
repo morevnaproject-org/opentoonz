@@ -29,9 +29,6 @@ protected:
   TAssistantPoint &m_grid0;
   TAssistantPoint &m_grid1;
 
-  int m_gridRays; //!< for simple grid only, not perspective
-  double m_gridRadiusPart;
-
 public:
   TAssistantVanishingPoint(TMetaObject &object):
     TAssistant(object),
@@ -39,14 +36,12 @@ public:
     m_idGrid("grid"),
     m_idPerspective("perspective"),
     m_center( addPoint("center", TAssistantPoint::CircleCross) ),
-    m_a0    ( addPoint("A0",     TAssistantPoint::Circle, TPointD(-50.0, 0.0)) ),
-    m_a1    ( addPoint("A1",     TAssistantPoint::Circle, TPointD(-75.0, 0.0)) ),
-    m_b0    ( addPoint("B0",     TAssistantPoint::Circle, TPointD( 50.0, 0.0)) ),
-    m_b1    ( addPoint("B1",     TAssistantPoint::Circle, TPointD( 75.0, 0.0)) ),
-    m_grid0 ( addPoint("grid0",  TAssistantPoint::CircleDoubleDots, TPointD(-12.5,-25.0)) ),
-    m_grid1 ( addPoint("grid1",  TAssistantPoint::CircleDots,       TPointD( 12.5,-25.0)) ),
-    m_gridRays(),
-    m_gridRadiusPart()
+    m_a0    ( addPoint("a0",     TAssistantPoint::Circle, TPointD(-50.0, 0.0)) ),
+    m_a1    ( addPoint("a1",     TAssistantPoint::Circle, TPointD(-75.0, 0.0)) ),
+    m_b0    ( addPoint("b0",     TAssistantPoint::Circle, TPointD( 50.0, 0.0)) ),
+    m_b1    ( addPoint("b1",     TAssistantPoint::Circle, TPointD( 75.0, 0.0)) ),
+    m_grid0 ( addPoint("grid0",  TAssistantPoint::CircleDoubleDots, TPointD(  0.0,-50.0)) ),
+    m_grid1 ( addPoint("grid1",  TAssistantPoint::CircleDots,       TPointD( 25.0,-50.0)) )
   {
     addProperty( new TBoolProperty(m_idPassThrough.str(), getPassThrough()) );
     addProperty( new TBoolProperty(m_idGrid.str(), getGrid()) );
@@ -127,31 +122,11 @@ private:
     m_grid1.position = m_grid0.position + dx*x + dy*y;
   }
 
-  void recalcGrid() {
-    const double minStep = 5.0;
-
-    TPointD d0 = m_grid0.position - m_center.position;
-    TPointD d1 = m_grid1.position - m_center.position;
-    double l = norm(d0);
-    if (l <= TConsts::epsilon) return;
-    if (norm2(d1) <= TConsts::epsilon*TConsts::epsilon) return;
-    double a0 = atan(d0);
-    double a1 = atan(d1);
-    double da = fabs(a1 - a0);
-    if (da > M_PI) da = M_PI - da;
-    if (da < TConsts::epsilon) da = TConsts::epsilon;
-    double count = M_2PI/da;
-    m_gridRadiusPart = minStep/da/l;
-    m_gridRays = count < 1e6 && m_gridRadiusPart < 1.0
-               ? (int)round(count) : 0;
-  }
-
 public:
   void onFixPoints() override {
     fixSidePoint(m_a0, m_a1);
     fixSidePoint(m_b0, m_b1);
     fixCenter();
-    recalcGrid();
   }
 
   void onMovePoint(TAssistantPoint &point, const TPointD &position) override {
@@ -187,8 +162,6 @@ public:
     if (&point != &m_grid1) {
       fixGrid1(previousCenter, m_grid0.position);
     }
-
-    recalcGrid();
   }
 
   void getGuidelines(
@@ -214,7 +187,28 @@ public:
   }
 
   void drawSimpleGrid() const {
-    if (m_gridRays <= 0) return;
+    const double minStep = 5.0;
+    double alpha = getDrawingGridAlpha();
+    const TPointD &p = m_center.position;
+
+    // calculate rays count and step
+    TPointD d0 = m_grid0.position - p;
+    TPointD d1 = m_grid1.position - p;
+    TPointD dp = d0;
+    double l = norm(d0);
+    if (l <= TConsts::epsilon) return;
+    if (norm2(d1) <= TConsts::epsilon*TConsts::epsilon) return;
+    double a0 = atan(d0);
+    double a1 = atan(d1);
+    double da = fabs(a1 - a0);
+    if (da > M_PI) da = M_PI - da;
+    if (da < TConsts::epsilon) da = TConsts::epsilon;
+    double count = M_2PI/da;
+    if (count > 1e6) return;
+    double radiusPart = minStep/(da*l);
+    if (radiusPart > 1.0) return;
+    int raysCount = (int)round(count);
+    double step = M_2PI/(double)raysCount;
 
     // common data about viewport
     const TRectD oneBox(-1.0, -1.0, 1.0, 1.0);
@@ -225,14 +219,7 @@ public:
     TAffine matrixInv = matrix.inv();
     double pixelSize = sqrt(tglGetPixelSize2());
 
-    // initial calculations
-    double alpha = getDrawingGridAlpha();
-    const TPointD &p = m_center.position;
-    TPointD dp = m_grid0.position - p;
-    double step = M_2PI/(double)m_gridRays;
-
     // calculate range
-    int raysCount = m_gridRays;
     if (!(matrixInv*oneBox).contains(p)) {
       TPointD corners[4] = {
         TPointD(oneBox.x0, oneBox.y0),
@@ -265,9 +252,9 @@ public:
     double s = sin(step);
     double c = cos(step);
     for(int i = 0; i < raysCount; ++i) {
-      TPointD p0 = matrix*(p + dp*m_gridRadiusPart);
+      TPointD p0 = matrix*(p + dp*radiusPart);
       TPointD p1 = matrix*(p + dp);
-      if (TGuidelineLineBase::truncateInfiniteRay(oneBox, p0, p1))
+      if (TGuidelineLineBase::truncateRay(oneBox, p0, p1))
         drawSegment(matrixInv*p0, matrixInv*p1, pixelSize, alpha);
       dp = TPointD(c*dp.x - s*dp.y, s*dp.x + c*dp.y);
     }
@@ -345,7 +332,7 @@ public:
       TPointD p = smallGrid0 + smallStep*x - center;
       TPointD p0 = matrix*(center + p);
       TPointD p1 = matrix*(center + p*2.0);
-      if (TGuidelineLineBase::truncateInfiniteRay(oneBox, p0, p1))
+      if (TGuidelineLineBase::truncateRay(oneBox, p0, p1))
         drawSegment(matrixInv*p0, matrixInv*p1, pixelSize, alpha);
     }
 
