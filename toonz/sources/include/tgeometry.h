@@ -1301,4 +1301,77 @@ public:
   static TAffine4 perspective(double near, double far, double tangent);
 };
 
+
+//=============================================================================
+
+//! This class performs binary manipulations with angle ranges
+
+class DVAPI TAngleRangeSet {
+public:
+  typedef unsigned int Type;
+  typedef std::vector<Type> List;
+
+  static const Type max = Type() - Type(1);
+  static const Type half = ((Type() - Type(1)) >> 1) + Type(1);
+
+  static Type fromDouble(double a)
+    { return Type(round((a/M_2PI + 0.5)*max)); }
+  static double toDouble(Type a)
+    { return ((double)a/(double)max - 0.5)*M_2PI; }
+
+  struct Range {
+    Type a0, a1;
+    Range(): a0(), a1() { }
+    Range(Type a0, Type a1): a0(a0), a1(a1) { }
+    inline bool isEmpty() const { return a0 == a1; }
+    inline Range flip() const { return Range(a1, a0); }
+  };
+
+private:
+  bool m_flip;
+  List m_angles;
+
+  int find(Type a) const;
+  void insert(Type a);
+  bool doAdd(Type a0, Type a1);
+
+public:
+  inline explicit TAngleRangeSet(bool fill = false): m_flip(fill) { }
+  inline TAngleRangeSet(const TAngleRangeSet &x, bool flip = false):
+      m_flip(x.isFlipped() != flip), m_angles(x.angles()) { }
+
+  inline const List& angles() const { return m_angles; }
+  inline bool isFlipped() const { return m_flip; }
+  inline bool isEmpty() const { return !m_flip && m_angles.empty(); }
+  inline bool isFull() const { return m_flip && m_angles.empty(); }
+
+  bool contains(Type a) const;
+  bool check() const;
+
+  inline void clear() { m_flip = false; m_angles.clear(); }
+  inline void fill() { m_flip = true; m_angles.clear(); }
+  inline void invert() { m_flip = !m_flip; }
+
+  void set(Type a0, Type a1);
+  void set(const TAngleRangeSet &x, bool flip = false);
+
+  //! also known as 'xor'
+  void invert(Type a0, Type a1);
+  inline void invert(const Range &x) { invert(x.a0, x.a1); }
+  void invert(const TAngleRangeSet &x);
+
+  void add(Type a0, Type a1);
+  inline void add(const Range &x) { add(x.a0, x.a1); }
+  void add(const TAngleRangeSet &x);
+
+  void subtract(Type a0, Type a1);
+  inline void subtract(const Range &x) { subtract(x.a0, x.a1); }
+  void subtract(const TAngleRangeSet &x);
+
+  void intersect(Type a0, Type a1);
+  inline void intersect(const Range &x) { intersect(x.a0, x.a1); }
+  void intersect(const TAngleRangeSet &x);
+};
+
+
 #endif  //  __T_GEOMETRY_INCLUDED__
