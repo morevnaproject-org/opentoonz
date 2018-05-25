@@ -348,3 +348,181 @@ TAffine4 TAffine4::rotationZ(double angle) {
   r.a22 =  c;
   return r;
 }
+
+//==================================================================================================
+
+
+int TAngleRangeSet::find(Type a) const {
+  assert(!m_angles.empty());
+  int i0 = 0, i1 = m_angles.size() - 1;
+  if (a < m_angles[0]) return i1;
+  if (m_angles[i1] <= a) return i1;
+  while(true) {
+    int i = (i1 + i0)/2;
+    if (i == i0) break;
+    if (m_angles[i] <= a) i0 = i; else i1 = i;
+  }
+  return i0;
+}
+
+void TAngleRangeSet::insert(Type a) {
+  int i = find(a);
+  if (m_angles[i] == a) m_angles.erase(m_angles.begin() + i); else
+    if (a < m_angles[0]) m_angles.insert(m_angles.begin(), a); else
+      m_angles.insert(m_angles.begin()+1, a);
+}
+
+bool TAngleRangeSet::doAdd(Type a0, Type a1) {
+  int i0 = find(a0);
+  int i1 = find(a1);
+  if (i0 == i1) {
+    bool visible = (i0%2 != 0) == m_flip;
+    if (m_angles[i0] != a0 && m_angles[i0] - a0 <= a1 - a0) {
+      if (visible) { fill(); return true; }
+      set(a0, a1);
+    } else
+    if (!visible) {
+      if (a1 < a0) m_flip = true;
+      insert(a0);
+      insert(a1);
+    }
+    return false;
+  }
+
+  bool visible0 = (i0%2 != 0) == m_flip;
+  bool visible1 = (i1%2 != 0) == m_flip;
+
+  // remove range (i0, i1]
+  i0 = (i0 + 1)%m_angles.size();
+  if (i1 < i0) {
+    m_angles.erase(m_angles.begin() + i0, m_angles.end());
+    m_angles.erase(m_angles.begin(), m_angles.begin() + i1 + 1);
+  } else {
+    m_angles.erase(m_angles.begin() + i0, m_angles.begin() + i1 + 1);
+  }
+
+  // insert new angles if need
+  if (!visible0) insert(a0);
+  if (!visible1) insert(a1);
+  if (m_angles.empty()) { m_flip = true; return true; }
+  if (a1 < a0) m_flip = true;
+  return false;
+}
+
+bool TAngleRangeSet::contains(Type a) const {
+  if (isEmpty()) return false;
+  if (isFull()) return true;
+  return (find(a)%2 != 0) == m_flip;
+}
+
+bool TAngleRangeSet::check() const {
+  if (m_angles.size() % 2 != 0)
+    return false;
+  for(int i = 1; i < (int)m_angles.size(); ++i)
+    if (m_angles[i-1] >= m_angles[i])
+      return false;
+  return true;
+}
+
+void TAngleRangeSet::set(Type a0, Type a1) {
+  m_angles.clear();
+  if (a0 < a1) {
+    m_flip = false;
+    m_angles.push_back(a0);
+    m_angles.push_back(a1);
+  } else
+  if (a0 > a1) {
+    m_flip = true;
+    m_angles.push_back(a1);
+    m_angles.push_back(a0);
+  } else {
+    m_flip = true;
+  }
+}
+
+void TAngleRangeSet::set(const TAngleRangeSet &x, bool flip = false) {
+  if (&x == this) return;
+  m_flip = (x.isFlipped() != flip);
+  m_angles = x.angles();
+}
+
+void TAngleRangeSet::invert(Type a0, Type a1) {
+  if (a0 == a1) return;
+  if (isEmpty()) { set(a0, a1); return; }
+  if (isFull()) { set(a1, a0); return; }
+  if (a1 < a0) m_flip = !m_flip;
+  insert(a0);
+  insert(a1);
+}
+
+void TAngleRangeSet::invert(const TAngleRangeSet &x) {
+  if (x.isEmpty()) { return; }
+  if (x.isFull()) { invert(); return; }
+  if (isEmpty()) { set(x); return; }
+  if (isFull()) { set(x, true); return; }
+  m_flip = m_flip != x.isFlipped();
+  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
+    insert(*i);
+}
+
+void TAngleRangeSet::add(Type a0, Type a1) {
+  if (!isFull() && a0 != a1)
+    { if (isEmpty()) set(a0, a1); else doAdd(a0, a1); }
+}
+
+void TAngleRangeSet::add(const TAngleRangeSet &x) {
+  if (&x == this || isFull() || x.isEmpty()) return;
+  if (isEmpty()) { set(x); return; }
+  if (x.isFull()) { fill(); return; }
+  bool f = x.isFlipped();
+  Type prev = x.angles().back();
+  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
+    if (f && doAdd(prev, *i)) return;
+      else { prev = *i; f = !f; }
+}
+
+void TAngleRangeSet::subtract(Type a0, Type a1) {
+  if (!isEmpty() && a0 != a1) {
+    if (isFull()) set(a1, a0); else
+      { invert(); doAdd(a0, a1); invert(); }
+  }
+}
+
+void TAngleRangeSet::subtract(const TAngleRangeSet &x) {
+  if (isEmpty() || x.isEmpty()) return;
+  if (&x == this || x.isFull()) { clear(); return; }
+  if (isFull()) { set(x); invert(); return; }
+
+  // a - b = !(!a + b)
+  invert();
+  bool f = x.isFlipped();
+  Type prev = x.angles().back();
+  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
+    if (f && doAdd(prev, *i)) return;
+      else { prev = *i; f = !f; }
+  invert();
+}
+
+void TAngleRangeSet::intersect(Type a0, Type a1) {
+  if (!isEmpty()) {
+    if (a0 == a1) clear(); else
+      if (isFull()) set(a0, a1); else
+        { invert(); doAdd(a1, a0); invert(); }
+  }
+}
+
+void TAngleRangeSet::intersect(const TAngleRangeSet &x) {
+  if (&x == this || isEmpty() || x.isFull()) return;
+  if (x.isEmpty()) { clear(); return; }
+  if (isFull()) { set(x); return; }
+
+  // a & b = !(!a + b)
+  invert();
+  bool f = !x.isFlipped();
+  Type prev = x.angles().back();
+  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
+    if (f && doAdd(prev, *i)) return;
+      else { prev = *i; f = !f; }
+  invert();
+}
+
