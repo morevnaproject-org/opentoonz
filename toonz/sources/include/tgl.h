@@ -171,15 +171,12 @@ inline void tglFillRect(double x0, double y0, double x1, double y1) {
   tglFillRect(TRectD(x0, y0, x1, y1));
 }
 
-inline void tglMultMatrix(const TAffine &aff) {
-  GLdouble m[] = {aff.a11, aff.a21, 0, 0, aff.a12, aff.a22, 0, 0,
-                  0,       0,       1, 0, aff.a13, aff.a23, 0, 1};
-  glMultMatrixd(m);
-}
+inline void tglMultMatrix(const TAffine4 &aff)
+  { glMultMatrixd(aff.a); }
 
-inline void tglMultMatrix(const TAffine4 &aff) {
-  glMultMatrixd(aff.a);
-}
+inline void tglMultMatrix(const TAffine &aff)
+  { tglMultMatrix(TAffine4(aff)); }
+
 
 //=============================================================================
 

@@ -39,10 +39,10 @@ class TPointT {
 public:
   T x, y;
 
-  TPointT() : x(0), y(0){};
-  TPointT(T _x, T _y) : x(_x), y(_y){};
-  TPointT(const TPointT &point) : x(point.x), y(point.y){};
-  explicit TPointT(const TPoint4T<T> &point);
+  inline TPointT() : x(0), y(0){};
+  inline TPointT(T _x, T _y) : x(_x), y(_y){};
+  inline TPointT(const TPointT &point) : x(point.x), y(point.y){};
+  inline explicit TPointT(const TPoint4T<T> &point);
 
   inline TPointT &operator=(const TPointT &a) {
     x = a.x;
@@ -77,11 +77,11 @@ public:
     T a[4];
   };
 
-  TPoint4T():
+  inline TPoint4T():
     x(), y(), z(), w() { };
-  TPoint4T(T x, T y, T z, T w):
+  inline TPoint4T(T x, T y, T z, T w):
     x(x), y(y), z(z), w(w) { };
-  explicit TPoint4T(const TPointT<T> &p, T w = (T)1):
+  inline explicit TPoint4T(const TPointT<T> &p, T w = (T)1):
       x(p.x), y(p.y), z(), w(w) { };
 };
 
@@ -135,6 +135,7 @@ typedef TPoint4T<double> TPoint4D;
 #ifdef _WIN32
 template class DVAPI TPointT<int>;
 template class DVAPI TPointT<double>;
+template class DVAPI TPoint4T<double>;
 #endif
 
 template <class T>
@@ -901,199 +902,143 @@ extern DVVAR const TRectI infiniteRectI;
         */
 class DVAPI TAffine {
 public:
-  double a11, a12, a13;
-  double a21, a22, a23;
-  /*!
-          By default the object is initialized with a null matrix and a null
-     translation vector.
-  */
-  TAffine() : a11(1.0), a12(0.0), a13(0.0), a21(0.0), a22(1.0), a23(0.0){};
-  /*!
-          Initializes the internal matrix and vector of translation with the
-     user values.
-  */
-  TAffine(double p11, double p12, double p13, double p21, double p22,
-          double p23)
-      : a11(p11), a12(p12), a13(p13), a21(p21), a22(p22), a23(p23){};
-  /*!
-          Copy constructor.
-  */
-  TAffine(const TAffine &a)
-      : a11(a.a11)
-      , a12(a.a12)
-      , a13(a.a13)
-      , a21(a.a21)
-      , a22(a.a22)
-      , a23(a.a23){};
+  union {
+    //! elements m02, m12 assumed always to be zero, m22 - to be one.
+    //! memory layout represents array of three vectors (TPointD)
+    //! which defines a coordinate system (see rowX(), rowY(), rowW())
+    struct {
+      double m00, m01; // X-unit vector of a coordinate system
+      double m10, m11; // Y-unit vector of a coordinate system
+      double m20, m21; // origin (W) of a coordinate system
+    };
+    double m[3][2];
+    double a[6];
 
-  /*!
-          Assignment operator.
-*/
-  TAffine &operator=(const TAffine &a);
-  /*Sposto in tgeometry.cpp
-{
-a11 = a.a11; a12 = a.a12; a13 = a.a13;
-a21 = a.a21; a22 = a.a22; a23 = a.a23;
-return *this;
-};
-*/
-  /*!
-          Matrix multiplication.
-          <p>\f$\left(\begin{array}{cc}\bf{A}&\vec{a}\\\vec{0}&1\end{array}\right)
-          \left(\begin{array}{cc}\bf{B}&\vec{b}\\\vec{0}&1\end{array}\right)\f$</p>
-
-*/
-  TAffine operator*(const TAffine &b) const;
-  /*Sposto in tgeometry.cpp
-{
-return TAffine (
-a11 * b.a11 + a12 * b.a21,
-a11 * b.a12 + a12 * b.a22,
-a11 * b.a13 + a12 * b.a23 + a13,
-
-a21 * b.a11 + a22 * b.a21,
-a21 * b.a12 + a22 * b.a22,
-a21 * b.a13 + a22 * b.a23 + a23);
-};
-*/
-
-  TAffine operator*=(const TAffine &b);
-  /*Sposto in tgeometry.cpp
-{
-return *this = *this * b;
-};
-*/
-  /*!
-          Retruns the inverse tansformation as:
-          <p>\f$\left(\begin{array}{ccc}\bf{A}^{-1}&-\bf{A}^{-1}&\vec{b}\\\vec{0}&\vec{0}&1\end{array}\right)\f$</p>
-  */
-
-  TAffine inv() const;
-  /*Sposto in tgeometry.cpp
-{
-if(a12 == 0.0 && a21 == 0.0)
-{
-assert(a11 != 0.0);
-assert(a22 != 0.0);
-double inv_a11 = 1.0/a11;
-double inv_a22 = 1.0/a22;
-return TAffine(inv_a11,0, -a13 * inv_a11,
-  0,inv_a22, -a23 * inv_a22);
-}
-else if(a11 == 0.0 && a22 == 0.0)
-{
-assert(a12 != 0.0);
-assert(a21 != 0.0);
-double inv_a21 = 1.0/a21;
-double inv_a12 = 1.0/a12;
-return TAffine(0, inv_a21, -a23 * inv_a21,
-  inv_a12, 0, -a13 * inv_a12);
-}
-else
-{
-double d = 1./det();
-return TAffine(a22*d,-a12*d, (a12*a23-a22*a13)*d,
-  -a21*d, a11*d, (a21*a13-a11*a23)*d);
-}
-};
-*/
-
-  double det() const;
-  /*Sposto in tgeometry.cpp{
-return a11*a22-a12*a21;
-};
-*/
-
-  /*!
-          Returns \e true if all elements are equals.
-  */
-  bool operator==(const TAffine &a) const;
-  /*Sposto in tgeometry.cpp
-{
-return a11==a.a11 && a12==a.a12 && a13==a.a13 &&
-a21==a.a21 && a22==a.a22 && a23==a.a23;
-};
-*/
-  /*!
-          Returns \e true if at least one element is different.
-  */
-
-  bool operator!=(const TAffine &a) const;
-  /*Sposto in tgeometry.cpp
-{
-return a11!=a.a11 || a12!=a.a12 || a13!=a.a13 ||
-a21!=a.a21 || a22!=a.a22 || a23!=a.a23;
-};
-*/
-  /*!
-          Returns \e true if the transformation is an identity,
-          i.e in the error limit \e err leaves the vectors unchanged.
-  */
-
-  bool isIdentity(double err = 1.e-8) const;
-  /*Sposto in tgeometry.cpp
-{
-return ((a11-1.0)*(a11-1.0)+(a22-1.0)*(a22-1.0)+
-a12*a12+a13*a13+a21*a21+a23*a23) < err;
-};
-*/
-  /*!
-          Returns \e true if in the error limits \e err \f$\bf{A}\f$ is the
-     identity matrix.
-  */
-
-  bool isTranslation(double err = 1.e-8) const;
-  /*Sposto in tgeometry.cpp
-{
-return ((a11-1.0)*(a11-1.0)+(a22-1.0)*(a22-1.0)+
-a12*a12+a21*a21) < err;
-};
-*/
-  /*!
-          Returns \e true if in the error limits the matrix \f$\bf{A}\f$ is of
-     the form:
-          <p>\f$\left(\begin{array}{cc}a&b\\-b&a\end{array}\right)\f$</p>.
-  */
-
-  bool isIsotropic(double err = 1.e-8) const;
-  /*Sposto in tgeometry.cpp
-  {
-    return areAlmostEqual(a11, a22, err) && areAlmostEqual(a12, -a21, err);
+    //! elements aXX is an transposed version of mXX, for compatibility with previous code
+    struct {
+      double a11, a21;
+      double a12, a22;
+      double a13, a23;
+    };
   };
-  */
 
-  /*!
-          Retruns the transfomed point.
-  */
+  //! By default the object is initialized with a null matrix and a null
+  //! translation vector.
+  inline TAffine() : m00(1.0), m01(0.0), m10(0.0), m11(1.0), m20(0.0), m21(0.0) { }
+
+  // this constructor is disabled to avoid disambiguation in arguments order,
+  // because we have two sets of fields aXX and mXX with different numeration
+  //
+  // //! Initializes the internal matrix and vector of translation with the
+  // //! user values.
+  // inline TAffine(
+  //   double m00, double m01,
+  //   double m10, double m11,
+  //   double m20, double m21
+  // ): m00(m00), m01(m01), m10(m10), m11(m11), m20(m20), m21(m21) { }
+
+  //! Initializes the internal matrix with the user unit vectors.
+  inline TAffine(
+    const TPointD &rowX,
+    const TPointD &rowY,
+    const TPointD &rowW = TPointD()
+  ) {
+    this->rowX() = rowX;
+    this->rowY() = rowY;
+    this->rowW() = rowW;
+  }
+
+  inline TPointD& row(int index)
+    { return *(TPointD*)(m[index]); }
+  inline const TPointD& row(int index) const
+    { return *(const TPointD*)(m[index]); }
+
+  inline TPointD& rowX() { return row(0); }
+  inline TPointD& rowY() { return row(1); }
+  inline TPointD& rowW() { return row(2); }
+
+  inline const TPointD& rowX() const { return row(0); }
+  inline const TPointD& rowY() const { return row(1); }
+  inline const TPointD& rowW() const { return row(2); }
+
+  //! Matrix multiplication.
+  //! <p>\f$\left(\begin{array}{cc}\bf{A}&\vec{a}\\\vec{0}&1\end{array}\right)
+  //! \left(\begin{array}{cc}\bf{B}&\vec{b}\\\vec{0}&1\end{array}\right)\f$</p>
+  TAffine operator*(const TAffine &b) const;
+
+  inline TAffine operator*=(const TAffine &b)
+    { return *this = *this * b; }
+
+  //! Retruns the inverse tansformation as:
+  //! <p>\f$\left(\begin{array}{ccc}\bf{A}^{-1}&-\bf{A}^{-1}&\vec{b}\\\vec{0}&\vec{0}&1\end{array}\right)\f$</p>
+  TAffine inv() const;
+
+  //! Returns determinant of matrix
+  double det() const;
+
+  //! Returns \e true if all elements are equals.
+  bool operator==(const TAffine &a) const;
+
+  //! Returns \e true if at least one element is different.
+  bool operator!=(const TAffine &a) const;
+
+  //! Returns \e true if the transformation is an identity,
+  //! i.e in the error limit \e err leaves the vectors unchanged.
+  bool isIdentity(double err = 1.e-8) const;
+
+  //! Returns \e true if in the error limits \e err \f$\bf{A}\f$ is the
+  //! identity matrix.
+  bool isTranslation(double err = 1.e-8) const;
+
+  //! Returns \e true if in the error limits the matrix \f$\bf{A}\f$ is of
+  //! the form: <p>\f$\left(\begin{array}{cc}a&b\\-b&a\end{array}\right)\f$</p>.
+  bool isIsotropic(double err = 1.e-8) const;
+
+  //! Retruns the transfomed point.
   TPointD operator*(const TPointD &p) const;
-  /*Sposto in tgeometry.cpp
-{
-return TPointD(p.x*a11+p.y*a12+a13, p.x*a21+p.y*a22+a23);
-};
-*/
 
-  /*!
-          Transform point without translation
-  */
+  //! Transform point without translation
   TPointD transformDirection(const TPointD &p) const;
 
-  /*!
-          Retruns the transformed box of the bounding box.
-  */
+  //! Retruns the transformed box of the bounding box.
   TRectD operator*(const TRectD &rect) const;
 
-  /*!
-          Returns a translated matrix that change the vector (u,v) in (x,y).
-  \n	It returns a matrix of the form:
-          <p>\f$\left(\begin{array}{ccc}\bf{A}&\vec{x}-\bf{A} \vec{u}\\
-          \vec{0}&1\end{array}\right)\f$</p>
-  */
+  //! Returns a translated matrix that change the vector (u,v) in (x,y).
+  //! \n	It returns a matrix of the form:
+  //! <p>\f$\left(\begin{array}{ccc}\bf{A}&\vec{x}-\bf{A} \vec{u}\\
+  //! \vec{0}&1\end{array}\right)\f$</p>
   TAffine place(double u, double v, double x, double y) const;
 
-  /*!
-          See above.
-  */
-  TAffine place(const TPointD &pIn, const TPointD &pOut) const;
+  //! See above.
+  inline TAffine place(const TPointD &pIn, const TPointD &pOut) const
+    { return place(pIn.x, pIn.y, pOut.x, pOut.y); }
+
+  inline static TAffine identity()
+    { return TAffine(); }
+  inline static TAffine zero()
+    { return TAffine(TPointD(), TPointD()); }
+
+  inline static TAffine translation(double x, double y)
+    { return TAffine(TPointD(1.0, 0.0), TPointD(0.0, 1.0), TPointD(x, y)); }
+  inline static TAffine translation(const TPointD &p)
+    { return translation(p.x, p.y); }
+
+  inline static TAffine scale(double sx, double sy)
+    { return TAffine(TPointD(sx, 0.0), TPointD(0.0, sy)); }
+  inline static TAffine scale(double s)
+    { return scale(s, s); }
+  inline static TAffine scale(const TPointD &center, double sx, double sy)
+    { return translation(center)*scale(sx, sy)*translation(-center); }
+  inline static TAffine scale(const TPointD &center, double s)
+    { return scale(center, s, s); }
+
+  static TAffine rotation(double angle);
+  inline static TAffine rotation(const TPointD &center, double angle)
+    { return translation(center)*rotation(angle)*translation(-center); }
+
+  inline static TAffine shear(double sx, double sy)
+    { return TAffine(TPointD(1.0, sy), TPointD(sx, 1.0)); }
+
 };
 
 //-----------------------------------------------------------------------------
@@ -1117,102 +1062,60 @@ const TAffine AffI = TAffine();
 
 class DVAPI TTranslation final : public TAffine {
 public:
-  TTranslation(){};
-  TTranslation(double x, double y) : TAffine(1, 0, x, 0, 1, y){};
-  TTranslation(const TPointD &p) : TAffine(1, 0, p.x, 0, 1, p.y){};
+  inline TTranslation() { }
+  inline TTranslation(double x, double y)
+    { *(TAffine*)this = translation(x, y); }
+  inline TTranslation(const TPointD &p)
+    { *(TAffine*)this = translation(p); }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TRotation final : public TAffine {
 public:
-  TRotation(){};
+  inline TRotation() { }
 
-  /*! makes a rotation matrix of  "degrees" degrees counterclockwise
-on the origin */
-  TRotation(double degrees);
-  /*Sposto in tgeometry.cpp
-{
-double rad, sn, cs;
-int idegrees = (int)degrees;
-if ((double)idegrees == degrees && idegrees % 90 == 0)
-{
-switch ((idegrees / 90) & 3)
-{
-case 0:  sn =  0; cs =  1; break;
-case 1:  sn =  1; cs =  0; break;
-case 2:  sn =  0; cs = -1; break;
-case 3:  sn = -1; cs =  0; break;
-default: sn =  0; cs =  0; break;
-}
-}
-else
-{
-rad = degrees * (TConsts::pi_180);
-sn = sin (rad);
-cs = cos (rad);
-if (sn == 1 || sn == -1)
-  cs = 0;
-if (cs == 1 || cs == -1)
-  sn = 0;
-}
-a11=cs;a12= -sn;a21= -a12;a22=a11;
-};
-*/
+  //! makes a rotation matrix of  "degrees" degrees counterclockwise
+  //! on the origin
+  inline TRotation(double degrees)
+    { *(TAffine*)this = rotation(degrees*M_PI_180); }
 
-  /*! makes a rotation matrix of  "degrees" degrees counterclockwise
-on the given center */
-  TRotation(const TPointD &center, double degrees);
-  /*Sposto in tgeometry.cpp
-{
-TAffine a = TTranslation(center) * TRotation(degrees) * TTranslation(-center);
-a11 = a.a11; a12 = a.a12; a13 = a.a13;
-a21 = a.a21; a22 = a.a22; a23 = a.a23;
-};
-*/
+  //! makes a rotation matrix of  "degrees" degrees counterclockwise
+  //! on the given center
+  inline TRotation(const TPointD &center, double degrees)
+    { *(TAffine*)this = rotation(center, degrees*M_PI_180); }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TScale final : public TAffine {
 public:
-  TScale(){};
-  TScale(double sx, double sy) : TAffine(sx, 0, 0, 0, sy, 0){};
-  TScale(double s) : TAffine(s, 0, 0, 0, s, 0) {}
-
-  TScale(const TPointD &center, double sx, double sy);
-  /*Sposto in tgeometry.cpp
-{
-TAffine a = TTranslation(center) * TScale(sx,sy) * TTranslation(-center);
-a11 = a.a11; a12 = a.a12; a13 = a.a13;
-a21 = a.a21; a22 = a.a22; a23 = a.a23;
-}
-*/
-
-  TScale(const TPointD &center, double s);
-  /*Sposto in tgeometry.cpp
-{
-TAffine a = TTranslation(center) * TScale(s) * TTranslation(-center);
-a11 = a.a11; a12 = a.a12; a13 = a.a13;
-a21 = a.a21; a22 = a.a22; a23 = a.a23;
-}
-*/
+  inline TScale() { }
+  inline TScale(double sx, double sy)
+    { *(TAffine*)this = scale(sx, sy); }
+  inline TScale(double s)
+    { *(TAffine*)this = scale(s); }
+  inline TScale(const TPointD &center, double sx, double sy)
+    { *(TAffine*)this = scale(center, sx, sy); }
+  inline TScale(const TPointD &center, double s)
+    { *(TAffine*)this = scale(center, s); }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TShear final : public TAffine {
 public:
-  TShear(){};
-  TShear(double sx, double sy) : TAffine(1, sx, 0, sy, 1, 0){};
+  TShear() { }
+  TShear(double sx, double sy)
+    { *(TAffine*)this = shear(sx, sy); }
 };
 
 //-----------------------------------------------------------------------------
 
 inline bool areEquals(const TAffine &a, const TAffine &b, double err = 1e-8) {
-  return fabs(a.a11 - b.a11) < err && fabs(a.a12 - b.a12) < err &&
-         fabs(a.a13 - b.a13) < err && fabs(a.a21 - b.a21) < err &&
-         fabs(a.a22 - b.a22) < err && fabs(a.a23 - b.a23) < err;
+  return fabs(a.m00 - b.m00) < err && fabs(a.m01 - b.m01) < err &&
+         fabs(a.m10 - b.m10) < err && fabs(a.m11 - b.m11) < err &&
+         fabs(a.m20 - b.m20) < err && fabs(a.m21 - b.m21) < err;
 }
 
 //-----------------------------------------------------------------------------
@@ -1222,10 +1125,10 @@ inline TAffine inv(const TAffine &a) { return a.inv(); }
 //-----------------------------------------------------------------------------
 
 inline std::ostream &operator<<(std::ostream &out, const TAffine &a) {
-  return out << "(" << a.a11 << ", " << a.a12 << ", " << a.a13 << ";" << a.a21
-             << ", " << a.a22 << ", " << a.a23 << ")";
+  return out << "(" << a.m00 << ", " << a.m01 << "; "
+                    << a.m10 << ", " << a.m11 << "; "
+                    << a.m20 << ", " << a.m21 << ")";
 }
-
 
 //=============================================================================
 
@@ -1236,37 +1139,38 @@ class DVAPI TAffine4 {
 public:
   union {
     struct {
-      double a11, a12, a13, a14;
-      double a21, a22, a23, a24;
-      double a31, a32, a33, a34;
-      double a41, a42, a43, a44;
+      double m00, m01, m02, m03;
+      double m10, m11, m12, m13;
+      double m20, m21, m22, m23;
+      double m30, m31, m32, m33;
     };
     double m[4][4];
     double a[16];
   };
 
   inline TAffine4():
-    a11(1.0), a12(0.0), a13(0.0), a14(0.0),
-    a21(0.0), a22(1.0), a23(0.0), a24(0.0),
-    a31(0.0), a32(0.0), a33(1.0), a34(0.0),
-    a41(0.0), a42(0.0), a43(0.0), a44(1.0) { }
+    m00(1.0), m01(0.0), m02(0.0), m03(0.0),
+    m10(0.0), m11(1.0), m12(0.0), m13(0.0),
+    m20(0.0), m21(0.0), m22(1.0), m23(0.0),
+    m30(0.0), m31(0.0), m32(0.0), m33(1.0) { }
 
   inline explicit TAffine4(const TAffine &a):
-    a11(a.a11), a12(a.a21), a13(0.0), a14(0.0),
-    a21(a.a12), a22(a.a22), a23(0.0), a24(0.0),
-    a31( 0.0 ), a32( 0.0 ), a33(1.0), a34(0.0),
-    a41(a.a13), a42(a.a23), a43(0.0), a44(1.0) { }
+    m00(a.m00), m01(a.m01), m02(0.0), m03(0.0),
+    m10(a.m10), m11(a.m11), m12(0.0), m13(0.0),
+    m20( 0.0 ), m21( 0.0 ), m22(1.0), m23(0.0),
+    m30(a.m20), m31(a.m21), m32(0.0), m33(1.0) { }
 
   inline TAffine4(
     const TPoint4D &rowX,
     const TPoint4D &rowY,
     const TPoint4D &rowZ,
     const TPoint4D &rowW
-  ):
-    a11(rowX.x), a12(rowX.y), a13(rowX.z), a14(rowX.w),
-    a21(rowY.x), a22(rowY.y), a23(rowY.z), a24(rowY.w),
-    a31(rowZ.x), a32(rowZ.y), a33(rowZ.z), a34(rowZ.w),
-    a41(rowW.x), a42(rowW.y), a43(rowW.z), a44(rowW.w) { }
+  ) {
+    this->rowX() = rowX;
+    this->rowY() = rowY;
+    this->rowZ() = rowZ;
+    this->rowW() = rowW;
+  }
 
   inline TPoint4D& row(int index)
     { return *(TPoint4D*)(m[index]); }
@@ -1292,6 +1196,7 @@ public:
   TAffine get2d(double z = 0.0) const;
 
   inline static TAffine4 identity() { return TAffine4(); }
+  inline static TAffine4 zero() { return TAffine4(TPoint4D(), TPoint4D(), TPoint4D(), TPoint4D()); }
   static TAffine4 translation(double x, double y, double z);
   static TAffine4 scale(double x, double y, double z);
   static TAffine4 rotation(double x, double y, double z, double angle);
@@ -1306,9 +1211,11 @@ public:
 
 //! This class performs binary manipulations with angle ranges
 
+typedef unsigned int TAngleI;
+
 class DVAPI TAngleRangeSet {
 public:
-  typedef unsigned int Type;
+  typedef TAngleI Type;
   typedef std::vector<Type> List;
 
   static const Type max = Type() - Type(1);
