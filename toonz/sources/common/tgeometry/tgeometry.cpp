@@ -33,197 +33,128 @@ const TRectI TConsts::infiniteRectI(-(numeric_limits<int>::max)(),
 
 //==================================================================================================
 
-// operazioni fra affini
-TAffine &TAffine::operator=(const TAffine &a) {
-  a11 = a.a11;
-  a12 = a.a12;
-  a13 = a.a13;
-  a21 = a.a21;
-  a22 = a.a22;
-  a23 = a.a23;
-  return *this;
-}
-//--------------------------------------------------------------------------------------------------
 TAffine TAffine::operator*(const TAffine &b) const {
-  return TAffine(a11 * b.a11 + a12 * b.a21, a11 * b.a12 + a12 * b.a22,
-                 a11 * b.a13 + a12 * b.a23 + a13,
-
-                 a21 * b.a11 + a22 * b.a21, a21 * b.a12 + a22 * b.a22,
-                 a21 * b.a13 + a22 * b.a23 + a23);
+  return TAffine( transformDirection(b.rowX()),
+                  transformDirection(b.rowY()),
+                  *this * b.rowW() );
 }
+
 //--------------------------------------------------------------------------------------------------
-TAffine TAffine::operator*=(const TAffine &b) { return *this = *this * b; }
+
+double TAffine::det() const { return m00*m11 - m10*m01; }
+
 //--------------------------------------------------------------------------------------------------
+
 TAffine TAffine::inv() const {
-  if (a12 == 0.0 && a21 == 0.0) {
-    assert(a11 != 0.0);
-    assert(a22 != 0.0);
-    double inv_a11 = 1.0 / a11;
-    double inv_a22 = 1.0 / a22;
-    return TAffine(inv_a11, 0, -a13 * inv_a11, 0, inv_a22, -a23 * inv_a22);
-  } else if (a11 == 0.0 && a22 == 0.0) {
-    assert(a12 != 0.0);
-    assert(a21 != 0.0);
-    double inv_a21 = 1.0 / a21;
-    double inv_a12 = 1.0 / a12;
-    return TAffine(0, inv_a21, -a23 * inv_a21, inv_a12, 0, -a13 * inv_a12);
+  if (m01 == 0.0 && m10 == 0.0) {
+    if (m00 == 0.0 || m11 == 0.0) return zero();
+    double inv_m00 = 1.0/m00;
+    double inv_m11 = 1.0/m11;
+    return TAffine( TPointD(inv_m00, 0.0),
+                    TPointD(0.0, inv_m11),
+                    TPointD(-m20*inv_m00, -m21*inv_m11) );
+  } else if (m00 == 0.0 && m11 == 0.0) {
+    if (m01 == 0.0 || m10 == 0.0) return zero();
+    double inv_m01 = 1.0/m01;
+    double inv_m10 = 1.0/m10;
+    return TAffine( TPointD(0.0, inv_m10),
+                    TPointD(inv_m01, 0.0),
+                    TPointD(-m21*inv_m01, -m20*inv_m10) );
   } else {
-    double d = 1. / det();
-    return TAffine(a22 * d, -a12 * d, (a12 * a23 - a22 * a13) * d, -a21 * d,
-                   a11 * d, (a21 * a13 - a11 * a23) * d);
+    double d = det();
+    if (d == 0.0) return zero();
+    d = 1.0/d;
+    return TAffine( TPointD( m11*d, -m10*d),
+                    TPointD(-m01*d,  m00*d),
+                    TPointD((m10*m21 - m11*m20)*d, (m01*m20 - m00*m21)*d) );
   }
 }
-//--------------------------------------------------------------------------------------------------
-double TAffine::det() const { return a11 * a22 - a12 * a21; }
 
 //--------------------------------------------------------------------------------------------------
 
-// Confronti tra affini
 bool TAffine::operator==(const TAffine &a) const {
-  return a11 == a.a11 && a12 == a.a12 && a13 == a.a13 && a21 == a.a21 &&
-         a22 == a.a22 && a23 == a.a23;
+  return m00 == a.m00 && m01 == a.m01
+      && m10 == a.m10 && m11 == a.m11
+      && m20 == a.m20 && m21 == a.m21;
 }
+
 //--------------------------------------------------------------------------------------------------
+
 bool TAffine::operator!=(const TAffine &a) const {
-  return a11 != a.a11 || a12 != a.a12 || a13 != a.a13 || a21 != a.a21 ||
-         a22 != a.a22 || a23 != a.a23;
+  return m00 != a.m00 || m01 != a.m01
+      || m10 != a.m10 || m11 != a.m11
+      || m20 != a.m20 || m21 != a.m21;
 }
+
 //--------------------------------------------------------------------------------------------------
+
 bool TAffine::isIdentity(double err) const {
-  return ((a11 - 1.0) * (a11 - 1.0) + (a22 - 1.0) * (a22 - 1.0) + a12 * a12 +
-          a13 * a13 + a21 * a21 + a23 * a23) < err;
+  return ( (m00 - 1.0)*(m00 - 1.0)
+         + (m11 - 1.0)*(m11 - 1.0)
+         + m01*m01 + m10*m10
+         + m20*m20 + m21*m21 ) < err;
 }
+
 //--------------------------------------------------------------------------------------------------
+
 bool TAffine::isTranslation(double err) const {
-  return ((a11 - 1.0) * (a11 - 1.0) + (a22 - 1.0) * (a22 - 1.0) + a12 * a12 +
-          a21 * a21) < err;
-}
-//--------------------------------------------------------------------------------------------------
-bool TAffine::isIsotropic(double err) const {
-  return areAlmostEqual(a11, a22, err) && areAlmostEqual(a12, -a21, err);
+  return ( (m00 - 1.0)*(m00 - 1.0)
+         + (m11 - 1.0)*(m11 - 1.0)
+         + m01*m01 + m10*m10 ) < err;
 }
 
 //--------------------------------------------------------------------------------------------------
 
-// applicazione
+bool TAffine::isIsotropic(double err) const
+  { return areAlmostEqual(m00, m11, err) && areAlmostEqual(m01, -m10, err); }
+
+//--------------------------------------------------------------------------------------------------
+
 TPointD TAffine::operator*(const TPointD &p) const {
-  return TPointD(p.x * a11 + p.y * a12 + a13, p.x * a21 + p.y * a22 + a23);
+  return TPointD( p.x*m00 + p.y*m10 + m20,
+                  p.x*m01 + p.y*m11 + m21 );
 }
 
 //--------------------------------------------------------------------------------------------------
 
 TPointD TAffine::transformDirection(const TPointD &p) const {
-  return TPointD(p.x * a11 + p.y * a12, p.x * a21 + p.y * a22);
+  return TPointD( p.x*m00 + p.y*m10,
+                  p.x*m01 + p.y*m11 );
 }
 
 //--------------------------------------------------------------------------------------------------
 
 TRectD TAffine::operator*(const TRectD &rect) const {
-  if (rect != TConsts::infiniteRectD) {
-    TPointD p1 = *this * rect.getP00(), p2 = *this * rect.getP01(),
-            p3 = *this * rect.getP10(), p4 = *this * rect.getP11();
-    return TRectD(
-        std::min({p1.x, p2.x, p3.x, p4.x}), std::min({p1.y, p2.y, p3.y, p4.y}),
-        std::max({p1.x, p2.x, p3.x, p4.x}), std::max({p1.y, p2.y, p3.y, p4.y}));
-  } else
-    return TConsts::infiniteRectD;
+  if (rect == TConsts::infiniteRectD) return TConsts::infiniteRectD;
+  TPointD p1 = *this * rect.getP00(), p2 = *this * rect.getP01(),
+          p3 = *this * rect.getP10(), p4 = *this * rect.getP11();
+  return TRectD(
+      std::min({p1.x, p2.x, p3.x, p4.x}), std::min({p1.y, p2.y, p3.y, p4.y}),
+      std::max({p1.x, p2.x, p3.x, p4.x}), std::max({p1.y, p2.y, p3.y, p4.y}));
 }
 
 //--------------------------------------------------------------------------------------------------
 
 TAffine TAffine::place(double u, double v, double x, double y) const {
-  return TAffine(a11, a12, x - (a11 * u + a12 * v), a21, a22,
-                 y - (a21 * u + a22 * v));
+  return TAffine( rowX(),
+                  rowY(),
+                  TPointD(x - (m00*u + m10*v), y - (m01*u + m11*v)) );
 }
 
-//--------------------------------------------------------------------------------------------------
-
-TAffine TAffine::place(const TPointD &pIn, const TPointD &pOut) const {
-  return TAffine(a11, a12, pOut.x - (a11 * pIn.x + a12 * pIn.y), a21, a22,
-                 pOut.y - (a21 * pIn.x + a22 * pIn.y));
-}
-
-//==================================================================================================
-
-TRotation::TRotation(double degrees) {
-  double rad, sn, cs;
-  int idegrees = (int)degrees;
-  if ((double)idegrees == degrees && idegrees % 90 == 0) {
-    switch ((idegrees / 90) & 3) {
-    case 0:
-      sn = 0;
-      cs = 1;
-      break;
-    case 1:
-      sn = 1;
-      cs = 0;
-      break;
-    case 2:
-      sn = 0;
-      cs = -1;
-      break;
-    case 3:
-      sn = -1;
-      cs = 0;
-      break;
-    default:
-      sn = 0;
-      cs = 0;
-      break;
-    }
-  } else {
-    rad                         = degrees * M_PI_180;
-    sn                          = sin(rad);
-    cs                          = cos(rad);
-    if (sn == 1 || sn == -1) cs = 0;
-    if (cs == 1 || cs == -1) sn = 0;
-  }
-  a11 = cs;
-  a12 = -sn;
-  a21 = -a12;
-  a22 = a11;
-}
-//--------------------------------------------------------------------------------------------------
-TRotation::TRotation(const TPointD &center, double degrees) {
-  TAffine a = TTranslation(center) * TRotation(degrees) * TTranslation(-center);
-  a11       = a.a11;
-  a12       = a.a12;
-  a13       = a.a13;
-  a21       = a.a21;
-  a22       = a.a22;
-  a23       = a.a23;
-}
-
-//==================================================================================================
-
-TScale::TScale(const TPointD &center, double sx, double sy) {
-  TAffine a = TTranslation(center) * TScale(sx, sy) * TTranslation(-center);
-  a11       = a.a11;
-  a12       = a.a12;
-  a13       = a.a13;
-  a21       = a.a21;
-  a22       = a.a22;
-  a23       = a.a23;
-}
-//--------------------------------------------------------------------------------------------------
-TScale::TScale(const TPointD &center, double s) {
-  TAffine a = TTranslation(center) * TScale(s) * TTranslation(-center);
-  a11       = a.a11;
-  a12       = a.a12;
-  a13       = a.a13;
-  a21       = a.a21;
-  a22       = a.a22;
-  a23       = a.a23;
+TAffine TAffine::rotation(double angle) {
+  double s = sin(angle);
+  double c = cos(angle);
+  return TAffine(TPointD(c, s), TPointD(-s, c));
 }
 
 //==================================================================================================
 
 TPoint4D TAffine4::operator*(const TPoint4D &b) const {
   return TPoint4D(
-    b.x*a11 + b.y*a21 + b.z*a31 + b.w*a41,
-    b.x*a12 + b.y*a22 + b.z*a32 + b.w*a42,
-    b.x*a13 + b.y*a23 + b.z*a33 + b.w*a43,
-    b.x*a14 + b.y*a24 + b.z*a34 + b.w*a44 );
+    b.x*m00 + b.y*m10 + b.z*m20 + b.w*m30,
+    b.x*m01 + b.y*m11 + b.z*m21 + b.w*m31,
+    b.x*m02 + b.y*m12 + b.z*m22 + b.w*m32,
+    b.x*m03 + b.y*m13 + b.z*m23 + b.w*m33 );
 }
 
 TAffine4 TAffine4::operator*(const TAffine4 &b) const {
@@ -239,38 +170,40 @@ TAffine4 TAffine4::operator*=(const TAffine4 &b)
 
 TAffine4 TAffine4::inv() const {
   TAffine4 r;
-  r.a11 = a22*(a33*a44 - a34*a43) + a23*(a34*a42 - a32*a44) + a24*(a32*a43 - a33*a42);
-  r.a12 = a21*(a34*a43 - a33*a44) + a23*(a31*a44 - a34*a41) + a24*(a33*a41 - a31*a43);
-  r.a13 = a21*(a32*a44 - a34*a42) + a22*(a34*a41 - a31*a44) + a24*(a31*a42 - a32*a41);
-  r.a14 = a21*(a33*a42 - a32*a43) + a22*(a31*a43 - a33*a41) + a23*(a32*a41 - a31*a42);
+  r.m00 = m11*(m22*m33 - m23*m32) + m12*(m23*m31 - m21*m33) + m13*(m21*m32 - m22*m31);
+  r.m01 = m10*(m23*m32 - m22*m33) + m12*(m20*m33 - m23*m30) + m13*(m22*m30 - m20*m32);
+  r.m02 = m10*(m21*m33 - m23*m31) + m11*(m23*m30 - m20*m33) + m13*(m20*m31 - m21*m30);
+  r.m03 = m10*(m22*m31 - m21*m32) + m11*(m20*m32 - m22*m30) + m12*(m21*m30 - m20*m31);
 
-  double det = a11*r.a11 + a12*r.a21 + a13*r.a31 + a14*r.a41;
-  if (fabs(det) > TConsts::epsilon) det = 1.0/det;
-  r.a11 *= det;
-  r.a12 *= det;
-  r.a13 *= det;
-  r.a14 *= det;
+  double det = m00*r.m00 + m01*r.m10 + m02*r.m20 + m03*r.m30;
+  if (fabs(det) <= TConsts::epsilon) return zero();
+  det = 1.0/det;
+  r.m00 *= det;
+  r.m01 *= det;
+  r.m02 *= det;
+  r.m03 *= det;
 
-  r.a21 = det*( a12*(a34*a43 - a33*a44) + a13*(a32*a44 - a34*a42) + a14*(a33*a42 - a32*a43) );
-  r.a22 = det*( a11*(a33*a44 - a34*a43) + a13*(a34*a41 - a31*a44) + a14*(a31*a43 - a33*a41) );
-  r.a23 = det*( a11*(a34*a42 - a32*a44) + a12*(a31*a44 - a34*a41) + a14*(a32*a41 - a31*a42) );
-  r.a24 = det*( a11*(a32*a43 - a33*a42) + a12*(a33*a41 - a31*a43) + a13*(a31*a42 - a32*a41) );
-  r.a31 = det*( a12*(a23*a44 - a24*a43) + a13*(a24*a42 - a22*a44) + a14*(a22*a43 - a23*a42) );
-  r.a32 = det*( a11*(a24*a43 - a23*a44) + a13*(a21*a44 - a24*a41) + a14*(a23*a41 - a21*a43) );
-  r.a33 = det*( a11*(a22*a44 - a24*a42) + a12*(a24*a41 - a21*a44) + a14*(a21*a42 - a22*a41) );
-  r.a34 = det*( a11*(a23*a42 - a22*a43) + a12*(a21*a43 - a23*a41) + a13*(a22*a41 - a21*a42) );
-  r.a41 = det*( a12*(a24*a33 - a23*a34) + a13*(a22*a34 - a24*a32) + a14*(a23*a32 - a22*a33) );
-  r.a42 = det*( a11*(a23*a34 - a24*a33) + a13*(a24*a31 - a21*a34) + a14*(a21*a33 - a23*a31) );
-  r.a43 = det*( a11*(a24*a32 - a22*a34) + a12*(a21*a34 - a24*a31) + a14*(a22*a31 - a21*a32) );
-  r.a44 = det*( a11*(a22*a33 - a23*a32) + a12*(a23*a31 - a21*a33) + a13*(a21*a32 - a22*a31) );
+  r.m10 = det*(m01*(m23*m32 - m22*m33) + m02*(m21*m33 - m23*m31) + m03*(m22*m31 - m21*m32));
+  r.m11 = det*(m00*(m22*m33 - m23*m32) + m02*(m23*m30 - m20*m33) + m03*(m20*m32 - m22*m30));
+  r.m12 = det*(m00*(m23*m31 - m21*m33) + m01*(m20*m33 - m23*m30) + m03*(m21*m30 - m20*m31));
+  r.m13 = det*(m00*(m21*m32 - m22*m31) + m01*(m22*m30 - m20*m32) + m02*(m20*m31 - m21*m30));
+  r.m20 = det*(m01*(m12*m33 - m13*m32) + m02*(m13*m31 - m11*m33) + m03*(m11*m32 - m12*m31));
+  r.m21 = det*(m00*(m13*m32 - m12*m33) + m02*(m10*m33 - m13*m30) + m03*(m12*m30 - m10*m32));
+  r.m22 = det*(m00*(m11*m33 - m13*m31) + m01*(m13*m30 - m10*m33) + m03*(m10*m31 - m11*m30));
+  r.m23 = det*(m00*(m12*m31 - m11*m32) + m01*(m10*m32 - m12*m30) + m02*(m11*m30 - m10*m31));
+  r.m30 = det*(m01*(m13*m22 - m12*m23) + m02*(m11*m23 - m13*m21) + m03*(m12*m21 - m11*m22));
+  r.m31 = det*(m00*(m12*m23 - m13*m22) + m02*(m13*m20 - m10*m23) + m03*(m10*m22 - m12*m20));
+  r.m32 = det*(m00*(m13*m21 - m11*m23) + m01*(m10*m23 - m13*m20) + m03*(m11*m20 - m10*m21));
+  r.m33 = det*(m00*(m11*m22 - m12*m21) + m01*(m12*m20 - m10*m22) + m02*(m10*m21 - m11*m20));
 
   return r;
 }
 
 TAffine TAffine4::get2d(double z) const {
   return TAffine(
-    a11, a21, z*a31 + a41,
-    a12, a22, z*a32 + a42 );
+    TPointD(m00, m01),
+    TPointD(m10, m11),
+    TPointD(z*m20 + m30, z*m21 + m31) );
 }
 
 TAffine4 TAffine4::translation(double x, double y, double z) {
@@ -283,9 +216,9 @@ TAffine4 TAffine4::translation(double x, double y, double z) {
 
 TAffine4 TAffine4::scale(double x, double y, double z) {
   TAffine4 r;
-  r.a11 = x;
-  r.a22 = y;
-  r.a33 = z;
+  r.m00 = x;
+  r.m11 = y;
+  r.m22 = z;
   return r;
 }
 
@@ -301,17 +234,17 @@ TAffine4 TAffine4::rotation(double x, double y, double z, double angle) {
     y *= k;
     z *= k;
 
-    r.a11 = ic*x*x + c;
-    r.a12 = ic*x*y + s*z;
-    r.a13 = ic*z*x - s*y;
+    r.m00 = ic*x*x + c;
+    r.m01 = ic*x*y + s*z;
+    r.m02 = ic*z*x - s*y;
 
-    r.a21 = ic*x*y - s*z;
-    r.a22 = ic*y*y + c;
-    r.a23 = ic*y*z + s*x;
+    r.m10 = ic*x*y - s*z;
+    r.m11 = ic*y*y + c;
+    r.m12 = ic*y*z + s*x;
 
-    r.a31 = ic*z*x + s*y;
-    r.a32 = ic*y*z - s*x;
-    r.a33 = ic*z*z + c;
+    r.m20 = ic*z*x + s*y;
+    r.m21 = ic*y*z - s*x;
+    r.m22 = ic*z*z + c;
   }
   return r;
 }
@@ -320,10 +253,10 @@ TAffine4 TAffine4::rotationX(double angle) {
   TAffine4 r;
   double s = sin(angle);
   double c = cos(angle);
-  r.a22 =  c;
-  r.a23 =  s;
-  r.a32 = -s;
-  r.a33 =  c;
+  r.m11 =  c;
+  r.m12 =  s;
+  r.m21 = -s;
+  r.m22 =  c;
   return r;
 }
 
@@ -331,10 +264,10 @@ TAffine4 TAffine4::rotationY(double angle) {
   TAffine4 r;
   double s = sin(angle);
   double c = cos(angle);
-  r.a11 =  c;
-  r.a13 = -s;
-  r.a31 =  s;
-  r.a33 =  c;
+  r.m00 =  c;
+  r.m02 = -s;
+  r.m20 =  s;
+  r.m22 =  c;
   return r;
 }
 
@@ -342,10 +275,10 @@ TAffine4 TAffine4::rotationZ(double angle) {
   TAffine4 r;
   double s = sin(angle);
   double c = cos(angle);
-  r.a11 =  c;
-  r.a12 =  s;
-  r.a21 = -s;
-  r.a22 =  c;
+  r.m00 =  c;
+  r.m01 =  s;
+  r.m10 = -s;
+  r.m11 =  c;
   return r;
 }
 

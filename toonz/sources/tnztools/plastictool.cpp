@@ -1742,11 +1742,9 @@ static void drawFilledHandle(const TPointD &pos, double radius,
 static void drawText(const TPointD &pos, const QString &text,
                      double fontScale) {
   // Get the world-to-window affine
-  double matrix[16];
-
-  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
-  TAffine worldToWindowAff(matrix[0], matrix[4], matrix[12], matrix[1],
-                           matrix[5], matrix[13]);
+  TAffine4 matrix;
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix.a);
+  TAffine worldToWindowAff = matrix.get2d();
 
   // Push the window reference
   glPushMatrix();
