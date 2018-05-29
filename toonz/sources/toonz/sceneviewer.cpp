@@ -1254,11 +1254,12 @@ void SceneViewer::drawPreview() {
     else
       previewStageRectD = cameraStageRectD;
 
-    TAffine rasterToStageRef(
-        previewStageRectD.getLx() / ras->getLx(), 0.0,
-        previewStageRectD.x0 + 0.5 * previewStageRectD.getLx(), 0.0,
-        previewStageRectD.getLy() / ras->getLy(),
-        previewStageRectD.y0 + 0.5 * previewStageRectD.getLy());
+    TAffine rasterToStageRef = TAffine::translation(
+                                 previewStageRectD.y0 + 0.5 * previewStageRectD.getLy(),
+                                 previewStageRectD.x0 + 0.5 * previewStageRectD.getLx() )
+                             * TAffine::scale(
+                                 previewStageRectD.getLx() / ras->getLx(),
+                                 previewStageRectD.getLy() / ras->getLy() );
 
     TDimension dim(width(), height());
     TAffine finalAff              = m_drawCameraAff * rasterToStageRef;
