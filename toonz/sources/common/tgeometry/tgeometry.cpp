@@ -290,8 +290,6 @@ TAffine4 TAffine4::rotationZ(double angle) {
 
 //==================================================================================================
 
-const TAngleRangeSet::Type TAngleRangeSet::Iterator::m_blank = TAngleRangeSet::Type();
-
 
 int TAngleRangeSet::find(Type a) const {
   assert(!m_angles.empty());

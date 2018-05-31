@@ -16,7 +16,7 @@
 //    TAssistantEllipse implementation
 //*****************************************************************************************
 
-class DVAPI TAssistantEllipse final : public TAssistant {
+class TAssistantEllipse final : public TAssistant {
   Q_DECLARE_TR_FUNCTIONS(TAssistantEllipse)
 public:
   const TStringId m_idRestricktA;
