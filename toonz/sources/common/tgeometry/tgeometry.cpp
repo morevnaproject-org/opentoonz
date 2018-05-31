@@ -64,8 +64,8 @@ TAffine TAffine::inv() const {
     double d = det();
     if (d == 0.0) return zero();
     d = 1.0/d;
-    return TAffine( TPointD( m11*d, -m10*d),
-                    TPointD(-m01*d,  m00*d),
+    return TAffine( TPointD( m11*d, -m01*d),
+                    TPointD(-m10*d,  m00*d),
                     TPointD((m10*m21 - m11*m20)*d, (m01*m20 - m00*m21)*d) );
   }
 }
@@ -87,6 +87,12 @@ bool TAffine::operator!=(const TAffine &a) const {
 }
 
 //--------------------------------------------------------------------------------------------------
+
+bool TAffine::isZero(double err) const {
+  return fabs(m00) <= err && fabs(m01) <= err
+      && fabs(m10) <= err && fabs(m11) <= err
+      && fabs(m20) <= err && fabs(m21) <= err;
+}
 
 bool TAffine::isIdentity(double err) const {
   return ( (m00 - 1.0)*(m00 - 1.0)
