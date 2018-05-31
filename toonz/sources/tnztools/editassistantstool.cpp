@@ -124,6 +124,7 @@ protected:
 
   bool           m_dragging;
   bool           m_dragAllPoints;
+  TSmartHolderT<TImage> m_currentImage;
   TMetaObjectH   m_currentAssistant;
   bool           m_currentAssistantCreated;
   bool           m_currentAssistantChanged;
@@ -171,8 +172,10 @@ public:
     { return TTool::LevelWriteTool; }
   int getCursorId() const override
     { return ToolCursor::StrokeSelectCursor; }
-  void onImageChanged() override
-    { getViewer()->GLInvalidateAll(); }
+  void onImageChanged() override {
+    if (m_currentImage != getImage(false)) resetCurrentPoint();
+    getViewer()->GLInvalidateAll();
+  }
   ToolModifiers getToolModifiers() const override
     { return ModifierAssistants; }
 
@@ -207,8 +210,13 @@ public:
     return &m_allProperties;
   }
 
-  void onActivate() override
-    { updateAssistantTypes(); }
+  void onActivate() override {
+    updateAssistantTypes();
+    resetCurrentPoint();
+  }
+
+  void onDeactivate() override
+    { resetCurrentPoint(); }
 
   void updateTranslation() override {
     m_assistantType.setQStringName( tr("Assistant Type") );
@@ -340,6 +348,7 @@ protected:
 
   void resetCurrentPoint(bool updateOptionsBox = true) {
     close();
+    m_currentImage.reset();
     m_currentAssistant.reset();
     m_currentAssistantCreated = false;
     m_currentAssistantChanged = false;
@@ -347,12 +356,21 @@ protected:
     m_currentPointName.reset();
     m_currentPointOffset = TPointD();
     m_currentAssistantBackup.reset();
+
+    // deselect points
+    if (Closer closer = read(ModeImage))
+      for(TMetaObjectListCW::iterator i = (*m_reader)->begin(); i != (*m_reader)->end(); ++i)
+        if (*i)
+          if (const TAssistant *assistant = (*i)->getHandler<TAssistant>())
+            assistant->deselectAll();
+
     if (updateOptionsBox) this->updateOptionsBox();
   }
 
   bool findCurrentPoint(const TPointD &position, double pixelSize, bool updateOptionsBox = true) {
     resetCurrentPoint(false);
     if (Closer closer = read(ModeImage)) {
+      m_currentImage.set(m_readImage);
       for(TMetaObjectListCW::iterator i = (*m_reader)->begin(); i != (*m_reader)->end(); ++i) {
         if (!*i) continue;
 
