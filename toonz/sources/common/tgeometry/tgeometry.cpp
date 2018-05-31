@@ -284,6 +284,8 @@ TAffine4 TAffine4::rotationZ(double angle) {
 
 //==================================================================================================
 
+const TAngleRangeSet::Type TAngleRangeSet::Iterator::m_blank = TAngleRangeSet::Type();
+
 
 int TAngleRangeSet::find(Type a) const {
   assert(!m_angles.empty());
@@ -302,7 +304,7 @@ void TAngleRangeSet::insert(Type a) {
   int i = find(a);
   if (m_angles[i] == a) m_angles.erase(m_angles.begin() + i); else
     if (a < m_angles[0]) m_angles.insert(m_angles.begin(), a); else
-      m_angles.insert(m_angles.begin()+1, a);
+      m_angles.insert(m_angles.begin()+i+1, a);
 }
 
 bool TAngleRangeSet::doAdd(Type a0, Type a1) {
@@ -373,7 +375,7 @@ void TAngleRangeSet::set(Type a0, Type a1) {
   }
 }
 
-void TAngleRangeSet::set(const TAngleRangeSet &x, bool flip = false) {
+void TAngleRangeSet::set(const TAngleRangeSet &x, bool flip) {
   if (&x == this) return;
   m_flip = (x.isFlipped() != flip);
   m_angles = x.angles();
@@ -407,11 +409,8 @@ void TAngleRangeSet::add(const TAngleRangeSet &x) {
   if (&x == this || isFull() || x.isEmpty()) return;
   if (isEmpty()) { set(x); return; }
   if (x.isFull()) { fill(); return; }
-  bool f = x.isFlipped();
-  Type prev = x.angles().back();
-  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
-    if (f && doAdd(prev, *i)) return;
-      else { prev = *i; f = !f; }
+  for(Iterator i(x); i; ++i)
+    if (doAdd(i.a0(), i.a1())) return;
 }
 
 void TAngleRangeSet::subtract(Type a0, Type a1) {
@@ -428,11 +427,8 @@ void TAngleRangeSet::subtract(const TAngleRangeSet &x) {
 
   // a - b = !(!a + b)
   invert();
-  bool f = x.isFlipped();
-  Type prev = x.angles().back();
-  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
-    if (f && doAdd(prev, *i)) return;
-      else { prev = *i; f = !f; }
+  for(Iterator i(x); i; ++i)
+    if (doAdd(i.a0(), i.a1())) return;
   invert();
 }
 
@@ -449,13 +445,9 @@ void TAngleRangeSet::intersect(const TAngleRangeSet &x) {
   if (x.isEmpty()) { clear(); return; }
   if (isFull()) { set(x); return; }
 
-  // a & b = !(!a + b)
+  // a & b = !(!a + !b)
   invert();
-  bool f = !x.isFlipped();
-  Type prev = x.angles().back();
-  for(List::const_iterator i = x.angles().begin(); i != x.angles().end(); ++i)
-    if (f && doAdd(prev, *i)) return;
-      else { prev = *i; f = !f; }
+  for(Iterator i(x, true); i; ++i)
+    if (doAdd(i.a0(), i.a1())) return;
   invert();
 }
-
