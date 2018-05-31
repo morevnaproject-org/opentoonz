@@ -1,9 +1,8 @@
 
 
-#include "guidelineline.h"
-
 // TnzTools includes
 #include <tools/assistant.h>
+#include <tools/assistants/guidelineline.h>
 
 // TnzCore includes
 #include <tgl.h>
