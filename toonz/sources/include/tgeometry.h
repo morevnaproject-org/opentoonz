@@ -982,6 +982,10 @@ public:
   //! Returns \e true if at least one element is different.
   bool operator!=(const TAffine &a) const;
 
+  //! Returns \e true if the transformation is zero,
+  //! i.e in the error limit \e err leaves the vectors unchanged.
+  bool isZero(double err = 1.e-8) const;
+
   //! Returns \e true if the transformation is an identity,
   //! i.e in the error limit \e err leaves the vectors unchanged.
   bool isIdentity(double err = 1.e-8) const;
