@@ -84,7 +84,7 @@ public:
 //************************************************************************
 class SmoothStroke {
 public:
-  SmoothStroke() {}
+  SmoothStroke(): m_smooth(), m_outputIndex(), m_readIndex() { }
   ~SmoothStroke() {}
 
   // begin stroke
@@ -125,6 +125,11 @@ public:
   ToonzRasterBrushTool(std::string name, int targetType);
 
   ToolType getToolType() const override { return TTool::LevelWriteTool; }
+  ToolModifiers getToolModifiers() const override
+    { return ModifierTangents | ModifierAssistants | ModifierCustom | ModifierSegmentation; }
+  bool isAssistantsEnabled() const override;
+  bool isCustomModifiersEnabled() const override
+    { return true; }
 
   ToolOptionsBox *createOptionsBox() override;
 
@@ -177,6 +182,7 @@ protected:
   TEnumProperty m_drawOrder;
   TBoolProperty m_pencil;
   TBoolProperty m_pressure;
+  TBoolProperty m_assistants;
   TDoubleProperty m_modifierSize;
 
   RasterStrokeGenerator *m_rasterTrack;
