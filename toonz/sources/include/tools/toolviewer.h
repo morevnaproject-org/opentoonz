@@ -81,6 +81,9 @@ public:
   }  //!< Gets the viewer's current view affine 3d (ie the transform from
      //!<  starting to current <I> world view <\I>)
 
+  //! Gets the viewer's window size to calculate win coordinates from pos
+  virtual TDimensionI getWindowSize() const = 0;
+
   //! return the column index of the drawing intersecting point \b p
   //! (window coordinate, pixels, bottom-left origin)
   virtual int posToColumnIndex(const TPointD &p, double distance,
