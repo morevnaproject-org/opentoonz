@@ -12,7 +12,7 @@
 //    TAssistantVanishingPoint implementation
 //*****************************************************************************************
 
-class DVAPI TAssistantVanishingPoint final : public TAssistant {
+class TAssistantVanishingPoint final : public TAssistant {
   Q_DECLARE_TR_FUNCTIONS(TAssistantVanishingPoint)
 public:
   const TStringId m_idPassThrough;
