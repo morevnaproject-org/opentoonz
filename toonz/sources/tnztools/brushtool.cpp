@@ -58,6 +58,7 @@ TEnv::IntVar BrushDrawOrder("InknpaintBrushDrawOrder", 0);
 TEnv::IntVar BrushBreakSharpAngles("InknpaintBrushBreakSharpAngles", 0);
 TEnv::IntVar RasterBrushPencilMode("InknpaintRasterBrushPencilMode", 0);
 TEnv::IntVar BrushPressureSensitivity("InknpaintBrushPressureSensitivity", 1);
+TEnv::IntVar BrushAssistants("InknpaintBrushAssistants", 0);
 TEnv::DoubleVar RasterBrushHardness("RasterBrushHardness", 100);
 TEnv::IntVar VectorBrushFrameRange("VectorBrushFrameRange", 0);
 TEnv::IntVar VectorBrushSnap("VectorBrushSnap", 0);
@@ -816,23 +817,33 @@ BrushTool::BrushTool(std::string name, int targetType)
     , m_breakAngles("Break", true)
     , m_pencil("Pencil", false)
     , m_pressure("Pressure", true)
+    , m_snap("Snap", false)
+    , m_assistants("Assistants", false)
+    , m_snapSensitivity("Sensitivity:")
     , m_capStyle("Cap")
     , m_joinStyle("Join")
     , m_miterJoinLimit("Miter:", 0, 100, 4)
-    , m_rasterTrack(0)
-    , m_styleId(0)
+    , m_rasterTrack()
+    , m_firstStroke()
+    , m_tileSet()
+    , m_tileSaver()
+    , m_styleId()
+    , m_minThick()
+    , m_maxThick()
+    , m_strokeIndex1(), m_strokeIndex2(), m_col(), m_firstFrame()
+    , m_veryFirstFrame(), m_veryFirstCol()
+    , m_targetType(targetType)
+    , m_w1(), m_w2(), m_pixelSize(), m_currThickness(), m_minDistance2()
+    , m_bluredBrush()
     , m_modifiedRegion()
-    , m_bluredBrush(0)
     , m_active(false)
     , m_enabled(false)
     , m_isPrompting(false)
     , m_firstTime(true)
-    , m_firstFrameRange(true)
+    , m_isPath(false)
     , m_presetsLoaded(false)
+    , m_firstFrameRange(true)
     , m_frameRange("Range:")
-    , m_snap("Snap", false)
-    , m_snapSensitivity("Sensitivity:")
-    , m_targetType(targetType)
     , m_workingFrameId(TFrameId()) {
   bind(targetType);
 
@@ -859,6 +870,7 @@ BrushTool::BrushTool(std::string name, int targetType)
   }
 
   m_prop[0].bind(m_pressure);
+  m_prop[0].bind(m_assistants);
 
   if (targetType & TTool::Vectors) {
     m_frameRange.addValue(L"Off");
@@ -1072,6 +1084,7 @@ void BrushTool::updateTranslation() {
   m_preset.setItemUIName(CUSTOM_WSTR, tr("<custom>"));
   m_breakAngles.setQStringName(tr("Break"));
   m_pencil.setQStringName(tr("Pencil"));
+  m_assistants.setQStringName(tr("Assistants"));
   m_pressure.setQStringName(tr("Pressure"));
   m_capStyle.setQStringName(tr("Cap"));
   m_joinStyle.setQStringName(tr("Join"));
@@ -1096,6 +1109,11 @@ void BrushTool::updateTranslation() {
     m_joinStyle.setItemUIName(BEVEL_WSTR, tr("Bevel join"));
   }
 }
+
+//---------------------------------------------------------------------------------------------------
+
+bool BrushTool::isAssistantsEnabled() const
+  { return m_assistants.getValue(); }
 
 //---------------------------------------------------------------------------------------------------
 
@@ -1144,6 +1162,7 @@ void BrushTool::onActivate() {
       m_hardness.setValue(RasterBrushHardness);
     }
     m_pressure.setValue(BrushPressureSensitivity ? 1 : 0);
+    m_assistants.setValue(BrushAssistants ? 1 : 0);
     m_firstTime = false;
     m_smooth.setValue(BrushSmooth);
     if (m_targetType & TTool::Vectors) {
@@ -2498,6 +2517,8 @@ bool BrushTool::onPropertyChanged(std::string propertyName) {
     RasterBrushPencilMode = m_pencil.getValue();
   } else if (propertyName == m_pressure.getName()) {
     BrushPressureSensitivity = m_pressure.getValue();
+  } else if (propertyName == m_assistants.getName()) {
+    BrushAssistants = m_assistants.getValue();
   } else if (propertyName == m_capStyle.getName()) {
     VectorCapStyle = m_capStyle.getIndex();
   } else if (propertyName == m_joinStyle.getName()) {
@@ -2595,6 +2616,7 @@ void BrushTool::loadPreset() {
       m_smooth.setValue(preset.m_smooth, true);
       m_breakAngles.setValue(preset.m_breakAngles);
       m_pressure.setValue(preset.m_pressure);
+      m_assistants.setValue(preset.m_assistants);
       m_capStyle.setIndex(preset.m_cap);
       m_joinStyle.setIndex(preset.m_join);
       m_miterJoinLimit.setValue(preset.m_miter);
@@ -2608,6 +2630,7 @@ void BrushTool::loadPreset() {
       m_drawOrder.setIndex(preset.m_drawOrder);
       m_pencil.setValue(preset.m_pencil);
       m_pressure.setValue(preset.m_pressure);
+      m_assistants.setValue(preset.m_assistants);
     }
   } catch (...) {
   }
@@ -2634,6 +2657,7 @@ void BrushTool::addPreset(QString name) {
   preset.m_pencil      = m_pencil.getValue();
   preset.m_breakAngles = m_breakAngles.getValue();
   preset.m_pressure    = m_pressure.getValue();
+  preset.m_assistants  = m_assistants.getValue();
   preset.m_cap         = m_capStyle.getIndex();
   preset.m_join        = m_joinStyle.getIndex();
   preset.m_miter       = m_miterJoinLimit.getValue();
