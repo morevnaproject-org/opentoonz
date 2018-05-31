@@ -1,10 +1,9 @@
 
 
-#include "guidelineline.h"
-#include "guidelineellipse.h"
-
 // TnzTools includes
 #include <tools/assistant.h>
+#include <tools/assistants/guidelineline.h>
+#include <tools/assistants/guidelineellipse.h>
 
 // TnzCore includes
 #include <tgl.h>
