@@ -6,8 +6,6 @@
 // TnzTools includes
 #include <tools/assistant.h>
 
-#include <tgl.h>
-
 
 #undef DVAPI
 #undef DVVAR

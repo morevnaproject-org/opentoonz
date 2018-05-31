@@ -321,6 +321,17 @@ public:
   virtual void draw(TToolViewer *viewer, bool enabled) const;
   void draw(TToolViewer *viewer) const { draw(viewer, true); }
   virtual void drawEdit(TToolViewer *viewer) const;
+
+  static bool calcPerspectiveStep(
+    double minStep,
+    double minX,
+    double maxX,
+    double x0,
+    double x1,
+    double x2,
+    double &outK,
+    double &outMin,
+    double &outMax );
 };
 
 

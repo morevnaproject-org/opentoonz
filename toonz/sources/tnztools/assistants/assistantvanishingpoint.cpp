@@ -187,9 +187,10 @@ public:
   }
 
   void drawSimpleGrid() const {
-    const double minStep = 5.0;
     double alpha = getDrawingGridAlpha();
     const TPointD &p = m_center.position;
+    double pixelSize = sqrt(tglGetPixelSize2());
+    double minStep = 5.0*pixelSize;
 
     // calculate rays count and step
     TPointD d0 = m_grid0.position - p;
@@ -217,7 +218,6 @@ public:
     glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
     TAffine matrix = (projection*modelview).get2d();
     TAffine matrixInv = matrix.inv();
-    double pixelSize = sqrt(tglGetPixelSize2());
 
     // calculate range
     if (!(matrixInv*oneBox).contains(p)) {
@@ -262,9 +262,10 @@ public:
 
   void drawPerspectiveGrid() const {
     // initial calculations
-    const double minStep = 5.0;
     double alpha = getDrawingGridAlpha();
     const TPointD &center = m_center.position;
+    double pixelSize = sqrt(tglGetPixelSize2());
+    double minStep = 5.0*pixelSize;
 
     TPointD step = m_grid1.position - m_grid0.position;
     double stepLen2 = norm2(step);
@@ -293,7 +294,6 @@ public:
     glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
     TAffine matrix = (projection*modelview).get2d();
     TAffine matrixInv = matrix.inv();
-    double pixelSize = sqrt(tglGetPixelSize2());
 
     // calculate bounds
     bool found = false;
