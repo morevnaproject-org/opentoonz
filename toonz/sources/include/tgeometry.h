@@ -1222,6 +1222,7 @@ public:
   typedef TAngleI Type;
   typedef std::vector<Type> List;
 
+  static const Type min = Type();
   static const Type max = Type() - Type(1);
   static const Type half = ((Type() - Type(1)) >> 1) + Type(1);
 
@@ -1246,7 +1247,6 @@ public:
     List::const_iterator m_end;
     List::const_iterator m_current;
     bool m_lapped;
-    static const Type m_blank;
 
   public:
     inline Iterator(): m_flip(), m_lapped(true)
@@ -1289,10 +1289,10 @@ public:
     inline Iterator& set(const TAngleRangeSet &ranges, bool flip = false, bool reverse = false)
       { return set(ranges.angles(), ranges.isFlipped() != flip, reverse); }
 
-    inline const Type& a0() const
-      { return valid() ? *(m_current == m_begin ? m_prebegin : m_current - 1) : m_blank; }
-    inline const Type& a1() const
-      { return valid() ? *m_current : m_blank; }
+    inline const Type a0() const
+      { return valid() ? *(m_current == m_begin ? m_prebegin : m_current - 1) : Type(); }
+    inline const Type a1() const
+      { return valid() ? *m_current : Type(); }
     inline double d0() const
       { return toDouble(a0()); }
     inline double d1() const

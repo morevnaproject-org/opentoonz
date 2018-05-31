@@ -13,7 +13,7 @@
 //    TAssistantLine implementation
 //*****************************************************************************************
 
-class DVAPI TAssistantLine final : public TAssistant {
+class TAssistantLine final : public TAssistant {
   Q_DECLARE_TR_FUNCTIONS(TAssistantVanishingPoint)
 public:
   const TStringId m_idRestricktA;
