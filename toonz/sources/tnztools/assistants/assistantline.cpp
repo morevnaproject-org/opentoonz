@@ -157,40 +157,8 @@ public:
   }
 
 private:
-  bool calcPerspectiveStep(
-    double minStep,
-    double minX,
-    double maxX,
-    double x0,
-    double x1,
-    double x2,
-    double &outK,
-    double &outMin,
-    double &outMax ) const
-  {
-    outK = outMin = outMax = 0.0;
-
-    double dx1 = x1 - x0;
-    double dx2 = x2 - x0;
-    if (fabs(dx1) <= TConsts::epsilon) return false;
-    if (fabs(dx2) <= TConsts::epsilon) return false;
-    if ((dx1 < 0.0) != (dx2 < 0.0)) dx2 = -dx2;
-    if (fabs(dx2 - dx1) <= minStep) return false;
-    if (fabs(dx2) < fabs(dx1)) std::swap(dx1, dx2);
-
-    if (x0 <= minX + TConsts::epsilon && dx1 < 0.0) return false;
-    if (x0 >= maxX - TConsts::epsilon && dx1 > 0.0) return false;
-
-    outK = dx2/dx1;
-    double minI = log(minStep/fabs(dx1*(1.0 - 1.0/outK)))/log(outK);
-    outMin = dx1*pow(outK, floor(minI - TConsts::epsilon));
-    if (fabs(outMin) < TConsts::epsilon) return false;
-    outMax = (dx1 > 0.0 ? maxX : minX) - x0;
-    return true;
-  }
-
-  void drawRuler(const TPointD &a, const TPointD &b, bool perspective) const {
-    const double minStep = 10.0;
+  void drawRuler(const TPointD &a, const TPointD &b, double pixelSize, bool perspective) const {
+    double minStep = 10.0*pixelSize;
     double alpha = getDrawingGridAlpha();
 
     TPointD direction = b - a;
@@ -246,7 +214,7 @@ private:
     bool restrictB,
     bool perspective ) const
   {
-    const double minStep = 10.0;
+    double minStep = 10.0*pixelSize;
 
     double alpha = getDrawingGridAlpha();
     TPointD a = m_a.position;
@@ -363,11 +331,11 @@ public:
     if (restrictB)
       drawDot(m_b.position);
 
-    if (getGrid()) {
+    if (grid) {
       if (getParallel()) {
         drawGrid(matrix, matrixInv, pixelSize, restrictA, restrictB, perspective);
       } else {
-        drawRuler(a, b, perspective);
+        drawRuler(a, b, pixelSize, perspective);
       }
     }
   }
