@@ -1,6 +1,6 @@
 
 
-#include "guidelineellipse.h"
+#include <tools/assistants/guidelineellipse.h>
 
 // TnzCore includes
 #include "tgl.h"
