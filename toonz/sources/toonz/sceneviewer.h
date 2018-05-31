@@ -290,6 +290,9 @@ public:
 
   TPointD worldToPos(const TPointD &worldPos) const override;
 
+  TDimensionI getWindowSize() const override
+    { return TDimensionI(width(), height()); }
+
 protected:
   // Paint vars
   TAffine m_drawCameraAff;
@@ -324,15 +327,15 @@ protected:
   void rebuildModifiers();
   void updateModifiers();
 
-  /*TODO*/ void gestureEvent(QGestureEvent *e);
-  /*TODO*/ void touchEvent(QTouchEvent *e, int type);
-  /*TODO*/ void tabletEvent(QTabletEvent *) override;
-  /*TODO*/ void leaveEvent(QEvent *) override;
-  /*TODO*/ void enterEvent(QEvent *) override;
-  /*TODO*/ void mouseMoveEvent(QMouseEvent *event) override;
-  /*TODO*/ void mousePressEvent(QMouseEvent *event) override;
-  /*TODO*/ void mouseReleaseEvent(QMouseEvent *event) override;
-  /*TODO*/ void mouseDoubleClickEvent(QMouseEvent *event) override;
+  void gestureEvent(QGestureEvent *e);
+  void touchEvent(QTouchEvent *e, int type);
+  void tabletEvent(QTabletEvent *) override;
+  void leaveEvent(QEvent *) override;
+  void enterEvent(QEvent *) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+  void mouseDoubleClickEvent(QMouseEvent *event) override;
 
   void onPress(const TMouseEvent &event);
   void onMove(const TMouseEvent &event);
@@ -342,10 +345,10 @@ protected:
   void onLeave();
 
   void wheelEvent(QWheelEvent *) override;
-  /*TODO*/ void keyPressEvent(QKeyEvent *event) override;
-  /*TODO*/ void keyReleaseEvent(QKeyEvent *event) override;
+  void keyPressEvent(QKeyEvent *event) override;
+  void keyReleaseEvent(QKeyEvent *event) override;
   void contextMenuEvent(QContextMenuEvent *event) override;
-  /*TODO*/ void inputMethodEvent(QInputMethodEvent *) override;
+  void inputMethodEvent(QInputMethodEvent *) override;
   void drawCompared();
   bool event(QEvent *event) override;
 

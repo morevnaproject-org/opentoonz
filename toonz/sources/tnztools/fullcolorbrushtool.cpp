@@ -8,6 +8,7 @@
 #include "tools/toolutils.h"
 #include "tools/toolhandle.h"
 #include "tools/tooloptions.h"
+#include "tools/inputmanager.h"
 
 #include "mypainttoonzbrush.h"
 
@@ -280,7 +281,7 @@ bool FullColorBrushTool::preLeftButtonDown() {
 
 //---------------------------------------------------------------------------------------------------------------
 
-void FullColorBrushTool::mouseMove(const TPointD &position, const TInputState &state) {
+void FullColorBrushTool::hoverEvent(const TInputManager &manager) {
   struct Locals {
     FullColorBrushTool *m_this;
 
@@ -328,7 +329,10 @@ void FullColorBrushTool::mouseMove(const TPointD &position, const TInputState &s
     }
   } locals = {this};
 
-  if (state.isKeyPressed(TKey::control) && state.isKeyPressed(TKey::alt)) {
+  if (manager.getOutputHovers().empty()) return;
+  TPointD position = manager.getOutputHovers().front();
+
+  if (manager.state.isKeyPressed(TKey::control) && manager.state.isKeyPressed(TKey::alt)) {
     const TPointD &diff = position - m_mousePos;
     if (getBrushStyle()) {
       locals.add(m_modifierSize, 0.01*diff.x);

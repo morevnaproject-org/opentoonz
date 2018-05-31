@@ -423,7 +423,8 @@ public:
     return true;
   }
 
-  void leftButtonDown(const TTrackPoint& point, const TTrack &track) override {
+  void paintTrackBegin(const TTrackPoint &point, const TTrack &track, bool firstTrack) override {
+    if (!firstTrack) return;
     apply();
     m_dragging = true;
     m_dragAllPoints = false;
@@ -466,7 +467,8 @@ public:
     getViewer()->GLInvalidateAll();
   }
 
-  void leftButtonDrag(const TTrackPoint& point, const TTrack&) override {
+  void paintTrackMotion(const TTrackPoint &point, const TTrack&, bool firstTrack) override {
+    if (!firstTrack) return;
     if (m_dragAllPoints) {
       if (Closer closer = write(ModeAssistant, true))
         m_writeAssistant->move( point.position + m_currentPointOffset );
@@ -480,7 +482,8 @@ public:
     getViewer()->GLInvalidateAll();
   }
 
-  void leftButtonUp(const TTrackPoint &point, const TTrack&) override {
+  void paintTrackEnd(const TTrackPoint &point, const TTrack&, bool firstTrack) override {
+    if (!firstTrack) return;
     if (m_currentAssistantCreated) {
       if (Closer closer = write(ModeAssistant, true)) {
         m_writeAssistant->getBasePoint();

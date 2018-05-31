@@ -406,7 +406,6 @@ return true if the method execution can have changed the current tool
 */
   virtual bool preLeftButtonDown() { return false; }
 
-  // TODO: remove this block
   virtual void mouseMove(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonDown(const TPointD &, const TMouseEvent &) {}
   virtual void leftButtonDrag(const TPointD &, const TMouseEvent &) {}
@@ -414,21 +413,9 @@ return true if the method execution can have changed the current tool
   virtual void leftButtonDoubleClick(const TPointD &, const TMouseEvent &) {}
   virtual void rightButtonDown(const TPointD &, const TMouseEvent &) {}
 
-  /*
-  void leftButtonDown(const TTrackPoint &point, const TTrack &track) override;
-  void leftButtonDrag(const TTrackPoint &point, const TTrack &track) override;
-  void leftButtonUp(const TTrackPoint &point, const TTrack &track) override;
-  void mouseMove(const TPointD &position, const TInputState &state) override;
-  void leftButtonDoubleClick(const TPointD &position, const TInputState &state) override;
-  void rightButtonDown(const TPointD &position, const TInputState &state) override;
-  */
+  TMouseEvent makeMouseEvent();
+  TMouseEvent makeMouseEvent(const TTrackPoint &point, const TTrack &track);
 
-  virtual void leftButtonDown(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
-  virtual void leftButtonDrag(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
-  virtual void leftButtonUp(const TTrackPoint& /*point*/, const TTrack& /*track*/) {}
-  virtual void mouseMove(const TPointD& /*position*/,  const TInputState& /*state*/) {}
-  virtual void leftButtonDoubleClick(const TPointD& /*position*/, const TInputState& /*state*/) {}
-  virtual void rightButtonDown(const TPointD& /*position*/, const TInputState& /*state*/) {}
   virtual bool keyDown(QKeyEvent* /*event*/) { return false; }
   virtual void onInputText(
     const std::wstring& /*preedit*/,
@@ -448,6 +435,10 @@ return true if the method execution can have changed the current tool
     const TInputManager &manager );
   virtual void hoverEvent(const TInputManager &manager);
   virtual void doubleClickEvent(const TInputManager &manager);
+
+  virtual void paintTrackBegin(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  virtual void paintTrackMotion(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  virtual void paintTrackEnd(const TTrackPoint &point, const TTrack &track, bool firstTrack);
 
   /*! paint single track-point at the top painting level */
   virtual void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);

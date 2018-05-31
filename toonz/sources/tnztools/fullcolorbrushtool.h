@@ -68,7 +68,7 @@ public:
   bool askWrite(const TRect &rect) override;
 
   bool preLeftButtonDown() override;
-  void mouseMove(const TPointD &position, const TInputState &state) override;
+  void hoverEvent(const TInputManager &manager) override;
   void paintBegin() override;
   void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
   void paintEnd() override;

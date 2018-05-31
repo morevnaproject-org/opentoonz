@@ -565,6 +565,68 @@ int TTool::pick(const TPointD &p) {
 
 //-----------------------------------------------------------------------------
 
+TMouseEvent
+TTool::makeMouseEvent() {
+  TToolViewer *viewer = getViewer();
+  TInputManager *manager = viewer ? viewer->getInputManager() : 0;
+
+  TPointD point = manager && !manager->getOutputHovers().empty()
+                ? manager->getOutputHovers().front() : TPointD();
+  TPointD pos = manager ? manager->toolToScreen() * point : point;
+  TDimensionI size = viewer ? viewer->getWindowSize() : TDimensionI();
+  TPointD center(0.5*(double)size.lx, 0.5*(double)size.ly);
+
+
+  TMouseEvent e;
+  e.m_pos = pos + center;
+  if (manager) {
+    e.setModifiers( manager->state.isKeyPressed(TKey::shift),
+                    manager->state.isKeyPressed(TKey::alt),
+                    manager->state.isKeyPressed(TKey::control) );
+    if (manager->state.isButtonPressedAny(Qt::LeftButton   )) e.m_buttons |= Qt::LeftButton;
+    if (manager->state.isButtonPressedAny(Qt::RightButton  )) e.m_buttons |= Qt::RightButton;
+    if (manager->state.isButtonPressedAny(Qt::MidButton    )) e.m_buttons |= Qt::MidButton;
+    if (manager->state.isButtonPressedAny(Qt::BackButton   )) e.m_buttons |= Qt::BackButton;
+    if (manager->state.isButtonPressedAny(Qt::ForwardButton)) e.m_buttons |= Qt::ForwardButton;
+    if (manager->state.isButtonPressedAny(Qt::TaskButton   )) e.m_buttons |= Qt::TaskButton;
+  }
+  e.m_mousePos = QPointF(pos.x + center.x, center.y - pos.y);
+  return e;
+}
+
+//-----------------------------------------------------------------------------
+
+TMouseEvent
+TTool::makeMouseEvent(const TTrackPoint &point, const TTrack &track) {
+  TToolViewer *viewer = getViewer();
+  TInputManager *manager = viewer ? viewer->getInputManager() : 0;
+
+  TPointD pos = manager ? manager->toolToScreen() * point.position : point.position;
+  TDimensionI size = viewer ? viewer->getWindowSize() : TDimensionI();
+  TPointD center(0.5*(double)size.lx, 0.5*(double)size.ly);
+
+  TInputState::KeyState::Holder keyState = track.getKeyState(point.time);
+  TInputState::ButtonState::Holder buttonState = track.getButtonState(point.time);
+
+  TMouseEvent e;
+  e.m_pos = pos + center;
+  e.m_pressure = track.hasPressure ? point.pressure : 1.0;
+  e.setModifiers( keyState.isPressed(TKey::shift),
+                  keyState.isPressed(TKey::alt),
+                  keyState.isPressed(TKey::control) );
+  if (buttonState.isPressed(Qt::LeftButton   )) e.m_buttons |= Qt::LeftButton;
+  if (buttonState.isPressed(Qt::RightButton  )) e.m_buttons |= Qt::RightButton;
+  if (buttonState.isPressed(Qt::MidButton    )) e.m_buttons |= Qt::MidButton;
+  if (buttonState.isPressed(Qt::BackButton   )) e.m_buttons |= Qt::BackButton;
+  if (buttonState.isPressed(Qt::ForwardButton)) e.m_buttons |= Qt::ForwardButton;
+  if (buttonState.isPressed(Qt::TaskButton   )) e.m_buttons |= Qt::TaskButton;
+  e.m_mousePos = QPointF(pos.x + center.x, center.y - pos.y);
+  e.m_isTablet = track.hasPressure;
+  return e;
+}
+
+//-----------------------------------------------------------------------------
+
 bool
 TTool::keyEvent(
   bool press,
@@ -586,8 +648,11 @@ TTool::buttonEvent(
   TInputState::Button button,
   const TInputManager &manager )
 {
-  if (press && button == Qt::RightButton && !manager.getOutputHovers().empty())
-    rightButtonDown(manager.getOutputHovers().front(), manager.state);
+  if (press && button == Qt::RightButton && !manager.getOutputHovers().empty()) {
+    TMouseEvent e = makeMouseEvent();
+    e.m_button = Qt::RightButton;
+    rightButtonDown(manager.getOutputHovers().front(), e);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -595,7 +660,7 @@ TTool::buttonEvent(
 void
 TTool::hoverEvent(const TInputManager &manager) {
   if (!manager.getOutputHovers().empty())
-    mouseMove(manager.getOutputHovers().front(), manager.state);
+    mouseMove(manager.getOutputHovers().front(), makeMouseEvent());
 }
 
 //-----------------------------------------------------------------------------
@@ -603,22 +668,38 @@ TTool::hoverEvent(const TInputManager &manager) {
 void
 TTool::doubleClickEvent(const TInputManager &manager) {
   if (!manager.getOutputHovers().empty())
-    leftButtonDoubleClick(manager.getOutputHovers().front(), manager.state);
+    leftButtonDoubleClick(manager.getOutputHovers().front(), makeMouseEvent());
 }
 
 //-----------------------------------------------------------------------------
 
 void
+TTool::paintTrackBegin(const TTrackPoint &point, const TTrack &track, bool firstTrack)
+  { if (firstTrack) leftButtonDown(point.position, makeMouseEvent(point, track)); }
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::paintTrackMotion(const TTrackPoint &point, const TTrack &track, bool firstTrack)
+  { if (firstTrack) leftButtonDrag(point.position, makeMouseEvent(point, track)); }
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::paintTrackEnd(const TTrackPoint &point, const TTrack &track, bool firstTrack)
+  { if (firstTrack) leftButtonUp(point.position, makeMouseEvent(point, track)); }
+
+//-----------------------------------------------------------------------------
+
+void
 TTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack) {
-  if (firstTrack) {
-    if (track.pointsAdded == track.size())
-      leftButtonDown(point, track);
-    else
-    if (point.final)
-      leftButtonUp(point, track);
-    else
-      leftButtonDrag(point, track);
-   }
+  if (track.pointsAdded == track.size())
+    paintTrackBegin(point, track, firstTrack);
+  else
+  if (point.final)
+    paintTrackEnd(point, track, firstTrack);
+  else
+    paintTrackMotion(point, track, firstTrack);
 }
 
 //-----------------------------------------------------------------------------
