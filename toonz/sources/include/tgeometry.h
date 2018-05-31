@@ -1234,6 +1234,137 @@ public:
     inline Range flip() const { return Range(a1, a0); }
   };
 
+  struct Iterator {
+  private:
+    bool m_flip;
+    List::const_iterator m_prebegin;
+    List::const_iterator m_begin;
+    List::const_iterator m_end;
+    List::const_iterator m_current;
+    bool m_lapped;
+    static const Type m_blank;
+
+  public:
+    inline Iterator(): m_flip(), m_lapped(true)
+      { reset(); }
+    inline explicit Iterator(const List &list, bool flip = false, bool reverse = false)
+      { set(list, flip, reverse); }
+    inline explicit Iterator(const TAngleRangeSet &ranges, bool flip = false, bool reverse = false)
+      { set(ranges, flip, reverse); }
+
+    inline Iterator& set(bool full) {
+      m_flip = full; m_lapped = !m_flip;
+      m_current = m_prebegin = m_begin = m_end = List::const_iterator();
+      return *this;
+    }
+
+    inline Iterator& reset()
+      { return set(false); }
+
+    inline Iterator& set(const List &list, bool flip = false, bool reverse = false) {
+      assert(list.size()%2 == 0);
+      if (list.empty()) {
+        set(flip);
+      } else {
+        m_flip = flip;
+        m_lapped = false;
+        if (flip) {
+          m_prebegin = list.end() - 1;
+          m_begin = list.begin();
+          m_end = m_prebegin - 1;
+        } else {
+          m_prebegin = list.begin();
+          m_begin = m_prebegin + 1;
+          m_end = list.end() - 1;
+        }
+      }
+      m_current = reverse ? m_end : m_begin;
+      return *this;
+    }
+
+    inline Iterator& set(const TAngleRangeSet &ranges, bool flip = false, bool reverse = false)
+      { return set(ranges.angles(), ranges.isFlipped() != flip, reverse); }
+
+    inline const Type& a0() const
+      { return valid() ? *(m_current == m_begin ? m_prebegin : m_current - 1) : m_blank; }
+    inline const Type& a1() const
+      { return valid() ? *m_current : m_blank; }
+    inline double d0() const
+      { return toDouble(a0()); }
+    inline double d1() const
+      { return toDouble(a1()); }
+    inline double d1greater() const {
+      return !valid() ? (m_flip ? M_PI : -M_PI)
+           : m_current == m_begin && m_prebegin > m_begin
+           ? toDouble(*m_current) + M_2PI : toDouble(*m_current);
+    }
+    inline Range range() const
+      { return Range(a0(), a1()); }
+    inline int size() const
+      { return (m_end - m_begin)/2 + 1; }
+    inline int index() const
+      { return (m_current - m_begin)/2; }
+    inline int reverseIndex() const
+      { int i = index(); return i == 0 ? 0 : size() - i; }
+    inline bool lapped() const
+      { return m_lapped; }
+    inline bool valid() const
+      { return m_prebegin != m_begin; }
+    inline bool isFull() const
+      { return !valid() && m_flip; }
+    inline bool isEmpty() const
+      { return !valid() && !m_flip; }
+
+    inline operator bool() const
+      { return !m_lapped; }
+
+    inline Iterator& operator++() {
+      if (!valid()) { m_lapped = true; return *this; }
+      m_lapped = (m_current == m_end);
+      if (m_lapped) m_current = m_begin; else m_current += 2;
+      return *this;
+    }
+
+    inline Iterator& operator--() {
+      if (!valid()) { m_lapped = true; return *this; }
+      m_lapped = (m_current == m_end);
+      if (m_lapped) m_current = m_end; else m_current -= 2;
+      return *this;
+    }
+
+    inline Iterator& operator += (int i) {
+      if (i == 0) { m_lapped = isEmpty(); return *this; }
+      if (!valid()) { m_lapped = true; return *this; }
+      int ii = index();
+      int s = size();
+      if (ii + i >= 0 && ii + i < s) {
+        m_current += i*2;
+        m_lapped = false;
+      } else {
+        m_current = m_begin + ((ii + s + i%s)%s)*2;
+        m_lapped = true;
+      }
+      return *this;
+    }
+
+    inline int operator-(const Iterator &i) const {
+      assert(m_flip == i.m_flip && m_begin == i.m_begin && m_end == i.m_end && m_prebegin == i.m_prebegin);
+      int ii = m_current - i.m_current;
+      return ii < 0 ? ii + size() : ii;
+    }
+
+    inline Iterator operator++() const
+      { Iterator copy(*this); ++(*this); return copy; }
+    inline Iterator operator--() const
+      { Iterator copy(*this); --(*this); return copy; }
+    inline Iterator& operator -= (int i)
+      { return (*this) += -i; }
+    inline Iterator operator+(int i) const
+      { Iterator ii(*this); return ii += i; }
+    inline Iterator operator-(int i) const
+      { Iterator ii(*this); return ii -= i; }
+  };
+
 private:
   bool m_flip;
   List m_angles;
