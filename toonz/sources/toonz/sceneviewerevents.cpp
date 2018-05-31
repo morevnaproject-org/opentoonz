@@ -530,7 +530,6 @@ void SceneViewer::onMove(const TMouseEvent &event) {
       && (m_tabletState == OnStroke || m_tabletState == StartStroke)
       && m_tabletMove )
     {
-      tool->leftButtonDrag(pos, event);
       getInputManager()->trackEvent(
         0, 0, worldPos, &event.m_pressure, NULL,
         false, TToolTimer::ticks() );
@@ -540,20 +539,14 @@ void SceneViewer::onMove(const TMouseEvent &event) {
     if (m_mouseButton == Qt::LeftButton) {
       // sometimes the mousePressedEvent is postponed to a wrong  mouse move
       // event!
-      if (m_toolSwitched) {
-        tool->leftButtonDown(pos, event);
+      if (m_buttonClicked && !m_toolSwitched) {
         getInputManager()->trackEvent(
           0, 0, worldPos, NULL, NULL,
           false, TToolTimer::ticks() );
         getInputManager()->processTracks();
       }
-      tool->leftButtonDrag(pos, event);
-      getInputManager()->trackEvent(
-        0, 0, pos, NULL, NULL,
-        false, TToolTimer::ticks() );
       m_mouseState = OnStroke;
     } else if (m_pressure == 0.0) {
-      tool->mouseMove(pos, event);
       m_hovers.front() = worldPos;
       getInputManager()->hoverEvent(m_hovers);
     }
@@ -703,7 +696,6 @@ void SceneViewer::onPress(const TMouseEvent &event) {
   if (m_tabletEvent && m_tabletState == Touched) {
     TApp::instance()->getCurrentTool()->setToolBusy(true);
     m_tabletState = StartStroke;
-    tool->leftButtonDown(pos, event);
     getInputManager()->trackEvent(
       0, 0, worldPos, &event.m_pressure, NULL,
       false, TToolTimer::ticks() );
@@ -711,13 +703,11 @@ void SceneViewer::onPress(const TMouseEvent &event) {
   } else if (m_mouseButton == Qt::LeftButton) {
     m_mouseState = StartStroke;
     TApp::instance()->getCurrentTool()->setToolBusy(true);
-    tool->leftButtonDown(pos, event);
     getInputManager()->trackEvent(
       0, 0, worldPos, NULL, NULL,
       false, TToolTimer::ticks() );
     getInputManager()->processTracks();
   }
-  if (m_mouseButton == Qt::RightButton) tool->rightButtonDown(pos, event);
 }
 
 //-----------------------------------------------------------------------------
@@ -800,7 +790,6 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
 
     if (m_mouseButton == Qt::LeftButton || m_tabletState == Released) {
       if (!m_toolSwitched) {
-        tool->leftButtonUp(pos, event);
         getInputManager()->trackEvent(
           0, 0, worldPos,
           (event.m_isTablet ? &event.m_pressure : NULL),
@@ -1328,6 +1317,7 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
 
     tool->setViewer(this);
 
+    bool ret = false;
     if (key.isModifier()) {
       // quando l'utente preme shift/ctrl ecc. alcuni tool (es. pinch) devono
       // cambiare subito la forma del cursore, senza aspettare il prossimo move
@@ -1339,8 +1329,7 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
       TPointD worldPos = winToWorld(m_lastMousePos);
       TPointD pos = getInputManager()->worldToTool() * worldPos;
 
-      getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event);
-      tool->mouseMove(pos, toonzEvent);
+      ret = getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event);
       m_hovers.front() = worldPos;
       getInputManager()->hoverEvent(m_hovers);
 
@@ -1349,9 +1338,8 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
 
     if (key.is(Qt::Key_Menu) || key.is(Qt::Key_Meta)) return false;
 
-    bool ret = tool->keyDown(event);
     if (!key.isModifier())
-      ret = getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event) || ret;
+      ret = getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event);
     return ret;
   }();
 
@@ -1416,7 +1404,6 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
     TPointD worldPos = winToWorld(m_lastMousePos);
     TPointD pos = getInputManager()->worldToTool() * worldPos;
 
-    tool->mouseMove(pos, toonzEvent);
     m_hovers.front() = worldPos;
     getInputManager()->hoverEvent(m_hovers);
 
@@ -1460,7 +1447,7 @@ void SceneViewer::mouseDoubleClickEvent(QMouseEvent *event) {
               * winToWorld(event->pos() * getDevPixRatio());
 
   if (event->button() == Qt::LeftButton)
-    tool->leftButtonDoubleClick(pos, toonzEvent);
+    getInputManager()->doubleClickEvent();
 }
 
 //-----------------------------------------------------------------------------
