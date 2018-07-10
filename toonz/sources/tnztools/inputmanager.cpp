@@ -387,13 +387,18 @@ TInputManager::addTrackPoint(
   const TPointD &position,
   double pressure,
   const TPointD &tilt,
+  const TPointD &worldPosition,
+  const TPointD &screenPosition,
   double time,
   bool final )
 {
+  TPointD p = toolToScreen() * position;
   track->push_back( TTrackPoint(
     position,
     pressure,
     tilt,
+    worldPosition,
+    screenPosition,
     (double)track->size(),
     time,
     0.0, // length will calculated inside of TTrack::push_back
@@ -406,7 +411,7 @@ TInputManager::touchTracks(bool finish) {
   for(TTrackList::const_iterator i = m_tracks.front().begin(); i != m_tracks.front().end(); ++i) {
     if (!(*i)->finished() && (*i)->size() > 0) {
       const TTrackPoint &p = (*i)->back();
-      addTrackPoint(*i, p.position, p.pressure, p.tilt, p.time, finish);
+      addTrackPoint(*i, p.position, p.pressure, p.tilt, p.worldPosition, p.screenPosition, p.time, finish);
     }
   }
 }
@@ -584,7 +589,7 @@ void
 TInputManager::trackEvent(
   TInputState::DeviceId deviceId,
   TInputState::TouchId touchId,
-  const TPointD &position,
+  const TPointD &screenPosition,
   const double *pressure,
   const TPointD *tilt,
   bool final,
@@ -599,11 +604,15 @@ TInputManager::trackEvent(
     TTrackP track = getTrack(deviceId, touchId, ticks, (bool)pressure, (bool)tilt);
     if (!track->finished()) {
       double time = (double)(ticks - track->ticks())*TToolTimer::step - track->timeOffset();
+      TPointD worldPosition = screenToWorld() * screenPosition;
+      TPointD position = worldToTool() * worldPosition;
       addTrackPoint(
         track,
-        worldToTool() * position,
+        position,
         pressure ? *pressure : 0.5,
         tilt ? *tilt : TPointD(),
+        worldPosition,
+        screenPosition,
         time,
         final );
     }
