@@ -505,7 +505,9 @@ void SceneViewer::onMove(const TMouseEvent &event) {
     }
     tool->setViewer(this);
 
-    TPointD worldPos = winToWorld(curPos);
+    TPointD screenPos( curPos.x() - (double)width()/2.0,
+                      -curPos.y() + (double)height()/2.0 );
+    TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
     if (m_locator) m_locator->onChangeViewAff(worldPos);
     TPointD pos = getInputManager()->worldToTool() * worldPos;
 
@@ -519,7 +521,7 @@ void SceneViewer::onMove(const TMouseEvent &event) {
       && m_tabletMove )
     {
       getInputManager()->trackEvent(
-        0, 0, worldPos, &event.m_pressure, NULL,
+        0, 0, screenPos, &event.m_pressure, NULL,
         false, TToolTimer::ticks() );
       getInputManager()->processTracks();
       m_tabletState = OnStroke;
@@ -529,7 +531,7 @@ void SceneViewer::onMove(const TMouseEvent &event) {
       // event!
       if (m_buttonClicked && !m_toolSwitched) {
         getInputManager()->trackEvent(
-          0, 0, worldPos, NULL, NULL,
+          0, 0, screenPos, NULL, NULL,
           false, TToolTimer::ticks() );
         getInputManager()->processTracks();
       }
@@ -658,7 +660,9 @@ void SceneViewer::onPress(const TMouseEvent &event) {
   // if(!m_tabletEvent) qDebug() << "-----------------MOUSE PRESS 'PURO'.
   // POSSIBILE EMBOLO";
 
-  TPointD worldPos = winToWorld(m_pos);
+  TPointD screenPos( m_pos.x() - (double)width()/2.0,
+                    -m_pos.y() + (double)height()/2.0 );
+  TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
   TPointD pos = getInputManager()->worldToTool() * worldPos;
 
   getInputManager()->buttonEvent(
@@ -669,13 +673,13 @@ void SceneViewer::onPress(const TMouseEvent &event) {
     TApp::instance()->getCurrentTool()->setToolBusy(true);
     m_tabletState = StartStroke;
     getInputManager()->trackEvent(
-      0, 0, worldPos, &event.m_pressure, NULL,
+      0, 0, screenPos, &event.m_pressure, NULL,
       false, TToolTimer::ticks() );
     getInputManager()->processTracks();
   } else if (m_mouseButton == Qt::LeftButton) {
     TApp::instance()->getCurrentTool()->setToolBusy(true);
     getInputManager()->trackEvent(
-      0, 0, worldPos, NULL, NULL,
+      0, 0, screenPos, NULL, NULL,
       false, TToolTimer::ticks() );
     getInputManager()->processTracks();
   }
@@ -755,13 +759,16 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
   tool->setViewer(this);
 
   {
-    TPointD worldPos = winToWorld(event.mousePos() * getDevPixRatio());
+    QPointF winPos = event.mousePos() * getDevPixRatio();
+    TPointD screenPos( winPos.x() - (double)width()/2.0,
+                      -winPos.y() + (double)height()/2.0 );
+    TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
     TPointD pos = getInputManager()->worldToTool() * worldPos;
 
     if (m_mouseButton == Qt::LeftButton || m_tabletState == Released) {
       if (!m_toolSwitched) {
         getInputManager()->trackEvent(
-          0, 0, worldPos,
+          0, 0, screenPos,
           (event.m_isTablet ? &event.m_pressure : NULL),
           NULL, true, TToolTimer::ticks() );
         getInputManager()->processTracks();

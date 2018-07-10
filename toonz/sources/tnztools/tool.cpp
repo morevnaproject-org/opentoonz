@@ -601,7 +601,6 @@ TTool::makeMouseEvent(const TTrackPoint &point, const TTrack &track) {
   TToolViewer *viewer = getViewer();
   TInputManager *manager = viewer ? viewer->getInputManager() : 0;
 
-  TPointD pos = manager ? manager->toolToScreen() * point.position : point.position;
   TDimensionI size = viewer ? viewer->getWindowSize() : TDimensionI();
   TPointD center(0.5*(double)size.lx, 0.5*(double)size.ly);
 
@@ -609,7 +608,7 @@ TTool::makeMouseEvent(const TTrackPoint &point, const TTrack &track) {
   TInputState::ButtonState::Holder buttonState = track.getButtonState(point.time);
 
   TMouseEvent e;
-  e.m_pos = pos + center;
+  e.m_pos = point.screenPosition + center;
   e.m_pressure = track.hasPressure ? point.pressure : 1.0;
   e.setModifiers( keyState.isPressed(TKey::shift),
                   keyState.isPressed(TKey::alt),
@@ -620,7 +619,7 @@ TTool::makeMouseEvent(const TTrackPoint &point, const TTrack &track) {
   if (buttonState.isPressed(Qt::BackButton   )) e.m_buttons |= Qt::BackButton;
   if (buttonState.isPressed(Qt::ForwardButton)) e.m_buttons |= Qt::ForwardButton;
   if (buttonState.isPressed(Qt::TaskButton   )) e.m_buttons |= Qt::TaskButton;
-  e.m_mousePos = QPointF(pos.x + center.x, center.y - pos.y);
+  e.m_mousePos = QPointF(point.screenPosition.x + center.x, center.y - point.screenPosition.y);
   e.m_isTablet = track.hasPressure;
   return e;
 }

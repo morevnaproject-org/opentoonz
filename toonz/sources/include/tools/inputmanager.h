@@ -256,6 +256,8 @@ private:
     const TPointD &position,
     double pressure,
     const TPointD &tilt,
+    const TPointD &worldPosition,
+    const TPointD &screenPosition,
     double time,
     bool final );
   void touchTracks(bool finish = false);
@@ -317,7 +319,7 @@ public:
   void trackEvent(
     TInputState::DeviceId deviceId,
     TInputState::TouchId touchId,
-    const TPointD &position,
+    const TPointD &screenPosition,
     const double *pressure,
     const TPointD *tilt,
     bool final,

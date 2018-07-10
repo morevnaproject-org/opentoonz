@@ -74,6 +74,9 @@ public:
   double pressure;
   TPointD tilt;
 
+  TPointD worldPosition;
+  TPointD screenPosition;
+
   double originalIndex;
   double time;
   double length;
@@ -84,6 +87,8 @@ public:
     const TPointD &position = TPointD(),
     double pressure = 0.5,
     const TPointD &tilt = TPointD(),
+    const TPointD &worldPosition = TPointD(),
+    const TPointD &screenPosition = TPointD(),
     double originalIndex = 0.0,
     double time = 0.0,
     double length = 0.0,
@@ -92,6 +97,8 @@ public:
     position(position),
     pressure(pressure),
     tilt(tilt),
+    worldPosition(worldPosition),
+    screenPosition(screenPosition),
     originalIndex(originalIndex),
     time(time),
     length(length),
@@ -110,14 +117,21 @@ public:
   double pressure;
   TPointD tilt;
 
+  TPointD worldPosition;
+  TPointD screenPosition;
+
   inline explicit TTrackTangent(
     const TPointD &position = TPointD(),
     double pressure = 0.0,
-    const TPointD &tilt = TPointD()
+    const TPointD &tilt = TPointD(),
+    const TPointD &worldPosition = TPointD(),
+    const TPointD &screenPosition = TPointD()
   ):
     position(position),
     pressure(pressure),
-    tilt(tilt)
+    tilt(tilt),
+    worldPosition(worldPosition),
+    screenPosition(screenPosition)
   { }
 };
 
@@ -359,6 +373,8 @@ public:
       interpolationLinear(p0.position      , p1.position      , l),
       interpolationLinear(p0.pressure      , p1.pressure      , l),
       interpolationLinear(p0.tilt          , p1.tilt          , l),
+      interpolationLinear(p0.worldPosition , p1.worldPosition , l),
+      interpolationLinear(p0.screenPosition, p1.screenPosition, l),
       interpolationLinear(p0.originalIndex , p1.originalIndex , l),
       interpolationLinear(p0.time          , p1.time          , l),
       interpolationLinear(p0.length        , p1.length        , l) );
@@ -374,11 +390,15 @@ public:
     if (l <= TConsts::epsilon) return p0;
     if (l >= 1.0 - TConsts::epsilon) return p1;
     return TTrackPoint(
-      interpolationSpline(p0.position      , p1.position      , t0.position , t1.position , l),
+      interpolationSpline(p0.position      , p1.position      , t0.position      , t1.position      , l),
       interpolationLinear(p0.pressure      , p1.pressure      , l),
-      //interpolationSpline(p0.pressure      , p1.pressure      , t0.pressure , t1.pressure , l),
+    //interpolationSpline(p0.pressure      , p1.pressure      , t0.pressure      , t1.pressure      , l),
       interpolationLinear(p0.tilt          , p1.tilt          , l),
-      //interpolationSpline(p0.tilt          , p1.tilt          , t0.tilt     , t1.tilt     , l),
+    //interpolationSpline(p0.tilt          , p1.tilt          , t0.tilt          , t1.tilt          , l),
+      interpolationLinear(p0.worldPosition , p1.worldPosition , l),
+    //interpolationSpline(p0.worldPosition , p1.worldPosition , t0.worldPosition , t1.worldPosition , l),
+      interpolationLinear(p0.screenPosition, p1.screenPosition, l),
+    //interpolationSpline(p0.screenPosition, p1.screenPosition, t0.screenPosition, t1.screenPosition, l),
       interpolationLinear(p0.originalIndex , p1.originalIndex , l),
       interpolationLinear(p0.time          , p1.time          , l),
       interpolationLinear(p0.length        , p1.length        , l) );

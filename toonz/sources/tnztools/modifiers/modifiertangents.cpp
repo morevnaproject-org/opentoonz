@@ -23,10 +23,8 @@ TModifierTangents::Modifier::calcPoint(double originalIndex) {
     TTrackTangent t0 = i0 < (int)tangents.size() ? tangents[i0] : TTrackTangent();
     TTrackTangent t1 = i1 < (int)tangents.size() ? tangents[i1] : TTrackTangent();
     double l = fabs(p1.length - p0.length);
-    t0.position.x *= l;
-    t0.position.y *= l;
-    t1.position.x *= l;
-    t1.position.y *= l;
+    t0.position       = t0.position       * l;
+    t1.position       = t1.position       * l;
     p = TTrack::interpolationSpline(p0, p1, t0, t1, frac);
   }
   p.originalIndex = originalIndex;
@@ -124,7 +122,9 @@ TModifierTangents::modifyTrack(
         //TTrackTangent tangent(
         //  (p2.position - p0.position)*k,
         //  (p2.pressure - p0.pressure)*k,
-        //  (p2.tilt - p0.tilt)*k );
+        //  (p2.tilt - p0.tilt)*k
+        //  (p2.worldPosition - p0.worldPosition)*k,
+        //  (p2.screenPosition - p0.screenPosition)*k );
 
         // calculate tangent (with normalized position)
         TPointD d = p2.position - p0.position;
@@ -133,7 +133,9 @@ TModifierTangents::modifyTrack(
         TTrackTangent tangent(
           d*k,
           (p2.pressure - p0.pressure)*0.5,
-          (p2.tilt - p0.tilt)*0.5 );
+          (p2.tilt - p0.tilt)*0.5,
+          (p2.worldPosition - p0.worldPosition)*0.5,
+          (p2.screenPosition - p0.screenPosition)*0.5 );
 
         modifier->tangents.push_back(tangent);
         subTrack.push_back(p1);
