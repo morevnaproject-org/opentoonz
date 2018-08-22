@@ -573,15 +573,15 @@ TInputManager::worldToTool() const
 
 TAffine
 TInputManager::worldToScreen() const {
-  return screenToWorld().inv();
+  if (TToolViewer *viewer = getViewer())
+    return viewer->get3dViewMatrix().get2d();
+  return TAffine();
 }
 
 
 TAffine
 TInputManager::screenToWorld() const {
-  if (TToolViewer *viewer = getViewer())
-    return viewer->get3dViewMatrix().get2d();
-  return TAffine();
+  return worldToScreen().inv();
 }
 
 
