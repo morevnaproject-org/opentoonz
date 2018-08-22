@@ -1291,11 +1291,11 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
       }
       // pressing F1, F2 or F3 key will flip between corresponding ghost
       if (CommandManager::instance()->getAction(MI_ShiftTrace)->isChecked() &&
-          (Qt::Key_F1 <= key && key <= Qt::Key_F3)) {
+          (Qt::Key_F1 <= key.key && key.key <= Qt::Key_F3)) {
         OnionSkinMask osm =
             TApp::instance()->getCurrentOnionSkin()->getOnionSkinMask();
-        if (osm.getGhostFlipKey() != key) {
-          osm.appendGhostFlipKey(key);
+        if (osm.getGhostFlipKey() != key.key) {
+          osm.appendGhostFlipKey(key.key);
           TApp::instance()->getCurrentOnionSkin()->setOnionSkinMask(osm);
           TApp::instance()->getCurrentOnionSkin()->notifyOnionSkinMaskChanged();
         }
@@ -1401,10 +1401,10 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
   }
 
   if (CommandManager::instance()->getAction(MI_ShiftTrace)->isChecked() &&
-      (Qt::Key_F1 <= key && key <= Qt::Key_F3)) {
+      (Qt::Key_F1 <= key.key && key.key <= Qt::Key_F3)) {
     OnionSkinMask osm =
         TApp::instance()->getCurrentOnionSkin()->getOnionSkinMask();
-    osm.removeGhostFlipKey(key);
+    osm.removeGhostFlipKey(key.key);
     TApp::instance()->getCurrentOnionSkin()->setOnionSkinMask(osm);
     TApp::instance()->getCurrentOnionSkin()->notifyOnionSkinMaskChanged();
   }
