@@ -95,5 +95,4 @@ else
 fi
 
 cd "$BIN_DIR"
-./OpenToonz_* "$@"
-
+./OpenToonz_* "${@/-psn_*}"
