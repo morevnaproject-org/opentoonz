@@ -4,6 +4,9 @@ set(CMAKE_BUILD_TYPE_INIT Release)
 
 project(OpenToonz)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 #-----------------------------------------------------------------------------
 # Platform Specific Defaults
 

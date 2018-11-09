@@ -1,0 +1,14 @@
+[requires]
+Qt/5.9.7@bincrafters/stable
+
+[generators]
+cmake
+
+[options]
+Qt:shared=True
+Qt:qtsvg=True
+Qt:GUI=True
+Qt:opengl=desktop
+Qt:qtscript=True
+Qt:qttranslations=True
+Qt:qtmultimedia=True
