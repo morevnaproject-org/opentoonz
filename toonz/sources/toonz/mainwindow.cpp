@@ -2183,7 +2183,7 @@ void MainWindow::defineActions() {
   createToolAction(T_Plastic, "plastic", tr("Plastic Tool"), "X");
   createToolAction(T_Ruler, "ruler", tr("Ruler Tool"), "");
   createToolAction(T_Finger, "finger", tr("Finger Tool"), "");
-  createToolAction(T_EditAssistants, "geometric", tr("Edit Assistants"), "");
+  createToolAction(T_EditAssistants, "tool_assistant", tr("Assistant Tool"), "");
 
   createViewerAction(V_ZoomIn, tr("Zoom In"), "+");
   createViewerAction(V_ZoomOut, tr("Zoom Out"), "-");
