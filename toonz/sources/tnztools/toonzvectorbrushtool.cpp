@@ -1264,7 +1264,7 @@ void ToonzVectorBrushTool::checkGuideSnapping(bool beforeMousePress,
     // check guide snapping
     int vGuideCount = 0, hGuideCount = 0;
     double guideDistance  = sqrt(m_minDistance2);
-    TTool::Viewer *viewer = getViewer();
+    TToolViewer *viewer = getViewer();
     if (viewer) {
       vGuideCount = viewer->getVGuideCount();
       hGuideCount = viewer->getHGuideCount();
