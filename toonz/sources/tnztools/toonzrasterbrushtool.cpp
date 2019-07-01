@@ -1302,7 +1302,7 @@ void ToonzRasterBrushTool::leftButtonDown(const TPointD &pos,
       m_strokeRect.empty();
       m_strokeSegmentRect.empty();
       m_toonz_brush->beginStroke();
-      m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+      m_toonz_brush->strokeTo(point, pressure, TPointD(), restartBrushTimer());
       TRect updateRect = m_strokeSegmentRect * ras->getBounds();
       if (!updateRect.isEmpty()) {
         // ras->extract(updateRect)->copy(m_workRas->extract(updateRect));
@@ -1404,7 +1404,7 @@ void ToonzRasterBrushTool::leftButtonDrag(const TPointD &pos,
         m_pressure.getValue() && e.isTablet() ? e.m_pressure : 0.5;
 
     m_strokeSegmentRect.empty();
-    m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+    m_toonz_brush->strokeTo(point, pressure, TPointD(), restartBrushTimer());
     TRect updateRect = m_strokeSegmentRect * ras->getBounds();
     if (!updateRect.isEmpty()) {
       // ras->extract(updateRect)->copy(m_workRaster->extract(updateRect));
@@ -1555,7 +1555,7 @@ void ToonzRasterBrushTool::finishRasterBrush(const TPointD &pos,
     double pressure = m_pressure.getValue() ? pressureVal : 0.5;
 
     m_strokeSegmentRect.empty();
-    m_toonz_brush->strokeTo(point, pressure, restartBrushTimer());
+    m_toonz_brush->strokeTo(point, pressure, TPointD(), restartBrushTimer());
     m_toonz_brush->endStroke();
     TRect updateRect = m_strokeSegmentRect * ras->getBounds();
     if (!updateRect.isEmpty()) {
