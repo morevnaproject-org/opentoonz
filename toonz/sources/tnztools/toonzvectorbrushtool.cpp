@@ -57,6 +57,7 @@ TEnv::IntVar V_BrushPressureSensitivity("InknpaintBrushPressureSensitivity", 1);
 TEnv::IntVar V_VectorBrushFrameRange("VectorBrushFrameRange", 0);
 TEnv::IntVar V_VectorBrushSnap("VectorBrushSnap", 0);
 TEnv::IntVar V_VectorBrushSnapSensitivity("VectorBrushSnapSensitivity", 0);
+TEnv::IntVar V_BrushAssistants("VectorBrushAssistants", 0);
 
 //-------------------------------------------------------------------
 
@@ -476,6 +477,7 @@ ToonzVectorBrushTool::ToonzVectorBrushTool(std::string name, int targetType)
     , m_preset("Preset:")
     , m_breakAngles("Break", true)
     , m_pressure("Pressure", true)
+    , m_assistants("Assistants", false)
     , m_capStyle("Cap")
     , m_joinStyle("Join")
     , m_miterJoinLimit("Miter:", 0, 100, 4)
@@ -500,6 +502,7 @@ ToonzVectorBrushTool::ToonzVectorBrushTool(std::string name, int targetType)
   m_prop[0].bind(m_smooth);
   m_prop[0].bind(m_breakAngles);
   m_prop[0].bind(m_pressure);
+  m_prop[0].bind(m_assistants);
 
   m_prop[0].bind(m_frameRange);
   m_frameRange.addValue(L"Off");
@@ -561,6 +564,7 @@ void ToonzVectorBrushTool::updateTranslation() {
   m_preset.setItemUIName(CUSTOM_WSTR, tr("<custom>"));
   m_breakAngles.setQStringName(tr("Break"));
   m_pressure.setQStringName(tr("Pressure"));
+  m_assistants.setQStringName(tr("Assistants"));
   m_capStyle.setQStringName(tr("Cap"));
   m_joinStyle.setQStringName(tr("Join"));
   m_miterJoinLimit.setQStringName(tr("Miter:"));
@@ -585,6 +589,11 @@ void ToonzVectorBrushTool::updateTranslation() {
 
 //---------------------------------------------------------------------------------------------------
 
+bool ToonzVectorBrushTool::isAssistantsEnabled() const
+  { return m_assistants.getValue(); }
+
+//---------------------------------------------------------------------------------------------------
+
 void ToonzVectorBrushTool::onActivate() {
   if (m_firstTime) {
     m_thickness.setValue(
@@ -597,6 +606,7 @@ void ToonzVectorBrushTool::onActivate() {
     m_accuracy.setValue(V_BrushAccuracy);
 
     m_pressure.setValue(V_BrushPressureSensitivity ? 1 : 0);
+    m_assistants.setValue(V_BrushAssistants ? 1 : 0);
     m_firstTime = false;
     m_smooth.setValue(V_BrushSmooth);
 
@@ -1467,6 +1477,8 @@ bool ToonzVectorBrushTool::onPropertyChanged(std::string propertyName) {
     V_BrushBreakSharpAngles = m_breakAngles.getValue();
   } else if (propertyName == m_pressure.getName()) {
     V_BrushPressureSensitivity = m_pressure.getValue();
+  } else if (propertyName == m_assistants.getName()) {
+    V_BrushAssistants = m_assistants.getValue();
   } else if (propertyName == m_capStyle.getName()) {
     V_VectorCapStyle = m_capStyle.getIndex();
   } else if (propertyName == m_joinStyle.getName()) {
@@ -1547,6 +1559,7 @@ void ToonzVectorBrushTool::loadPreset() {
     m_smooth.setValue(preset.m_smooth, true);
     m_breakAngles.setValue(preset.m_breakAngles);
     m_pressure.setValue(preset.m_pressure);
+    m_assistants.setValue(preset.m_assistants);
     m_capStyle.setIndex(preset.m_cap);
     m_joinStyle.setIndex(preset.m_join);
     m_miterJoinLimit.setValue(preset.m_miter);
@@ -1568,6 +1581,7 @@ void ToonzVectorBrushTool::addPreset(QString name) {
   preset.m_smooth      = m_smooth.getValue();
   preset.m_breakAngles = m_breakAngles.getValue();
   preset.m_pressure    = m_pressure.getValue();
+  preset.m_assistants  = m_assistants.getValue();
   preset.m_cap         = m_capStyle.getIndex();
   preset.m_join        = m_joinStyle.getIndex();
   preset.m_miter       = m_miterJoinLimit.getValue();
@@ -1621,7 +1635,8 @@ VectorBrushData::VectorBrushData()
     , m_pressure(false)
     , m_cap(0)
     , m_join(0)
-    , m_miter(0) {}
+    , m_miter(0)
+    , m_assistants(false) {}
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -1635,7 +1650,8 @@ VectorBrushData::VectorBrushData(const std::wstring &name)
     , m_pressure(false)
     , m_cap(0)
     , m_join(0)
-    , m_miter(0) {}
+    , m_miter(0)
+    , m_assistants(false) {}
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -1667,6 +1683,9 @@ void VectorBrushData::saveData(TOStream &os) {
   os.openChild("Miter");
   os << m_miter;
   os.closeChild();
+  os.openChild("Assistants");
+  os << (int)m_assistants;
+  os.closeChild();
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -1694,6 +1713,8 @@ void VectorBrushData::loadData(TIStream &is) {
       is >> m_join, is.matchEndTag();
     else if (tagName == "Miter")
       is >> m_miter, is.matchEndTag();
+    else if (tagName == "Assistants")
+      is >> val, m_assistants = val, is.matchEndTag();
     else
       is.skipCurrentTag();
   }
