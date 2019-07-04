@@ -17,6 +17,8 @@
 #include <tproperty.h>
 #include <tmetaimage.h>
 
+#include <toonzqt/tselectionhandle.h>
+
 // For Qt translation support
 #include <QCoreApplication>
 
@@ -308,7 +310,7 @@ protected:
       EditAssistantsTool *owner;
       Args(EditAssistantsTool &owner) : owner(&owner) {}
       operator bool() const  //!< declare bool-convertor here to prevent
-                             //!convertion path: Args->Closer->bool
+                             //! convertion path: Args->Closer->bool
       {
         return owner && (owner->m_reader || owner->m_writer);
       }
@@ -427,6 +429,7 @@ protected:
 public:
   bool preLeftButtonDown() override {
     if (m_assistantType.getIndex() != 0) touchImage();
+    TTool::getApplication()->getCurrentSelection()->setSelection(0);
     return true;
   }
 
