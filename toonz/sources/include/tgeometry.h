@@ -144,7 +144,7 @@ inline bool operator==(const TPointT<T> &p0, const TPointT<T> &p1) {
 }
 template<class T>
 inline bool operator!=(const TPointT<T> &p0, const TPointT<T> &p1) {
-  return p0.x != p1.x && p0.y != p1.y;
+  return p0.x != p1.x || p0.y != p1.y;
 }
 
 //-----------------------------------------------------------------------------
