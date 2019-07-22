@@ -17,6 +17,8 @@
 #include <tproperty.h>
 #include <tmetaimage.h>
 
+#include <toonzqt/selection.h>
+#include <toonzqt/selectioncommandids.h>
 #include <toonzqt/tselectionhandle.h>
 
 // For Qt translation support
@@ -102,6 +104,24 @@ public:
 
 class EditAssistantsTool final : public TTool {
   Q_DECLARE_TR_FUNCTIONS(EditAssistantsTool)
+public:
+  class Selection final : public TSelection {
+  private:
+    EditAssistantsTool &tool;
+  public:
+    explicit Selection(EditAssistantsTool &tool):
+      tool(tool) { }
+    void deleteSelection() 
+      { tool.removeSelected(); }
+
+    void enableCommands() override
+      { if (!isEmpty()) enableCommand(this, MI_Clear, &Selection::deleteSelection); }
+    bool isEmpty() const override
+      { return !tool.isSelected(); }
+    void selectNone() override
+      { tool.deselect(); }
+  };
+  
 protected:
   enum Mode { ModeImage, ModeAssistant, ModePoint };
 
@@ -131,6 +151,8 @@ protected:
   TMetaImage *m_writeImage;
   TMetaObjectP m_writeObject;
   TAssistant *m_writeAssistant;
+  
+  Selection *selection;
 
 public:
   EditAssistantsTool()
@@ -146,13 +168,18 @@ public:
       , m_readAssistant()
       , m_writer()
       , m_writeImage()
-      , m_writeAssistant() {
+      , m_writeAssistant()
+  {
+    selection = new Selection(*this);
     bind(MetaImage | EmptyTarget);
     m_toolProperties.bind(m_assistantType);
     updateTranslation();
   }
 
-  ~EditAssistantsTool() { close(); }
+  ~EditAssistantsTool() {
+    close();
+    delete selection;
+  }
 
   ToolType getToolType() const override { return TTool::LevelWriteTool; }
   int getCursorId() const override { return ToolCursor::StrokeSelectCursor; }
@@ -221,7 +248,10 @@ public:
     }
     return true;
   }
-
+  
+  TSelection* getSelection() override
+    { return isSelected() ? selection : 0; }
+  
 protected:
   void close() {
     m_readAssistant = 0;
@@ -245,7 +275,7 @@ protected:
         (mode >= ModePoint && !m_currentPointName))
       return false;
 
-    m_readImage = dynamic_cast<TMetaImage *>(getImage(true));
+    m_readImage = dynamic_cast<TMetaImage *>(getImage(false));
     if (m_readImage) {
       m_reader = new TMetaImage::Reader(*m_readImage);
       if (mode == ModeImage) return true;
@@ -420,16 +450,48 @@ protected:
     if (success) {
       notifyImageChanged();
       getApplication()->getCurrentTool()->notifyToolChanged();
+      TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
       getViewer()->GLInvalidateAll();
     }
 
     return success;
   }
-
+  
 public:
+  void deselect()
+    { resetCurrentPoint(); }
+  
+  bool isSelected()
+    { return read(ModeAssistant); }
+  
+  bool removeSelected() {
+    apply();
+    bool success = false;
+    if (Closer closer = write(ModeAssistant, true)) {
+      (*m_writer)->erase((*m_writer)->begin() + m_currentAssistantIndex);
+      TUndoManager::manager()->add(new EditAssistantsUndo(
+          getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
+          getCurrentFid(),
+          false,  // frameCreated
+          false,  // levelCreated
+          false,  // objectCreated
+          true,   // objectRemoved
+          m_currentAssistantIndex, m_writeObject, m_writeObject->data()));
+      success = true;
+    }
+
+    if (success) notifyImageChanged();
+
+    resetCurrentPoint();
+    getApplication()->getCurrentTool()->notifyToolChanged();
+    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
+    getViewer()->GLInvalidateAll();
+    return success;
+  }
+  
   bool preLeftButtonDown() override {
     if (m_assistantType.getIndex() != 0) touchImage();
-    TTool::getApplication()->getCurrentSelection()->setSelection(0);
+    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
     return true;
   }
 
@@ -448,6 +510,7 @@ public:
           assistant->setDefaults();
           assistant->move(point.position);
           assistant->selectAll();
+          m_currentImage.set(m_writeImage);
           m_dragAllPoints           = true;
           m_currentAssistantCreated = true;
           m_currentAssistantChanged = true;
@@ -498,11 +561,9 @@ public:
   void paintTrackEnd(const TTrackPoint &point, const TTrack &,
                      bool firstTrack) override {
     if (!firstTrack) return;
-    if (m_currentAssistantCreated) {
-      if (Closer closer = write(ModeAssistant, true)) {
-        m_writeAssistant->getBasePoint();
+    if (m_dragAllPoints) {
+      if (Closer closer = write(ModeAssistant, true))
         m_writeAssistant->move(point.position + m_currentPointOffset);
-      }
     } else {
       if (Closer closer = write(ModePoint, true))
         m_writeAssistant->movePoint(m_currentPointName,
@@ -512,41 +573,11 @@ public:
     apply();
     m_assistantType.setIndex(0);
     getApplication()->getCurrentTool()->notifyToolChanged();
-    emit getApplication()->getCurrentTool()->toolChanged();
+    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
     m_dragAllPoints = false;
     m_dragging      = false;
-  }
-
-  bool keyEvent(bool press, TInputState::Key key, QKeyEvent *event,
-                const TInputManager &manager) {
-    if (key == TKey(Qt::Key_Delete)) {
-      if (!m_dragging) {
-        apply();
-        bool success = false;
-        if (Closer closer = write(ModeAssistant, true)) {
-          (*m_writer)->erase((*m_writer)->begin() + m_currentAssistantIndex);
-          TUndoManager::manager()->add(new EditAssistantsUndo(
-              getApplication()->getCurrentLevel()->getLevel()->getSimpleLevel(),
-              getCurrentFid(),
-              false,  // frameCreated
-              false,  // levelCreated
-              false,  // objectCreated
-              true,   // objectRemoved
-              m_currentAssistantIndex, m_writeObject, m_writeObject->data()));
-          success = true;
-        }
-
-        if (success) notifyImageChanged();
-
-        resetCurrentPoint();
-        getApplication()->getCurrentTool()->notifyToolChanged();
-        getViewer()->GLInvalidateAll();
-      }
-      return true;
-    }
-    return false;
   }
 
   void draw() override {
