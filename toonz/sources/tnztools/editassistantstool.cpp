@@ -547,12 +547,13 @@ public:
                         bool firstTrack) override {
     if (!firstTrack) return;
     if (m_dragAllPoints) {
-      if (Closer closer = write(ModeAssistant, true))
-        m_writeAssistant->move(point.position + m_currentPointOffset);
+      if (Closer closer = write(ModeAssistant))
+        if (m_writeAssistant->move(point.position + m_currentPointOffset))
+          touch();
     } else {
-      if (Closer closer = write(ModePoint, true))
-        m_writeAssistant->movePoint(m_currentPointName,
-                                    point.position + m_currentPointOffset);
+      if (Closer closer = write(ModePoint))
+        if (m_writeAssistant->movePoint(m_currentPointName, point.position + m_currentPointOffset))
+          touch();
     }
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
@@ -562,12 +563,13 @@ public:
                      bool firstTrack) override {
     if (!firstTrack) return;
     if (m_dragAllPoints) {
-      if (Closer closer = write(ModeAssistant, true))
-        m_writeAssistant->move(point.position + m_currentPointOffset);
+      if (Closer closer = write(ModeAssistant))
+        if (m_writeAssistant->move(point.position + m_currentPointOffset))
+          touch();
     } else {
-      if (Closer closer = write(ModePoint, true))
-        m_writeAssistant->movePoint(m_currentPointName,
-                                    point.position + m_currentPointOffset);
+      if (Closer closer = write(ModePoint))
+        if (m_writeAssistant->movePoint(m_currentPointName, point.position + m_currentPointOffset))
+          touch();
     }
 
     apply();
