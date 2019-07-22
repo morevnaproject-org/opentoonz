@@ -219,8 +219,8 @@ public:
   }
 
   void fixPoints();
-  void move(const TPointD &position);
-  void movePoint(const TStringId &name, const TPointD &position);
+  bool move(const TPointD &position);
+  bool movePoint(const TStringId &name, const TPointD &position);
   void setPointSelection(const TStringId &name, bool selected) const;
   void setAllPointsSelection(bool selected) const;
 

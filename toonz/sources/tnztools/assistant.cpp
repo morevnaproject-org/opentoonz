@@ -219,21 +219,28 @@ TAssistant::fixPoints()
 
 //---------------------------------------------------------------------------------------------------
 
-void
+bool
 TAssistant::move(const TPointD &position) {
   TPointD d = position - getBasePoint().position;
-  for(TAssistantPointMap::iterator i = m_points.begin(); i != m_points.end(); ++i)
-    i->second.position += d;
-  fixPoints();
+  if (d != TPointD()) {
+    for(TAssistantPointMap::iterator i = m_points.begin(); i != m_points.end(); ++i)
+      i->second.position += d;
+    fixPoints();
+    return true;
+  }
+  return false;
 }
 
 //---------------------------------------------------------------------------------------------------
 
-void
+bool
 TAssistant::movePoint(const TStringId &name, const TPointD &position) {
   TAssistantPointMap::iterator i = m_points.find(name);
-  if (i != m_points.end())
+  if (i != m_points.end() && i->second.position != position) {
     onMovePoint(i->second, position);
+    return true;
+  }
+  return false;
 }
 
 //---------------------------------------------------------------------------------------------------
