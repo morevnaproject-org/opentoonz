@@ -349,24 +349,30 @@ const TTrackP&
 TInputManager::getTrack(
   TInputState::DeviceId deviceId,
   TInputState::TouchId touchId,
+  bool create,
   TTimerTicks ticks,
   bool hasPressure,
   bool hasTilt )
 {
+  static const TTrackP blank;
   TTrackList &origTracks = m_tracks.front();
   if (origTracks.empty())
-    return createTrack(0, deviceId, touchId, ticks, hasPressure, hasTilt);
+    return create ? createTrack(0, deviceId, touchId, ticks, hasPressure, hasTilt) : blank;
   int cmp;
 
   int a = 0;
   cmp = trackCompare(*origTracks[a], deviceId, touchId);
-  if (cmp == 0) return origTracks[a];
-  if (cmp < 0) return createTrack(a, deviceId, touchId, ticks, hasPressure, hasTilt);
+  if (cmp == 0)
+    return origTracks[a];
+  if (cmp < 0)
+    return create ? createTrack(a, deviceId, touchId, ticks, hasPressure, hasTilt) : blank;
 
   int b = (int)origTracks.size() - 1;
   cmp = trackCompare(*origTracks[b], deviceId, touchId);
-  if (cmp == 0) return origTracks[b];
-  if (cmp > 0) return createTrack(b+1, deviceId, touchId, ticks, hasPressure, hasTilt);
+  if (cmp == 0)
+    return origTracks[b];
+  if (cmp > 0)
+    return create ? createTrack(b+1, deviceId, touchId, ticks, hasPressure, hasTilt) : blank;
 
   // binary search: tracks[a] < tracks[c] < tracks[b]
   while(true) {
@@ -377,7 +383,7 @@ TInputManager::getTrack(
       if (cmp > 0) a = c; else
         return origTracks[c];
   }
-  return createTrack(b, deviceId, touchId, ticks, hasPressure, hasTilt);
+  return create ? createTrack(b, deviceId, touchId, ticks, hasPressure, hasTilt) : blank;
 }
 
 
@@ -392,7 +398,6 @@ TInputManager::addTrackPoint(
   double time,
   bool final )
 {
-  TPointD p = toolToScreen() * position;
   track->push_back( TTrackPoint(
     position,
     pressure,
@@ -407,13 +412,17 @@ TInputManager::addTrackPoint(
 
 
 void
-TInputManager::touchTracks(bool finish) {
-  for(TTrackList::const_iterator i = m_tracks.front().begin(); i != m_tracks.front().end(); ++i) {
-    if (!(*i)->finished() && (*i)->size() > 0) {
-      const TTrackPoint &p = (*i)->back();
-      addTrackPoint(*i, p.position, p.pressure, p.tilt, p.worldPosition, p.screenPosition, p.time, finish);
-    }
+TInputManager::touchTrack(const TTrackP& track, bool finish) {
+  if (track && !track->finished() && !track->empty()) {
+    const TTrackPoint &p = track->back();
+    addTrackPoint(track, p.position, p.pressure, p.tilt, p.worldPosition, p.screenPosition, p.time, finish);
   }
+}
+
+void
+TInputManager::touchTracks(bool finish) {
+  for(TTrackList::const_iterator i = m_tracks.front().begin(); i != m_tracks.front().end(); ++i)
+    touchTrack(*i, finish);
 }
 
 
@@ -601,7 +610,7 @@ TInputManager::trackEvent(
   }
 
   if (isActive()) {
-    TTrackP track = getTrack(deviceId, touchId, ticks, (bool)pressure, (bool)tilt);
+    TTrackP track = getTrack(deviceId, touchId, true, ticks, (bool)pressure, (bool)tilt);
     if (!track->finished()) {
       double time = (double)(ticks - track->ticks())*TToolTimer::step - track->timeOffset();
       TPointD worldPosition = screenToWorld() * screenPosition;
@@ -617,6 +626,15 @@ TInputManager::trackEvent(
         final );
     }
   }
+}
+
+void
+TInputManager::trackEventFinish(
+  TInputState::DeviceId deviceId,
+  TInputState::TouchId touchId )
+{
+  if (isActive())
+    touchTrack( getTrack(deviceId, touchId), true );
 }
 
 
