@@ -30,7 +30,7 @@ TGuideline::drawSegment(
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
-  tglEnableLineSmooth(true, 0.5);
+  tglEnableLineSmooth(true, 1.0);
   TPointD d = p1 - p0;
   double k = norm2(d);
   if (k > TConsts::epsilon*TConsts::epsilon) {
