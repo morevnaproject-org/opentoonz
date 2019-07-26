@@ -797,10 +797,7 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
 
     if (m_mouseButton == Qt::LeftButton || m_tabletState == Released) {
       if (!m_toolSwitched) {
-        getInputManager()->trackEvent(
-          0, 0, screenPos,
-          (event.m_isTablet ? &event.m_pressure : NULL),
-          NULL, true, TToolTimer::ticks() );
+        getInputManager()->trackEventFinish(0, 0);
         getInputManager()->processTracks();
       }
       TApp::instance()->getCurrentTool()->setToolBusy(false);
