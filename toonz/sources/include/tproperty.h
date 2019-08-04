@@ -69,10 +69,8 @@ public:
   class TypeError {};
   class RangeError {};
 
-  TProperty(const std::string &name):
-    m_name(name),
-    m_qstringName(QString::fromStdString(name))
-    { }
+  TProperty(const std::string &name)
+      : m_name(name), m_qstringName(QString::fromStdString(name)) {}
 
   virtual ~TProperty() {}
 
@@ -355,14 +353,16 @@ public:
     return ret;
   }
 
-  void addValueWithUIName(std::wstring value, const QString &name, const QString &iconName = QString()) {
+  void addValueWithUIName(std::wstring value, const QString &name,
+                          const QString &iconName = QString()) {
     if (m_index == -1) m_index = 0;
     m_range.push_back(value);
     m_items.push_back(Item(name, iconName));
   }
 
-  void addValue(std::wstring value, const QString &iconName = QString())
-    { addValueWithUIName(value, QString::fromStdWString(value), iconName); }
+  void addValue(std::wstring value, const QString &iconName = QString()) {
+    addValueWithUIName(value, QString::fromStdWString(value), iconName);
+  }
 
   void setItemUIName(std::wstring value, const QString &name) {
     int index = indexOf(value);
@@ -437,10 +437,12 @@ public:
 
   //! returns 0 if the property doesn't exist
   TProperty *getProperty(const TStringId &name);
-  TProperty *getProperty(const std::string &name)
-    { return getProperty(TStringId::find(name)); }
-  TProperty *getProperty(int i)
-    { return (i >= (int)m_properties.size()) ? 0 : m_properties[i].first; }
+  TProperty *getProperty(const std::string &name) {
+    return getProperty(TStringId::find(name));
+  }
+  TProperty *getProperty(int i) {
+    return (i >= (int)m_properties.size()) ? 0 : m_properties[i].first;
+  }
 
   void setProperties(TPropertyGroup *g);
 

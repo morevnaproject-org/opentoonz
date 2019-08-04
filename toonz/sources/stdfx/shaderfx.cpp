@@ -111,9 +111,10 @@ struct RectF {
 struct AffineF {
   GLfloat m_val[9];
   operator TAffine() const {
-    return TAffine( TPointD(m_val[0], m_val[1]),   // m_val[2] ignored and assumed to be zero
-                    TPointD(m_val[3], m_val[4]),   // m_val[5] ignored and assumed to be zero
-                    TPointD(m_val[6], m_val[7]) ); // m_val[8] ignored and assumed to be one
+    return TAffine(
+        TPointD(m_val[0], m_val[1]),  // m_val[2] ignored and assumed to be zero
+        TPointD(m_val[3], m_val[4]),  // m_val[5] ignored and assumed to be zero
+        TPointD(m_val[6], m_val[7]));  // m_val[8] ignored and assumed to be one
   }
 };
 

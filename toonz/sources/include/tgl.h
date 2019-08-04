@@ -171,12 +171,9 @@ inline void tglFillRect(double x0, double y0, double x1, double y1) {
   tglFillRect(TRectD(x0, y0, x1, y1));
 }
 
-inline void tglMultMatrix(const TAffine4 &aff)
-  { glMultMatrixd(aff.a); }
+inline void tglMultMatrix(const TAffine4 &aff) { glMultMatrixd(aff.a); }
 
-inline void tglMultMatrix(const TAffine &aff)
-  { tglMultMatrix(TAffine4(aff)); }
-
+inline void tglMultMatrix(const TAffine &aff) { tglMultMatrix(TAffine4(aff)); }
 
 //=============================================================================
 

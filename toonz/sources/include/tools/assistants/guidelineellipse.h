@@ -6,7 +6,6 @@
 // TnzTools includes
 #include <tools/assistant.h>
 
-
 #undef DVAPI
 #undef DVVAR
 #ifdef TNZTOOLS_EXPORTS
@@ -16,7 +15,6 @@
 #define DVAPI DV_IMPORT_API
 #define DVVAR DV_IMPORT_VAR
 #endif
-
 
 //==============================================================
 
@@ -29,22 +27,15 @@ public:
   const TAffine matrix;
   const TAffine matrixInv;
 
-  TGuidelineEllipse(
-    bool enabled,
-    double magnetism,
-    TAffine matrix );
+  TGuidelineEllipse(bool enabled, double magnetism, TAffine matrix);
 
-  TGuidelineEllipse(
-    bool enabled,
-    double magnetism,
-    TAffine matrix,
-    TAffine matrixInv );
+  TGuidelineEllipse(bool enabled, double magnetism, TAffine matrix,
+                    TAffine matrixInv);
 
   //! returns false when ellipse is invisible
-  static bool truncateEllipse(
-    TAngleRangeSet &ranges,
-    const TAffine &ellipseMatrixInv,
-    const TRectD &bounds );
+  static bool truncateEllipse(TAngleRangeSet &ranges,
+                              const TAffine &ellipseMatrixInv,
+                              const TRectD &bounds);
 
   static int calcSegmentsCount(const TAffine &ellipseMatrix, double pixelSize);
 

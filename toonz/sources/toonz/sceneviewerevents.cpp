@@ -515,8 +515,8 @@ void SceneViewer::onMove(const TMouseEvent &event) {
     }
     tool->setViewer(this);
 
-    TPointD screenPos( curPos.x() - (double)width()/2.0,
-                      -curPos.y() + (double)height()/2.0 );
+    TPointD screenPos(curPos.x() - (double)width() / 2.0,
+                      -curPos.y() + (double)height() / 2.0);
     TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
     if (m_locator) m_locator->onChangeViewAff(worldPos);
     TPointD pos = getInputManager()->worldToTool() * worldPos;
@@ -526,23 +526,19 @@ void SceneViewer::onMove(const TMouseEvent &event) {
     //         << " buttonClicked=" << m_buttonClicked;
 
     // separate tablet events from mouse events
-    if ( m_tabletEvent
-      && (m_tabletState == OnStroke || m_tabletState == StartStroke)
-      && m_tabletMove )
-    {
-      getInputManager()->trackEvent(
-        0, 0, screenPos, &event.m_pressure, NULL,
-        false, TToolTimer::ticks() );
+    if (m_tabletEvent &&
+        (m_tabletState == OnStroke || m_tabletState == StartStroke) &&
+        m_tabletMove) {
+      getInputManager()->trackEvent(0, 0, screenPos, &event.m_pressure, NULL,
+                                    false, TToolTimer::ticks());
       getInputManager()->processTracks();
       m_tabletState = OnStroke;
-    } else
-    if (m_mouseButton == Qt::LeftButton) {
+    } else if (m_mouseButton == Qt::LeftButton) {
       // sometimes the mousePressedEvent is postponed to a wrong  mouse move
       // event!
       if (m_buttonClicked && !m_toolSwitched) {
-        getInputManager()->trackEvent(
-          0, 0, screenPos, NULL, NULL,
-          false, TToolTimer::ticks() );
+        getInputManager()->trackEvent(0, 0, screenPos, NULL, NULL, false,
+                                      TToolTimer::ticks());
         getInputManager()->processTracks();
       }
       m_mouseState = OnStroke;
@@ -686,28 +682,25 @@ void SceneViewer::onPress(const TMouseEvent &event) {
   // if(!m_tabletEvent) qDebug() << "-----------------MOUSE PRESS 'PURO'.
   // POSSIBILE EMBOLO";
 
-  TPointD screenPos( m_pos.x() - (double)width()/2.0,
-                    -m_pos.y() + (double)height()/2.0 );
+  TPointD screenPos(m_pos.x() - (double)width() / 2.0,
+                    -m_pos.y() + (double)height() / 2.0);
   TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
-  TPointD pos = getInputManager()->worldToTool() * worldPos;
+  TPointD pos      = getInputManager()->worldToTool() * worldPos;
 
-  getInputManager()->buttonEvent(
-    true, 0, event.button(), TToolTimer::ticks());
+  getInputManager()->buttonEvent(true, 0, event.button(), TToolTimer::ticks());
 
   // separate tablet and mouse events
   if (m_tabletEvent && m_tabletState == Touched) {
     TApp::instance()->getCurrentTool()->setToolBusy(true);
     m_tabletState = StartStroke;
-    getInputManager()->trackEvent(
-      0, 0, screenPos, &event.m_pressure, NULL,
-      false, TToolTimer::ticks() );
+    getInputManager()->trackEvent(0, 0, screenPos, &event.m_pressure, NULL,
+                                  false, TToolTimer::ticks());
     getInputManager()->processTracks();
   } else if (m_mouseButton == Qt::LeftButton) {
     m_mouseState = StartStroke;
     TApp::instance()->getCurrentTool()->setToolBusy(true);
-    getInputManager()->trackEvent(
-      0, 0, screenPos, NULL, NULL,
-      false, TToolTimer::ticks() );
+    getInputManager()->trackEvent(0, 0, screenPos, NULL, NULL, false,
+                                  TToolTimer::ticks());
     getInputManager()->processTracks();
   }
 }
@@ -788,10 +781,10 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
 
   {
     QPointF winPos = event.mousePos() * getDevPixRatio();
-    TPointD screenPos( winPos.x() - (double)width()/2.0,
-                      -winPos.y() + (double)height()/2.0 );
+    TPointD screenPos(winPos.x() - (double)width() / 2.0,
+                      -winPos.y() + (double)height() / 2.0);
     TPointD worldPos = getInputManager()->screenToWorld() * screenPos;
-    TPointD pos = getInputManager()->worldToTool() * worldPos;
+    TPointD pos      = getInputManager()->worldToTool() * worldPos;
 
     if (m_mouseButton == Qt::LeftButton || m_tabletState == Released) {
       if (!m_toolSwitched) {
@@ -801,8 +794,8 @@ void SceneViewer::onRelease(const TMouseEvent &event) {
       TApp::instance()->getCurrentTool()->setToolBusy(false);
     }
 
-    getInputManager()->buttonEvent(
-      false, 0, event.button(), TToolTimer::ticks() );
+    getInputManager()->buttonEvent(false, 0, event.button(),
+                                   TToolTimer::ticks());
   }
 
 quit:
@@ -1258,8 +1251,9 @@ bool changeFrameSkippingHolds(QKeyEvent *e) {
 
 void SceneViewer::keyPressEvent(QKeyEvent *event) {
   if (m_freezedStatus != NO_FREEZED) return;
-  //int key = event->key();
-  TKey key = TKey((Qt::Key)event->key(), false, (bool)(event->modifiers() & Qt::KeypadModifier));
+  // int key = event->key();
+  TKey key = TKey((Qt::Key)event->key(), false,
+                  (bool)(event->modifiers() & Qt::KeypadModifier));
 
   // resolving priority and tool-specific key events in this lambda
   auto ret = [&]() -> bool {
@@ -1275,14 +1269,11 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
       // If this object is child of Viewer or ComboViewer
       // (m_isStyleShortcutSelective = true),
       // then consider about shortcut for the current style selection.
-      if ( m_isStyleShortcutSwitchable
-        && Preferences::instance()->isUseNumpadForSwitchingStylesEnabled()
-        && ( event->modifiers() == Qt::NoModifier
-          || event->modifiers() == Qt::KeypadModifier )
-        && ( key.isNumber()
-          || key.is(Qt::Key_Tab)
-          || key.is(Qt::Key_Backtab) ))
-      {
+      if (m_isStyleShortcutSwitchable &&
+          Preferences::instance()->isUseNumpadForSwitchingStylesEnabled() &&
+          (event->modifiers() == Qt::NoModifier ||
+           event->modifiers() == Qt::KeypadModifier) &&
+          (key.isNumber() || key.is(Qt::Key_Tab) || key.is(Qt::Key_Backtab))) {
         event->ignore();
         return true;
       }
@@ -1314,7 +1305,7 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
                                  (double)(height() - 1) - m_lastMousePos.y());
 
       TPointD worldPos = winToWorld(m_lastMousePos);
-      TPointD pos = getInputManager()->worldToTool() * worldPos;
+      TPointD pos      = getInputManager()->worldToTool() * worldPos;
 
       ret = getInputManager()->keyEvent(true, key, TToolTimer::ticks(), event);
       m_hovers.front() = worldPos;
@@ -1337,8 +1328,7 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
 
     if (key.is(Qt::Key_Up) || key.is(Qt::Key_Left))
       fh->prevFrame();
-    else
-    if (key.is(Qt::Key_Down) || key.is(Qt::Key_Right)) {
+    else if (key.is(Qt::Key_Down) || key.is(Qt::Key_Right)) {
       // If on a level frame pass the frame id after the last frame to allow
       // creating a new frame with the down arrow key
       TFrameId newId = 0;
@@ -1356,11 +1346,9 @@ void SceneViewer::keyPressEvent(QKeyEvent *event) {
         }
       }
       fh->nextFrame(newId);
-    } else
-    if (key.is(Qt::Key_Home))
+    } else if (key.is(Qt::Key_Home))
       fh->firstFrame();
-    else
-    if (key.is(Qt::Key_End))
+    else if (key.is(Qt::Key_End))
       fh->lastFrame();
   }
   update();
@@ -1376,7 +1364,8 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
   if (!tool || !tool->isEnabled()) return;
   tool->setViewer(this);
 
-  TKey key = TKey((Qt::Key)event->key(), false, (bool)(event->modifiers() & Qt::KeypadModifier));
+  TKey key = TKey((Qt::Key)event->key(), false,
+                  (bool)(event->modifiers() & Qt::KeypadModifier));
 
   getInputManager()->keyEvent(false, key, TToolTimer::ticks(), event);
 
@@ -1389,7 +1378,7 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
                                (double)(height() - 1) - m_lastMousePos.y());
 
     TPointD worldPos = winToWorld(m_lastMousePos);
-    TPointD pos = getInputManager()->worldToTool() * worldPos;
+    TPointD pos      = getInputManager()->worldToTool() * worldPos;
 
     m_hovers.front() = worldPos;
     getInputManager()->hoverEvent(m_hovers);
@@ -1430,11 +1419,10 @@ void SceneViewer::mouseDoubleClickEvent(QMouseEvent *event) {
   TMouseEvent toonzEvent;
   initToonzEvent(toonzEvent, event, height(), 1.0, getDevPixRatio());
 
-  TPointD pos = getInputManager()->worldToTool()
-              * winToWorld(event->pos() * getDevPixRatio());
+  TPointD pos = getInputManager()->worldToTool() *
+                winToWorld(event->pos() * getDevPixRatio());
 
-  if (event->button() == Qt::LeftButton)
-    getInputManager()->doubleClickEvent();
+  if (event->button() == Qt::LeftButton) getInputManager()->doubleClickEvent();
 }
 
 //-----------------------------------------------------------------------------

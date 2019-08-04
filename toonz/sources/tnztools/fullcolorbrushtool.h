@@ -31,16 +31,13 @@ class Brush;
 class FullColorBrushTool final : public TTool, public RasterController {
   Q_DECLARE_TR_FUNCTIONS(FullColorBrushTool)
 public:
-  class TrackHandler: public TTrackToolHandler {
+  class TrackHandler : public TTrackToolHandler {
   public:
     MyPaintToonzBrush brush;
 
-    TrackHandler(
-      const TRaster32P &ras,
-      RasterController &controller,
-      const mypaint::Brush &brush
-    ):
-      brush(ras, controller, brush) { }
+    TrackHandler(const TRaster32P &ras, RasterController &controller,
+                 const mypaint::Brush &brush)
+        : brush(ras, controller, brush) {}
   };
 
 private:
@@ -51,13 +48,13 @@ private:
 public:
   FullColorBrushTool(std::string name);
 
-  ToolType getToolType() const override
-    { return LevelWriteTool; }
-  ToolModifiers getToolModifiers() const override
-    { return ModifierTangents | ModifierAssistants | ModifierCustom | ModifierSegmentation; }
+  ToolType getToolType() const override { return LevelWriteTool; }
+  ToolModifiers getToolModifiers() const override {
+    return ModifierTangents | ModifierAssistants | ModifierCustom |
+           ModifierSegmentation;
+  }
   bool isAssistantsEnabled() const override;
-  bool isCustomModifiersEnabled() const override
-    { return true; }
+  bool isCustomModifiersEnabled() const override { return true; }
 
   ToolOptionsBox *createOptionsBox() override;
 
@@ -72,7 +69,8 @@ public:
   bool preLeftButtonDown() override;
   void hoverEvent(const TInputManager &manager) override;
   void paintBegin() override;
-  void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  void paintTrackPoint(const TTrackPoint &point, const TTrack &track,
+                       bool firstTrack);
   void paintEnd() override;
 
   void draw() override;
@@ -102,16 +100,16 @@ public:
 protected:
   TPropertyGroup m_prop;
 
-  TIntPairProperty    m_thickness;
-  TBoolProperty       m_pressure;
+  TIntPairProperty m_thickness;
+  TBoolProperty m_pressure;
   TDoublePairProperty m_opacity;
-  TDoubleProperty     m_hardness;
-  TDoubleProperty     m_modifierSize;
-  TDoubleProperty     m_modifierOpacity;
-  TBoolProperty       m_modifierEraser;
-  TBoolProperty       m_modifierLockAlpha;
-  TBoolProperty       m_assistants;
-  TEnumProperty       m_preset;
+  TDoubleProperty m_hardness;
+  TDoubleProperty m_modifierSize;
+  TDoubleProperty m_modifierOpacity;
+  TBoolProperty m_modifierEraser;
+  TBoolProperty m_modifierLockAlpha;
+  TBoolProperty m_assistants;
+  TEnumProperty m_preset;
 
   TPixel32 m_currentColor;
   bool m_enabledPressure;

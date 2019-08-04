@@ -1098,11 +1098,9 @@ TAffine ImageViewer::getImgToWidgetAffine(const TRectD &geom) const {
   TPointD viewerCenter((widGeom.left() + widGeom.right() + 1) * 0.5,
                        (widGeom.top() + widGeom.bottom() + 1) * 0.5);
 
-  return TAffine::translation(0.0, height())
-       * TAffine::scale(1.0, -1.0)
-       * TAffine::translation(viewerCenter)
-       * m_viewAff
-       * TAffine::translation(-geomCenter);
+  return TAffine::translation(0.0, height()) * TAffine::scale(1.0, -1.0) *
+         TAffine::translation(viewerCenter) * m_viewAff *
+         TAffine::translation(-geomCenter);
 }
 
 //-----------------------------------------------------------------------------

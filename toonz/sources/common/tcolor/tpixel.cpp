@@ -14,8 +14,8 @@ const TPixelRGBM32 TPixelRGBM32::Blue(0, 0, maxChannelValue);
 const TPixelRGBM32 TPixelRGBM32::Yellow(maxChannelValue, maxChannelValue, 0);
 const TPixelRGBM32 TPixelRGBM32::Cyan(0, maxChannelValue, maxChannelValue);
 const TPixelRGBM32 TPixelRGBM32::Magenta(maxChannelValue, 0, maxChannelValue);
-const TPixelRGBM32 TPixelRGBM32::Gray(maxChannelValue/2, maxChannelValue/2,
-                                      maxChannelValue/2);
+const TPixelRGBM32 TPixelRGBM32::Gray(maxChannelValue / 2, maxChannelValue / 2,
+                                      maxChannelValue / 2);
 const TPixelRGBM32 TPixelRGBM32::White(maxChannelValue, maxChannelValue,
                                        maxChannelValue);
 const TPixelRGBM32 TPixelRGBM32::Black(0, 0, 0);
@@ -28,8 +28,8 @@ const TPixelRGBM64 TPixelRGBM64::Blue(0, 0, maxChannelValue);
 const TPixelRGBM64 TPixelRGBM64::Yellow(maxChannelValue, maxChannelValue, 0);
 const TPixelRGBM64 TPixelRGBM64::Cyan(0, maxChannelValue, maxChannelValue);
 const TPixelRGBM64 TPixelRGBM64::Magenta(maxChannelValue, 0, maxChannelValue);
-const TPixelRGBM64 TPixelRGBM64::Gray(maxChannelValue/2, maxChannelValue/2,
-                                      maxChannelValue/2);
+const TPixelRGBM64 TPixelRGBM64::Gray(maxChannelValue / 2, maxChannelValue / 2,
+                                      maxChannelValue / 2);
 const TPixelRGBM64 TPixelRGBM64::White(maxChannelValue, maxChannelValue,
                                        maxChannelValue);
 const TPixelRGBM64 TPixelRGBM64::Black(0, 0, 0);

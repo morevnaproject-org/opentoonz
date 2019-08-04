@@ -2622,7 +2622,8 @@ void ToolOptions::showEvent(QShowEvent *) {
   if (currTool) {
     onToolSwitched();
     connect(currTool, SIGNAL(toolSwitched()), SLOT(onToolSwitched()));
-    connect(currTool, SIGNAL(toolOptionsBoxChanged()), SLOT(onToolOptionsBoxChanged()));
+    connect(currTool, SIGNAL(toolOptionsBoxChanged()),
+            SLOT(onToolOptionsBoxChanged()));
     connect(currTool, SIGNAL(toolChanged()), SLOT(onToolChanged()));
   }
 

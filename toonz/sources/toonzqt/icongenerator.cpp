@@ -504,14 +504,15 @@ IconRenderer::~IconRenderer() {}
 
 class NoImageIconRenderer final : public IconRenderer {
 public:
-  NoImageIconRenderer(const std::string &id, const TDimension &iconSize):
-    IconRenderer(id, iconSize) { }
+  NoImageIconRenderer(const std::string &id, const TDimension &iconSize)
+      : IconRenderer(id, iconSize) {}
   void run() override {
     try {
       TRaster32P ras(getIconSize());
       ras->fill(TPixel32::Gray);
       setIcon(ras);
-    } catch(...){}
+    } catch (...) {
+    }
   }
 };
 

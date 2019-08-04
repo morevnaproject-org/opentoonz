@@ -103,11 +103,7 @@ void Raster32PMyPaintSurface::setAntialiasing(bool value) {
 MyPaintToonzBrush::MyPaintToonzBrush(const TRaster32P &ras,
                                      RasterController &controller,
                                      const mypaint::Brush &brush)
-    : ras(ras)
-    , mypaintSurface(ras, controller)
-    , brush(brush)
-    , reset(true)
-{
+    : ras(ras), mypaintSurface(ras, controller), brush(brush), reset(true) {
   // read brush antialiasing settings
   float aa = this->brush.getBaseValue(MYPAINT_BRUSH_SETTING_ANTI_ALIASING);
   mypaintSurface.setAntialiasing(aa > 0.5f);
@@ -125,15 +121,12 @@ void MyPaintToonzBrush::beginStroke() {
   reset = true;
 }
 
-void MyPaintToonzBrush::endStroke()
-  { if (!reset) beginStroke(); }
+void MyPaintToonzBrush::endStroke() {
+  if (!reset) beginStroke();
+}
 
-void MyPaintToonzBrush::strokeTo(
-  const TPointD &position,
-  double pressure,
-  const TPointD &tilt,
-  double dtime )
-{
+void MyPaintToonzBrush::strokeTo(const TPointD &position, double pressure,
+                                 const TPointD &tilt, double dtime) {
   if (reset) {
     reset = false;
     // we need to jump to initial point (heuristic)
@@ -144,14 +137,8 @@ void MyPaintToonzBrush::strokeTo(
     return;
   }
 
-  brush.strokeTo(
-    mypaintSurface,
-    position.x,
-    position.y,
-    pressure,
-    0.0,
-    0.0,
-    dtime );
+  brush.strokeTo(mypaintSurface, position.x, position.y, pressure, 0.0, 0.0,
+                 dtime);
 }
 
 //----------------------------------------------------------------------------------
@@ -166,6 +153,5 @@ void MyPaintToonzBrush::updateDrawing(const TRasterCM32P rasCM,
   if (targetRect.isEmpty()) return;
 
   rasCM->copy(rasBackupCM->extract(targetRect), targetRect.getP00());
-  putOnRasterCM(rasCM->extract(targetRect), ras->extract(targetRect),
-                styleId);
+  putOnRasterCM(rasCM->extract(targetRect), ras->extract(targetRect), styleId);
 }
