@@ -27,7 +27,7 @@ public:
   typedef Map::iterator Iterator;
 
   struct StaticData;
-  static const Iterator& none();
+  static const Iterator &none();
   static Iterator genIter(const std::string &str);
   static Iterator findIter(int id);
   static Iterator findIter(const std::string &str);
@@ -35,37 +35,34 @@ public:
 private:
   Iterator iter;
 
-  inline explicit TStringId(const Iterator &iter):
-    iter(iter) { }
+  inline explicit TStringId(const Iterator &iter) : iter(iter) {}
 
 public:
-  inline TStringId():
-    iter(none()) { }
-  inline explicit TStringId(const std::string &str):
-    iter(genIter(str)) { }
-  inline void reset()
-    { iter = none(); }
-  inline void set(const std::string &str)
-    { if (iter->first != str) iter = genIter(str); }
+  inline TStringId() : iter(none()) {}
+  inline explicit TStringId(const std::string &str) : iter(genIter(str)) {}
+  inline void reset() { iter = none(); }
+  inline void set(const std::string &str) {
+    if (iter->first != str) iter = genIter(str);
+  }
 
-  inline int id() const
-    { return iter->second; }
-  inline const std::string& str() const
-    { return iter->first; }
+  inline int id() const { return iter->second; }
+  inline const std::string &str() const { return iter->first; }
 
-  inline operator bool () const
-    { return id() != 0; }
-  inline bool operator== (const TStringId &other) const
-    { return id() == other.id(); }
-  inline bool operator!= (const TStringId &other) const
-    { return id() != other.id(); }
-  inline bool operator< (const TStringId &other) const
-    { return id() < other.id(); }
+  inline operator bool() const { return id() != 0; }
+  inline bool operator==(const TStringId &other) const {
+    return id() == other.id();
+  }
+  inline bool operator!=(const TStringId &other) const {
+    return id() != other.id();
+  }
+  inline bool operator<(const TStringId &other) const {
+    return id() < other.id();
+  }
 
-  inline static TStringId find(int id)
-    { return TStringId(findIter(id)); }
-  inline static TStringId find(const std::string &str)
-    { return TStringId(findIter(str)); }
+  inline static TStringId find(int id) { return TStringId(findIter(id)); }
+  inline static TStringId find(const std::string &str) {
+    return TStringId(findIter(str));
+  }
 };
 
 #endif

@@ -1629,8 +1629,9 @@ bool TypeTool::keyDown(QKeyEvent *event) {
 
 //-----------------------------------------------------------------------------
 
-void TypeTool::onInputText(const std::wstring &preedit, const std::wstring &commit,
-                           int replacementStart, int replacementLen) {
+void TypeTool::onInputText(const std::wstring &preedit,
+                           const std::wstring &commit, int replacementStart,
+                           int replacementLen) {
   // butto la vecchia preedit string
   m_preeditRange.first  = std::max(0, m_preeditRange.first);
   m_preeditRange.second = std::min((int)m_string.size(), m_preeditRange.second);

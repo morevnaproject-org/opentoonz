@@ -78,7 +78,7 @@ TRectD tglGetBounds() {
   TAffine4 projection;
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview.a);
   glGetDoublev(GL_PROJECTION_MATRIX, projection.a);
-  return (projection*modelview).get2d().inv() * TRectD(-1.0, -1.0, 1.0, 1.0);
+  return (projection * modelview).get2d().inv() * TRectD(-1.0, -1.0, 1.0, 1.0);
 }
 
 //-----------------------------------------------------------------------------

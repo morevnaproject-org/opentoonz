@@ -10,7 +10,6 @@
 #include "tcommon.h"
 #include "tgeometry.h"
 
-
 #undef DVAPI
 #undef DVVAR
 #ifdef TNZTOOLS_EXPORTS
@@ -20,7 +19,6 @@
 #define DVAPI DV_IMPORT_API
 #define DVVAR DV_IMPORT_VAR
 #endif
-
 
 //====================================================
 
@@ -50,7 +48,7 @@ public:
   TToolViewer() {}
   virtual ~TToolViewer() {}
 
-  virtual TInputManager* getInputManager() const = 0;
+  virtual TInputManager *getInputManager() const = 0;
 
   const ImagePainter::VisualSettings &visualSettings() const {
     return m_visualSettings;

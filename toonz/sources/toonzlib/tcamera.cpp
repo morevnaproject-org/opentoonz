@@ -77,17 +77,17 @@ bool TCamera::isPixelSquared() const {
 //-------------------------------------------------------------------
 
 TAffine TCamera::getStageToCameraRef() const {
-  return TAffine::translation( 0.5*m_res.lx, 0.5*m_res.ly )
-       * TAffine::scale( m_res.lx / (Stage::inch * m_size.lx),
-                         m_res.ly / (Stage::inch * m_size.ly) );
+  return TAffine::translation(0.5 * m_res.lx, 0.5 * m_res.ly) *
+         TAffine::scale(m_res.lx / (Stage::inch * m_size.lx),
+                        m_res.ly / (Stage::inch * m_size.ly));
 }
 
 //-------------------------------------------------------------------
 
 TAffine TCamera::getCameraToStageRef() const {
-  return TAffine::scale( (Stage::inch * m_size.lx) / m_res.lx,
-                         (Stage::inch * m_size.ly) / m_res.ly )
-       * TAffine::translation( -0.5*m_res.lx, -0.5*m_res.ly );
+  return TAffine::scale((Stage::inch * m_size.lx) / m_res.lx,
+                        (Stage::inch * m_size.ly) / m_res.ly) *
+         TAffine::translation(-0.5 * m_res.lx, -0.5 * m_res.ly);
 }
 
 //-------------------------------------------------------------------

@@ -280,12 +280,12 @@ public:
     MeshImage   = 0x8,   //!< Will work on mesh images
     Splines     = 0x10,  //!< Will work on motion paths
 
-    LevelColumns= 0x20,  //!< Will work on level columns
-    MeshColumns = 0x40,  //!< Will work on mesh columns
+    LevelColumns = 0x20,  //!< Will work on level columns
+    MeshColumns  = 0x40,  //!< Will work on mesh columns
 
     EmptyTarget = 0x80,  //!< Will work on empty cells/columns
 
-    MetaImage   = 0x100, //!< Will work on mets images
+    MetaImage = 0x100,  //!< Will work on mets images
 
     CommonImages = VectorImage | ToonzImage | RasterImage,
     AllImages    = CommonImages | MeshImage | MetaImage,
@@ -297,12 +297,17 @@ public:
     AllTargets = 0xffffffff,
   };
 
-  enum ToolModifier  //!<  Set of modifiers which can be applied to user input for this tool
-  { NoModifiers          = 0x0,
-    ModifierTangents     = 0x1, //!< If enabled then 'segmentation' will do spline interpolation instead of linear
-    ModifierAssistants   = 0x2, //!< Show and snable assistants, see also: isAssistantsEnabled()
-    ModifierCustom       = 0x4, //!< Enable other modifiers, see also: isCustomModifiersEnabled()
-    ModifierSegmentation = 0x8, //!< Enable interpolation, see also: getInterpolationStep()
+  enum ToolModifier  //!<  Set of modifiers which can be applied to user input
+                     //! for this tool
+  { NoModifiers      = 0x0,
+    ModifierTangents = 0x1,  //!< If enabled then 'segmentation' will do spline
+                             //! interpolation instead of linear
+    ModifierAssistants =
+        0x2,  //!< Show and snable assistants, see also: isAssistantsEnabled()
+    ModifierCustom =
+        0x4,  //!< Enable other modifiers, see also: isCustomModifiersEnabled()
+    ModifierSegmentation =
+        0x8,  //!< Enable interpolation, see also: getInterpolationStep()
   };
   typedef long long ToolModifiers;
 
@@ -416,35 +421,32 @@ return true if the method execution can have changed the current tool
   TMouseEvent makeMouseEvent();
   TMouseEvent makeMouseEvent(const TTrackPoint &point, const TTrack &track);
 
-  virtual bool keyDown(QKeyEvent* /*event*/) { return false; }
-  virtual void onInputText(
-    const std::wstring& /*preedit*/,
-    const std::wstring& /*commit*/,
-    int /*replacementStart*/,
-    int /*replacementEnd*/ ) { }
+  virtual bool keyDown(QKeyEvent * /*event*/) { return false; }
+  virtual void onInputText(const std::wstring & /*preedit*/,
+                           const std::wstring & /*commit*/,
+                           int /*replacementStart*/, int /*replacementEnd*/) {}
 
-  virtual bool keyEvent(
-    bool press,
-    TInputState::Key key,
-    QKeyEvent *event,
-    const TInputManager &manager );
-  virtual void buttonEvent(
-    bool press,
-    TInputState::DeviceId device,
-    TInputState::Button button,
-    const TInputManager &manager );
+  virtual bool keyEvent(bool press, TInputState::Key key, QKeyEvent *event,
+                        const TInputManager &manager);
+  virtual void buttonEvent(bool press, TInputState::DeviceId device,
+                           TInputState::Button button,
+                           const TInputManager &manager);
   virtual void hoverEvent(const TInputManager &manager);
   virtual void doubleClickEvent(const TInputManager &manager);
 
-  virtual void paintTrackBegin(const TTrackPoint &point, const TTrack &track, bool firstTrack);
-  virtual void paintTrackMotion(const TTrackPoint &point, const TTrack &track, bool firstTrack);
-  virtual void paintTrackEnd(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  virtual void paintTrackBegin(const TTrackPoint &point, const TTrack &track,
+                               bool firstTrack);
+  virtual void paintTrackMotion(const TTrackPoint &point, const TTrack &track,
+                                bool firstTrack);
+  virtual void paintTrackEnd(const TTrackPoint &point, const TTrack &track,
+                             bool firstTrack);
 
   /*! paint single track-point at the top painting level */
-  virtual void paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack);
+  virtual void paintTrackPoint(const TTrackPoint &point, const TTrack &track,
+                               bool firstTrack);
 
   /*! called before paint first point */
-  virtual void paintBegin() { }
+  virtual void paintBegin() {}
   /*! create new painting level and return true, or do nothing and return false
       was:            ------O-------O------
       become:         ------O-------O------O */
@@ -455,23 +457,23 @@ return true if the method execution can have changed the current tool
   virtual void paintTracks(const TTrackList &tracks);
   /*! try to merge single top painting level */
   virtual int paintApply() { return false; }
-  /*! try to merge N top painting levels and return count of levels that actually merged
+  /*! try to merge N top painting levels and return count of levels that
+     actually merged
       was:            ------O-------O------O------
       become (N = 2): ------O--------------------- */
   virtual int paintApply(int count);
   /*! reset top level to initial state
       was:            ------O-------O------O------
       become:         ------O-------O------O */
-  virtual void paintCancel() { }
+  virtual void paintCancel() {}
   /*! cancel and pop top painting level */
-  virtual void paintPop() { }
+  virtual void paintPop() {}
   /*! cancel and pop N painting levels
       was:            ------O-------O------O------
       become (N = 2): ------O------- */
   virtual void paintPop(int count);
   /*! called after all tracks finished */
-  virtual void paintEnd() { }
-
+  virtual void paintEnd() {}
 
   virtual void onSetViewer() {}
 
@@ -616,7 +618,7 @@ protected:
   std::string m_name;  //!< The tool's name.
 
   TToolViewer *m_viewer;  //!< Tool's current viewer.
-  TAffine m_matrix;  //!< World-to-window reference change affine.
+  TAffine m_matrix;       //!< World-to-window reference change affine.
 
   int m_targetType;  //!< The tool's image type target.
 

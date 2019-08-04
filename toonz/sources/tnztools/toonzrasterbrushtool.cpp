@@ -1065,8 +1065,9 @@ void ToonzRasterBrushTool::updateTranslation() {
 
 //---------------------------------------------------------------------------------------------------
 
-bool ToonzRasterBrushTool::isAssistantsEnabled() const
-  { return m_assistants.getValue(); }
+bool ToonzRasterBrushTool::isAssistantsEnabled() const {
+  return m_assistants.getValue();
+}
 
 //---------------------------------------------------------------------------------------------------
 
@@ -2063,7 +2064,7 @@ void ToonzRasterBrushTool::addPreset(QString name) {
   preset.m_drawOrder    = m_drawOrder.getIndex();
   preset.m_pencil       = m_pencil.getValue();
   preset.m_pressure     = m_pressure.getValue();
-  preset.m_assistants  = m_assistants.getValue();
+  preset.m_assistants   = m_assistants.getValue();
   preset.m_modifierSize = m_modifierSize.getValue();
 
   // Pass the preset to the manager

@@ -540,17 +540,16 @@ public:
 
 class SceneViewer::Modifiers {
 public:
-  TSmartPointerT<TModifierTangents>     tangents;
-  TSmartPointerT<TModifierAssistants>   assistants;
-  TSmartPointerT<TModifierTest>         test;
+  TSmartPointerT<TModifierTangents> tangents;
+  TSmartPointerT<TModifierAssistants> assistants;
+  TSmartPointerT<TModifierTest> test;
   TSmartPointerT<TModifierSegmentation> segmentation;
 
-  Modifiers():
-    tangents     ( new TModifierTangents() ),
-    assistants   ( new TModifierAssistants() ),
-    test         ( new TModifierTest(5, 40.0) ),
-    segmentation ( new TModifierSegmentation() )
-      { }
+  Modifiers()
+      : tangents(new TModifierTangents())
+      , assistants(new TModifierAssistants())
+      , test(new TModifierTest(5, 40.0))
+      , segmentation(new TModifierSegmentation()) {}
 };
 
 //=============================================================================
@@ -600,8 +599,7 @@ SceneViewer::SceneViewer(ImageUtils::FullScreenWidget *parent)
     , m_editPreviewSubCamera(false)
     , m_locator(NULL)
     , m_isLocator(false)
-    , m_isBusyOnTabletMove(false)
-{
+    , m_isBusyOnTabletMove(false) {
   m_visualSettings.m_sceneProperties =
       TApp::instance()->getCurrentScene()->getScene()->getProperties();
   // Enables multiple key input.
@@ -657,17 +655,18 @@ void SceneViewer::rebuildModifiers() {
   updateModifiers();
 
   TTool *tool = TApp::instance()->getCurrentTool()->getTool();
-  TTool::ToolModifiers modifiers = tool ? tool->getToolModifiers() : TTool::NoModifiers;
+  TTool::ToolModifiers modifiers =
+      tool ? tool->getToolModifiers() : TTool::NoModifiers;
 
   m_inputManager->clearModifiers();
   if (TTool::ModifierTangents & modifiers)
-    m_inputManager->addModifier( m_modifiers->tangents.getPointer() );
+    m_inputManager->addModifier(m_modifiers->tangents.getPointer());
   if (TTool::ModifierAssistants & modifiers)
-    m_inputManager->addModifier( m_modifiers->assistants.getPointer() );
+    m_inputManager->addModifier(m_modifiers->assistants.getPointer());
   if (TTool::ModifierCustom & modifiers)
-    m_inputManager->addModifier( m_modifiers->test.getPointer() );
+    m_inputManager->addModifier(m_modifiers->test.getPointer());
   if (TTool::ModifierSegmentation & modifiers)
-    m_inputManager->addModifier( m_modifiers->segmentation.getPointer() );
+    m_inputManager->addModifier(m_modifiers->segmentation.getPointer());
 }
 
 //-----------------------------------------------------------------------------
@@ -675,11 +674,11 @@ void SceneViewer::rebuildModifiers() {
 void SceneViewer::updateModifiers() {
   if (TTool *tool = TApp::instance()->getCurrentTool()->getTool()) {
     m_modifiers->assistants->drawOnly = !tool->isAssistantsEnabled();
-    m_modifiers->test->enabled = tool->isCustomModifiersEnabled();
+    m_modifiers->test->enabled        = tool->isCustomModifiersEnabled();
     m_modifiers->segmentation->setStep(tool->getInterpolationStep());
   } else {
     m_modifiers->assistants->drawOnly = true;
-    m_modifiers->test->enabled = false;
+    m_modifiers->test->enabled        = false;
     m_modifiers->segmentation->setStep(TPointD(1.0, 1.0));
   }
 }
@@ -809,8 +808,8 @@ void SceneViewer::enablePreview(int previewMode) {
 TPointD SceneViewer::winToWorld(const QPointF &pos) const {
   // coordinate window (origine in alto a sinistra) -> coordinate colonna
   // (origine al centro dell'immagine)
-  TPointD pp( pos.x() - (double)width()/2.0,
-             -pos.y() + (double)height()/2.0 );
+  TPointD pp(pos.x() - (double)width() / 2.0,
+             -pos.y() + (double)height() / 2.0);
   return get3dViewMatrix().get2d().inv() * pp;
 }
 
@@ -825,7 +824,7 @@ TPointD SceneViewer::winToWorld(const TPointD &winPos) const {
 TPointD SceneViewer::worldToPos(const TPointD &worldPos) const {
   TPointD p;
   p = get3dViewMatrix().get2d() * worldPos;
-  return TPointD(width()/2 + p.x, height()/2 + p.y);
+  return TPointD(width() / 2 + p.x, height() / 2 + p.y);
 }
 
 //-----------------------------------------------------------------------------
@@ -1254,12 +1253,12 @@ void SceneViewer::drawPreview() {
     else
       previewStageRectD = cameraStageRectD;
 
-    TAffine rasterToStageRef = TAffine::translation(
-                                 previewStageRectD.y0 + 0.5 * previewStageRectD.getLy(),
-                                 previewStageRectD.x0 + 0.5 * previewStageRectD.getLx() )
-                             * TAffine::scale(
-                                 previewStageRectD.getLx() / ras->getLx(),
-                                 previewStageRectD.getLy() / ras->getLy() );
+    TAffine rasterToStageRef =
+        TAffine::translation(
+            previewStageRectD.y0 + 0.5 * previewStageRectD.getLy(),
+            previewStageRectD.x0 + 0.5 * previewStageRectD.getLx()) *
+        TAffine::scale(previewStageRectD.getLx() / ras->getLx(),
+                       previewStageRectD.getLy() / ras->getLy());
 
     TDimension dim(width(), height());
     TAffine finalAff              = m_drawCameraAff * rasterToStageRef;
@@ -1775,7 +1774,8 @@ TRect SceneViewer::getActualClipRect(const TAffine &aff) {
     clipRect = aff * (m_clipRect.enlarge(3));
   }
 
-  clipRect *= TRectD(viewerSize) - TPointD(viewerSize.lx/2, viewerSize.ly/2);
+  clipRect *=
+      TRectD(viewerSize) - TPointD(viewerSize.lx / 2, viewerSize.ly / 2);
   return convert(clipRect);
 }
 
@@ -1783,16 +1783,16 @@ TRect SceneViewer::getActualClipRect(const TAffine &aff) {
 
 TAffine4 SceneViewer::get3dViewMatrix() const {
   if (is3DView()) {
-    TXsheet *xsh = TApp::instance()->getCurrentXsheet()->getXsheet();
+    TXsheet *xsh            = TApp::instance()->getCurrentXsheet()->getXsheet();
     TStageObjectId cameraId = xsh->getStageObjectTree()->getCurrentCameraId();
-    double z = xsh->getStageObject(cameraId)->getZ(
-                  TApp::instance()->getCurrentFrame()->getFrame());
+    double z                = xsh->getStageObject(cameraId)->getZ(
+        TApp::instance()->getCurrentFrame()->getFrame());
 
     TAffine4 affine;
     affine *= TAffine4::translation(m_pan3D.x, m_pan3D.y, z);
     affine *= TAffine4::scale(m_zoomScale3D, m_zoomScale3D, m_zoomScale3D);
-    affine *= TAffine4::rotationX(M_PI_180*m_theta3D);
-    affine *= TAffine4::rotationY(M_PI_180*m_phi3D);
+    affine *= TAffine4::rotationX(M_PI_180 * m_theta3D);
+    affine *= TAffine4::rotationY(M_PI_180 * m_phi3D);
     return affine;
   }
 
@@ -1818,8 +1818,7 @@ TAffine SceneViewer::getViewMatrix() const {
                      : SCENE_VIEWMODE;
   if (is3DView()) {
     return TAffine();
-  } else
-  if (m_referenceMode == CAMERA_REFERENCE) {
+  } else if (m_referenceMode == CAMERA_REFERENCE) {
     int frame    = TApp::instance()->getCurrentFrame()->getFrame();
     TXsheet *xsh = TApp::instance()->getCurrentXsheet()->getXsheet();
     TAffine aff  = xsh->getCameraAff(frame);
@@ -1850,7 +1849,8 @@ void SceneViewer::setViewMatrix(const TAffine &aff, int viewMode) {
 
 bool SceneViewer::is3DView() const {
   bool isCameraTest = CameraTestCheck::instance()->isEnabled();
-  return (m_referenceMode == CAMERA3D_REFERENCE && !isCameraTest && m_previewMode == NO_PREVIEW);
+  return (m_referenceMode == CAMERA3D_REFERENCE && !isCameraTest &&
+          m_previewMode == NO_PREVIEW);
 }
 
 //-----------------------------------------------------------------------------
@@ -1922,8 +1922,9 @@ void SceneViewer::panQt(const QPointF &delta) {
 
 //-----------------------------------------------------------------------------
 
-TPointD SceneViewer::getDpiScale() const
-  { return getInputManager()->dpiScale(); }
+TPointD SceneViewer::getDpiScale() const {
+  return getInputManager()->dpiScale();
+}
 
 //-----------------------------------------------------------------------------
 
@@ -2386,8 +2387,7 @@ void SceneViewer::onLevelSwitched() {
 
 //-----------------------------------------------------------------------------
 
-void SceneViewer::onLevelChanged()
-  { getInputManager()->updateDpiScale(); }
+void SceneViewer::onLevelChanged() { getInputManager()->updateDpiScale(); }
 
 //-----------------------------------------------------------------------------
 
@@ -2775,10 +2775,10 @@ void SceneViewer::invalidateToolStatus() {
 TRectD SceneViewer::getGeometry() const {
   int devPixRatio     = getDevPixRatio();
   TAffine worldToTool = getInputManager()->worldToTool();
-  TPointD topLeft     = worldToTool
-                      * winToWorld( geometry().topLeft()     * devPixRatio );
-  TPointD bottomRight = worldToTool
-                      * winToWorld( geometry().bottomRight() * devPixRatio );
+  TPointD topLeft =
+      worldToTool * winToWorld(geometry().topLeft() * devPixRatio);
+  TPointD bottomRight =
+      worldToTool * winToWorld(geometry().bottomRight() * devPixRatio);
   return TRectD(topLeft, bottomRight);
 }
 

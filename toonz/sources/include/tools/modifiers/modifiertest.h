@@ -6,7 +6,6 @@
 // TnzTools includes
 #include <tools/inputmanager.h>
 
-
 #undef DVAPI
 #undef DVVAR
 #ifdef TNZTOOLS_EXPORTS
@@ -17,28 +16,28 @@
 #define DVVAR DV_IMPORT_VAR
 #endif
 
-
 //===================================================================
 
 //*****************************************************************************************
 //    TModifierTest definition
 //*****************************************************************************************
 
-class DVAPI TModifierTest: public TInputModifier {
+class DVAPI TModifierTest : public TInputModifier {
 public:
-  class DVAPI Handler: public TTrackHandler {
+  class DVAPI Handler : public TTrackHandler {
   public:
     std::vector<double> angles;
-    Handler(const TTrack &original): TTrackHandler(original) { }
+    Handler(const TTrack &original) : TTrackHandler(original) {}
   };
 
-  class DVAPI Modifier: public TTrackModifier {
+  class DVAPI Modifier : public TTrackModifier {
   public:
     double angle;
     double radius;
     double speed;
 
-    Modifier(TTrackHandler &handler, double angle, double radius, double speed = 0.25);
+    Modifier(TTrackHandler &handler, double angle, double radius,
+             double speed = 0.25);
     TTrackPoint calcPoint(double originalIndex) override;
   };
 
@@ -49,11 +48,9 @@ public:
 
   TModifierTest(int count, double radius);
 
-  void modifyTrack(
-    const TTrack &track,
-    const TInputSavePoint::Holder &savePoint,
-    TTrackList &outTracks ) override;
+  void modifyTrack(const TTrack &track,
+                   const TInputSavePoint::Holder &savePoint,
+                   TTrackList &outTracks) override;
 };
-
 
 #endif

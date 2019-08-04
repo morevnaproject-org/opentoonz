@@ -132,8 +132,7 @@ FullColorBrushTool::FullColorBrushTool(std::string name)
     , m_notifier(0)
     , m_presetsLoaded(false)
     , m_firstTime(true)
-    , m_started(false)
-{
+    , m_started(false) {
   bind(TTool::RasterImage | TTool::EmptyTarget);
   m_preset.setId("BrushPreset");
   m_modifierEraser.setId("RasterEraser");
@@ -313,7 +312,7 @@ void FullColorBrushTool::hoverEvent(const TInputManager &manager) {
       value.first += min;
       value.second += max;
       if (value.first > value.second) value.first = value.second;
-      value.first  = tcrop<double>(value.first, range.first, range.second);
+      value.first = tcrop<double>(value.first, range.first, range.second);
 
       value.second = tcrop<double>(value.second, range.first, range.second);
       prop.setValue(value);
@@ -325,7 +324,8 @@ void FullColorBrushTool::hoverEvent(const TInputManager &manager) {
       if (x == 0.0) return;
 
       const TDoubleProperty::Range &range = prop.getRange();
-      double value = tcrop<double>(prop.getValue() + x, range.first, range.second);
+      double value =
+          tcrop<double>(prop.getValue() + x, range.first, range.second);
       prop.setValue(value);
 
       notify(prop);
@@ -335,12 +335,13 @@ void FullColorBrushTool::hoverEvent(const TInputManager &manager) {
   if (manager.getOutputHovers().empty()) return;
   TPointD position = manager.getOutputHovers().front();
 
-  if (manager.state.isKeyPressed(TKey::control) && manager.state.isKeyPressed(TKey::alt)) {
+  if (manager.state.isKeyPressed(TKey::control) &&
+      manager.state.isKeyPressed(TKey::alt)) {
     const TPointD &diff = position - m_mousePos;
     if (getBrushStyle()) {
-      locals.add(m_modifierSize, 0.01*diff.x);
+      locals.add(m_modifierSize, 0.01 * diff.x);
     } else {
-      locals.addMinMaxSeparate(m_thickness, int(diff.x/2), int(diff.y/2));
+      locals.addMinMaxSeparate(m_thickness, int(diff.x / 2), int(diff.y / 2));
     }
   } else {
     m_brushPos = position;
@@ -398,12 +399,13 @@ void FullColorBrushTool::paintEnd() {
 
 //-------------------------------------------------------------------------------------------------------------
 
-void FullColorBrushTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack) {
+void FullColorBrushTool::paintTrackPoint(const TTrackPoint &point,
+                                         const TTrack &track, bool firstTrack) {
   // get raster
   if (!m_started || !getViewer()) return;
   TRasterImageP ri = (TRasterImageP)getImage(true);
   if (!ri) return;
-  TRasterP ras = ri->getRaster();
+  TRasterP ras      = ri->getRaster();
   TPointD rasCenter = ras->getCenterD();
 
   // init brush
@@ -415,18 +417,15 @@ void FullColorBrushTool::paintTrackPoint(const TTrackPoint &point, const TTrack 
     handler->brush.beginStroke();
     track.toolHandler = handler;
   }
-  handler = dynamic_cast<TrackHandler*>(track.toolHandler.getPointer());
+  handler = dynamic_cast<TrackHandler *>(track.toolHandler.getPointer());
   if (!handler) return;
 
   // paint stroke
   m_strokeSegmentRect.empty();
-  handler->brush.strokeTo(
-    point.position + rasCenter,
-    m_enabledPressure ? point.pressure : 0.5,
-    point.tilt,
-    point.time - track.previous().time );
-  if (track.pointsAdded == 1 && track.finished())
-    handler->brush.endStroke();
+  handler->brush.strokeTo(point.position + rasCenter,
+                          m_enabledPressure ? point.pressure : 0.5, point.tilt,
+                          point.time - track.previous().time);
+  if (track.pointsAdded == 1 && track.finished()) handler->brush.endStroke();
 
   // update affected area
   TRect updateRect = m_strokeSegmentRect * ras->getBounds();
@@ -435,8 +434,10 @@ void FullColorBrushTool::paintTrackPoint(const TTrackPoint &point, const TTrack 
   TRectD invalidateRect = convert(m_strokeSegmentRect) - rasCenter;
   if (firstTrack) {
     TPointD thickOffset(m_maxCursorThick * 0.5, m_maxCursorThick * 0.5);
-    invalidateRect += TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
-    invalidateRect += TRectD(point.position - thickOffset, point.position + thickOffset);
+    invalidateRect +=
+        TRectD(m_brushPos - thickOffset, m_brushPos + thickOffset);
+    invalidateRect +=
+        TRectD(point.position - thickOffset, point.position + thickOffset);
     m_brushPos = m_mousePos = point.position;
   }
   invalidate(invalidateRect.enlarge(2.0));
@@ -577,8 +578,9 @@ bool FullColorBrushTool::onPropertyChanged(std::string propertyName) {
 
 //------------------------------------------------------------------
 
-bool FullColorBrushTool::isAssistantsEnabled() const
-  { return m_assistants.getValue(); }
+bool FullColorBrushTool::isAssistantsEnabled() const {
+  return m_assistants.getValue();
+}
 
 //------------------------------------------------------------------
 
@@ -613,8 +615,8 @@ void FullColorBrushTool::loadPreset() {
 
   try  // Don't bother with RangeErrors
   {
-    m_thickness.setValue(
-        TIntPairProperty::Value(std::max((int)preset.m_min, 1), (int)preset.m_max));
+    m_thickness.setValue(TIntPairProperty::Value(std::max((int)preset.m_min, 1),
+                                                 (int)preset.m_max));
     m_hardness.setValue(preset.m_hardness, true);
     m_opacity.setValue(
         TDoublePairProperty::Value(preset.m_opacityMin, preset.m_opacityMax));

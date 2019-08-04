@@ -612,9 +612,9 @@ void PlaneViewer::draw(TRasterP ras, double dpiX, double dpiY, TPalette *pal) {
 
   TAffine4 matrix;
   glGetDoublev(GL_MODELVIEW_MATRIX, matrix.a);
-  TAffine viewAff = matrix.get2d()
-                  * TAffine::scale(Stage::inch/dpiX, Stage::inch/dpiY)
-                  * TAffine::translation(-rasCenter);
+  TAffine viewAff = matrix.get2d() *
+                    TAffine::scale(Stage::inch / dpiX, Stage::inch / dpiY) *
+                    TAffine::translation(-rasCenter);
 
   pushGLWinCoordinates();
 

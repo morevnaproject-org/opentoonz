@@ -9,7 +9,6 @@
 // std includes
 #include <algorithm>
 
-
 #undef DVAPI
 #undef DVVAR
 #ifdef TNZTOOLS_EXPORTS
@@ -20,30 +19,28 @@
 #define DVVAR DV_IMPORT_VAR
 #endif
 
-
 //===================================================================
 
 //*****************************************************************************************
 //    TModifierSegmentation definition
 //*****************************************************************************************
 
-class DVAPI TModifierSegmentation: public TInputModifier {
+class DVAPI TModifierSegmentation : public TInputModifier {
 private:
   TPointD m_step;
 
-  void addSegments(TTrack &track, const TTrackPoint &p0, const TTrackPoint &p1, int level = 0);
+  void addSegments(TTrack &track, const TTrackPoint &p0, const TTrackPoint &p1,
+                   int level = 0);
 
 public:
   explicit TModifierSegmentation(const TPointD &step = TPointD(1.0, 1.0));
 
   void setStep(const TPointD &step);
-  const TPointD& getStep() const { return m_step; }
+  const TPointD &getStep() const { return m_step; }
 
-  void modifyTrack(
-    const TTrack &track,
-    const TInputSavePoint::Holder &savePoint,
-    TTrackList &outTracks ) override;
+  void modifyTrack(const TTrack &track,
+                   const TInputSavePoint::Holder &savePoint,
+                   TTrackList &outTracks) override;
 };
-
 
 #endif

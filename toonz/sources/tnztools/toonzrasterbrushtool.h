@@ -84,7 +84,7 @@ public:
 //************************************************************************
 class SmoothStroke {
 public:
-  SmoothStroke(): m_smooth(), m_outputIndex(), m_readIndex() { }
+  SmoothStroke() : m_smooth(), m_outputIndex(), m_readIndex() {}
   ~SmoothStroke() {}
 
   // begin stroke
@@ -125,11 +125,12 @@ public:
   ToonzRasterBrushTool(std::string name, int targetType);
 
   ToolType getToolType() const override { return TTool::LevelWriteTool; }
-  ToolModifiers getToolModifiers() const override
-    { return ModifierTangents | ModifierAssistants | ModifierCustom | ModifierSegmentation; }
+  ToolModifiers getToolModifiers() const override {
+    return ModifierTangents | ModifierAssistants | ModifierCustom |
+           ModifierSegmentation;
+  }
   bool isAssistantsEnabled() const override;
-  bool isCustomModifiersEnabled() const override
-    { return true; }
+  bool isCustomModifiersEnabled() const override { return true; }
 
   ToolOptionsBox *createOptionsBox() override;
 

@@ -81,43 +81,39 @@ bool checkForSeqNum(QString type) {
     return false;
 }
 
-bool parseFrame(const std::wstring &str, int &frame, char &letter, int &padding) {
-  if (str.empty())
-    return false;
+bool parseFrame(const std::wstring &str, int &frame, char &letter,
+                int &padding) {
+  if (str.empty()) return false;
 
   int i = 0, number = 0;
-  while(i < (int)str.size() && str[i] >= L'0' && str[i] <= L'9')
-    number = number * 10 + str[i++] - L'0';
+  while (i < (int)str.size() && str[i] >= L'0' && str[i] <= L'9')
+    number   = number * 10 + str[i++] - L'0';
   int digits = i;
-  char l = str[i] >= L'a' && str[i] <= L'z' ? str[i++] + ('a' - L'a')
-         : str[i] >= L'A' && str[i] <= L'Z' ? str[i++] + ('A' - L'A')
-         : '\0';
-  if (number == 0 || i < (int)str.size())
-    return false;
+  char l =
+      str[i] >= L'a' && str[i] <= L'z'
+          ? str[i++] + ('a' - L'a')
+          : str[i] >= L'A' && str[i] <= L'Z' ? str[i++] + ('A' - L'A') : '\0';
+  if (number == 0 || i < (int)str.size()) return false;
 
-  frame = number;
-  letter = l;
+  frame   = number;
+  letter  = l;
   padding = str[0] == L'0' ? digits : 0;
   return true;
 }
 
 };  // namespace
 
-
 TFrameId::TFrameId(const std::string &str, char s)
-    : m_frame(EMPTY_FRAME), m_letter(), m_zeroPadding(4), m_startSeqInd(s)
-{
+    : m_frame(EMPTY_FRAME), m_letter(), m_zeroPadding(4), m_startSeqInd(s) {
   if (str.empty()) return;
   if (!parseFrame(to_wstring(str), m_frame, m_letter, m_zeroPadding))
     m_frame = NO_FRAME;
 }
 
 TFrameId::TFrameId(const std::wstring &str, char s)
-    : m_frame(EMPTY_FRAME), m_letter(), m_zeroPadding(4), m_startSeqInd(s)
-{
+    : m_frame(EMPTY_FRAME), m_letter(), m_zeroPadding(4), m_startSeqInd(s) {
   if (str.empty()) return;
-  if (!parseFrame(str, m_frame, m_letter, m_zeroPadding))
-    m_frame = NO_FRAME;
+  if (!parseFrame(str, m_frame, m_letter, m_zeroPadding)) m_frame = NO_FRAME;
 }
 
 // TFrameId::operator string() const
@@ -325,9 +321,10 @@ void TFilePath::setPath(std::wstring path) {
       m_path.length() > 1 && m_path[m_path.length() - 1] == wslash)
     m_path.erase(m_path.length() - 1, 1);
 
-  if (isUncName && !(m_path.find_last_of(L'\\') > 1 ||
-                     m_path.find_last_of(L'/') >
-                         1))  // e' indicato solo il nome della macchina...
+  if (isUncName &&
+      !(m_path.find_last_of(L'\\') > 1 ||
+        m_path.find_last_of(L'/') >
+            1))  // e' indicato solo il nome della macchina...
     m_path.append(1, wslash);
 }
 
@@ -670,9 +667,8 @@ TFilePath TFilePath::getParentDir() const  // noSlash!
 {
   int i = getLastSlash(m_path);  // cerco l'ultimo slash
   if (i < 0) {
-    if (m_path.length() >= 2 &&
-        ('a' <= m_path[0] && m_path[0] <= 'z' ||
-         'A' <= m_path[0] && m_path[0] <= 'Z') &&
+    if (m_path.length() >= 2 && ('a' <= m_path[0] && m_path[0] <= 'z' ||
+                                 'A' <= m_path[0] && m_path[0] <= 'Z') &&
         m_path[1] == ':')
       return TFilePath(m_path.substr(0, 2));
     else
@@ -718,7 +714,7 @@ TFrameId TFilePath::getFrame() const {
   if (!checkForSeqNum(type) || !isNumbers(str, j, i))
     return TFrameId(TFrameId::NO_FRAME);
 
-  return TFrameId(str.substr(j+1, i-j-1), str[j]);
+  return TFrameId(str.substr(j + 1, i - j - 1), str[j]);
 }
 
 //-----------------------------------------------------------------------------

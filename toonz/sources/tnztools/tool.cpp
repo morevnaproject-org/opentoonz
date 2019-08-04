@@ -150,27 +150,37 @@ TTool *TTool::getTool(std::string toolName, ToolTargetType targetType) {
   // then select tool which more compatible with default target type
 
   int defTarget = 0;
-  switch(Preferences::instance()->getDefLevelType()) {
-  case PLI_XSHLEVEL:  defTarget = VectorImage; break;
-  case TZP_XSHLEVEL:  defTarget = ToonzImage;  break;
-  case OVL_XSHLEVEL:  defTarget = RasterImage; break;
-  case META_XSHLEVEL: defTarget = MetaImage;   break;
-  default:            defTarget = 0;           break;
+  switch (Preferences::instance()->getDefLevelType()) {
+  case PLI_XSHLEVEL:
+    defTarget = VectorImage;
+    break;
+  case TZP_XSHLEVEL:
+    defTarget = ToonzImage;
+    break;
+  case OVL_XSHLEVEL:
+    defTarget = RasterImage;
+    break;
+  case META_XSHLEVEL:
+    defTarget = MetaImage;
+    break;
+  default:
+    defTarget = 0;
+    break;
   }
 
   bool isDefault = false;
-  int target = 0;
-  TTool *tool = 0;
+  int target     = 0;
+  TTool *tool    = 0;
 
   std::pair<ToolTable::iterator, ToolTable::iterator> range =
-    toolTable->equal_range(std::make_pair(toolName, targetType));
-  for(ToolTable::iterator it = range.first; it != range.second; ++it) {
-    int t = it->second->getTargetType();
+      toolTable->equal_range(std::make_pair(toolName, targetType));
+  for (ToolTable::iterator it = range.first; it != range.second; ++it) {
+    int t  = it->second->getTargetType();
     bool d = (bool)(t & defTarget);
     if (!tool || (d && !isDefault) || (d == isDefault && t > target)) {
       isDefault = d;
-      target = t;
-      tool = it->second;
+      target    = t;
+      tool      = it->second;
     }
   }
 
@@ -186,24 +196,19 @@ void TTool::bind(int targetType) {
 
   if (!toolNames) toolNames = new std::set<std::string>();
 
-  ToolTargetType targets[] = {
-    EmptyTarget,
-    ToonzImage,
-    VectorImage,
-    RasterImage,
-    MeshImage,
-    MetaImage };
-  int targetsCount = sizeof(targets)/sizeof(*targets);
+  ToolTargetType targets[] = {EmptyTarget, ToonzImage, VectorImage,
+                              RasterImage, MeshImage,  MetaImage};
+  int targetsCount = sizeof(targets) / sizeof(*targets);
 
   std::string name = getName();
   if (toolNames->count(name) == 0) {
     toolNames->insert(name);
 
     // Initialize with the dummy tool
-    for(int i = 0; i < targetsCount; ++i)
+    for (int i = 0; i < targetsCount; ++i)
       if (!toolTable->count(std::make_pair(name, targets[i])))
         toolTable->insert(
-          std::make_pair(std::make_pair(name, targets[i]), &theDummyTool));
+            std::make_pair(std::make_pair(name, targets[i]), &theDummyTool));
 
     ToolSelector *toolSelector = new ToolSelector(name);
     CommandManager::instance()->setHandler(
@@ -211,10 +216,9 @@ void TTool::bind(int targetType) {
                           toolSelector, &ToolSelector::selectTool));
   }
 
-  for(int i = 0; i < targetsCount; ++i)
+  for (int i = 0; i < targetsCount; ++i)
     if (targetType & targets[i])
-      toolTable->insert(
-        std::make_pair(std::make_pair(name, targets[i]), this));
+      toolTable->insert(std::make_pair(std::make_pair(name, targets[i]), this));
 }
 
 //-----------------------------------------------------------------------------
@@ -486,18 +490,26 @@ TImage *TTool::touchImage() {
     // select one from supported level types
     // default level type is preffered
 
-    int levelType = pref->getDefLevelType();
+    int levelType     = pref->getDefLevelType();
     int toolLevelType = UNKNOWN_XSHLEVEL;
-    bool found = false;
+    bool found        = false;
 
-    if ( m_targetType & MetaImage )
-      { toolLevelType = META_XSHLEVEL; found = found || toolLevelType == levelType; }
-    if ( m_targetType & RasterImage )
-      { toolLevelType = OVL_XSHLEVEL;  found = found || toolLevelType == levelType; }
-    if ( m_targetType & ToonzImage )
-      { toolLevelType = TZP_XSHLEVEL;  found = found || toolLevelType == levelType; }
-    if ( m_targetType & VectorImage )
-      { toolLevelType = PLI_XSHLEVEL;  found = found || toolLevelType == levelType; }
+    if (m_targetType & MetaImage) {
+      toolLevelType = META_XSHLEVEL;
+      found         = found || toolLevelType == levelType;
+    }
+    if (m_targetType & RasterImage) {
+      toolLevelType = OVL_XSHLEVEL;
+      found         = found || toolLevelType == levelType;
+    }
+    if (m_targetType & ToonzImage) {
+      toolLevelType = TZP_XSHLEVEL;
+      found         = found || toolLevelType == levelType;
+    }
+    if (m_targetType & VectorImage) {
+      toolLevelType = PLI_XSHLEVEL;
+      found         = found || toolLevelType == levelType;
+    }
 
     if (toolLevelType == UNKNOWN_XSHLEVEL) return 0;
     if (!found) levelType = toolLevelType;
@@ -565,30 +577,35 @@ int TTool::pick(const TPointD &p) {
 
 //-----------------------------------------------------------------------------
 
-TMouseEvent
-TTool::makeMouseEvent() {
-  TToolViewer *viewer = getViewer();
+TMouseEvent TTool::makeMouseEvent() {
+  TToolViewer *viewer    = getViewer();
   TInputManager *manager = viewer ? viewer->getInputManager() : 0;
 
   TPointD point = manager && !manager->getOutputHovers().empty()
-                ? manager->getOutputHovers().front() : TPointD();
-  TPointD pos = manager ? manager->toolToScreen() * point : point;
+                      ? manager->getOutputHovers().front()
+                      : TPointD();
+  TPointD pos      = manager ? manager->toolToScreen() * point : point;
   TDimensionI size = viewer ? viewer->getWindowSize() : TDimensionI();
-  TPointD center(0.5*(double)size.lx, 0.5*(double)size.ly);
-
+  TPointD center(0.5 * (double)size.lx, 0.5 * (double)size.ly);
 
   TMouseEvent e;
   e.m_pos = pos + center;
   if (manager) {
-    e.setModifiers( manager->state.isKeyPressed(TKey::shift),
-                    manager->state.isKeyPressed(TKey::alt),
-                    manager->state.isKeyPressed(TKey::control) );
-    if (manager->state.isButtonPressedAny(Qt::LeftButton   )) e.m_buttons |= Qt::LeftButton;
-    if (manager->state.isButtonPressedAny(Qt::RightButton  )) e.m_buttons |= Qt::RightButton;
-    if (manager->state.isButtonPressedAny(Qt::MidButton    )) e.m_buttons |= Qt::MidButton;
-    if (manager->state.isButtonPressedAny(Qt::BackButton   )) e.m_buttons |= Qt::BackButton;
-    if (manager->state.isButtonPressedAny(Qt::ForwardButton)) e.m_buttons |= Qt::ForwardButton;
-    if (manager->state.isButtonPressedAny(Qt::TaskButton   )) e.m_buttons |= Qt::TaskButton;
+    e.setModifiers(manager->state.isKeyPressed(TKey::shift),
+                   manager->state.isKeyPressed(TKey::alt),
+                   manager->state.isKeyPressed(TKey::control));
+    if (manager->state.isButtonPressedAny(Qt::LeftButton))
+      e.m_buttons |= Qt::LeftButton;
+    if (manager->state.isButtonPressedAny(Qt::RightButton))
+      e.m_buttons |= Qt::RightButton;
+    if (manager->state.isButtonPressedAny(Qt::MidButton))
+      e.m_buttons |= Qt::MidButton;
+    if (manager->state.isButtonPressedAny(Qt::BackButton))
+      e.m_buttons |= Qt::BackButton;
+    if (manager->state.isButtonPressedAny(Qt::ForwardButton))
+      e.m_buttons |= Qt::ForwardButton;
+    if (manager->state.isButtonPressedAny(Qt::TaskButton))
+      e.m_buttons |= Qt::TaskButton;
   }
   e.m_mousePos = QPointF(pos.x + center.x, center.y - pos.y);
   return e;
@@ -596,106 +613,99 @@ TTool::makeMouseEvent() {
 
 //-----------------------------------------------------------------------------
 
-TMouseEvent
-TTool::makeMouseEvent(const TTrackPoint &point, const TTrack &track) {
-  TToolViewer *viewer = getViewer();
+TMouseEvent TTool::makeMouseEvent(const TTrackPoint &point,
+                                  const TTrack &track) {
+  TToolViewer *viewer    = getViewer();
   TInputManager *manager = viewer ? viewer->getInputManager() : 0;
 
   TDimensionI size = viewer ? viewer->getWindowSize() : TDimensionI();
-  TPointD center(0.5*(double)size.lx, 0.5*(double)size.ly);
+  TPointD center(0.5 * (double)size.lx, 0.5 * (double)size.ly);
 
   TInputState::KeyState::Holder keyState = track.getKeyState(point.time);
-  TInputState::ButtonState::Holder buttonState = track.getButtonState(point.time);
+  TInputState::ButtonState::Holder buttonState =
+      track.getButtonState(point.time);
 
   TMouseEvent e;
-  e.m_pos = point.screenPosition + center;
+  e.m_pos      = point.screenPosition + center;
   e.m_pressure = track.hasPressure ? point.pressure : 1.0;
-  e.setModifiers( keyState.isPressed(TKey::shift),
-                  keyState.isPressed(TKey::alt),
-                  keyState.isPressed(TKey::control) );
-  if (buttonState.isPressed(Qt::LeftButton   )) e.m_buttons |= Qt::LeftButton;
-  if (buttonState.isPressed(Qt::RightButton  )) e.m_buttons |= Qt::RightButton;
-  if (buttonState.isPressed(Qt::MidButton    )) e.m_buttons |= Qt::MidButton;
-  if (buttonState.isPressed(Qt::BackButton   )) e.m_buttons |= Qt::BackButton;
-  if (buttonState.isPressed(Qt::ForwardButton)) e.m_buttons |= Qt::ForwardButton;
-  if (buttonState.isPressed(Qt::TaskButton   )) e.m_buttons |= Qt::TaskButton;
-  e.m_mousePos = QPointF(point.screenPosition.x + center.x, center.y - point.screenPosition.y);
+  e.setModifiers(keyState.isPressed(TKey::shift), keyState.isPressed(TKey::alt),
+                 keyState.isPressed(TKey::control));
+  if (buttonState.isPressed(Qt::LeftButton)) e.m_buttons |= Qt::LeftButton;
+  if (buttonState.isPressed(Qt::RightButton)) e.m_buttons |= Qt::RightButton;
+  if (buttonState.isPressed(Qt::MidButton)) e.m_buttons |= Qt::MidButton;
+  if (buttonState.isPressed(Qt::BackButton)) e.m_buttons |= Qt::BackButton;
+  if (buttonState.isPressed(Qt::ForwardButton))
+    e.m_buttons |= Qt::ForwardButton;
+  if (buttonState.isPressed(Qt::TaskButton)) e.m_buttons |= Qt::TaskButton;
+  e.m_mousePos = QPointF(point.screenPosition.x + center.x,
+                         center.y - point.screenPosition.y);
   e.m_isTablet = track.hasPressure;
   return e;
 }
 
 //-----------------------------------------------------------------------------
 
-bool
-TTool::keyEvent(
-  bool press,
-  TInputState::Key key,
-  QKeyEvent *event,
-  const TInputManager &manager )
-{
-  if (press && !key.isModifier())
-    return keyDown(event);
+bool TTool::keyEvent(bool press, TInputState::Key key, QKeyEvent *event,
+                     const TInputManager &manager) {
+  if (press && !key.isModifier()) return keyDown(event);
   return false;
 }
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::buttonEvent(
-  bool press,
-  TInputState::DeviceId device,
-  TInputState::Button button,
-  const TInputManager &manager )
-{
-  if (press && button == Qt::RightButton && !manager.getOutputHovers().empty()) {
+void TTool::buttonEvent(bool press, TInputState::DeviceId device,
+                        TInputState::Button button,
+                        const TInputManager &manager) {
+  if (press && button == Qt::RightButton &&
+      !manager.getOutputHovers().empty()) {
     TMouseEvent e = makeMouseEvent();
-    e.m_button = Qt::RightButton;
+    e.m_button    = Qt::RightButton;
     rightButtonDown(manager.getOutputHovers().front(), e);
   }
 }
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::hoverEvent(const TInputManager &manager) {
+void TTool::hoverEvent(const TInputManager &manager) {
   if (!manager.getOutputHovers().empty())
     mouseMove(manager.getOutputHovers().front(), makeMouseEvent());
 }
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::doubleClickEvent(const TInputManager &manager) {
+void TTool::doubleClickEvent(const TInputManager &manager) {
   if (!manager.getOutputHovers().empty())
     leftButtonDoubleClick(manager.getOutputHovers().front(), makeMouseEvent());
 }
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintTrackBegin(const TTrackPoint &point, const TTrack &track, bool firstTrack)
-  { if (firstTrack) leftButtonDown(point.position, makeMouseEvent(point, track)); }
+void TTool::paintTrackBegin(const TTrackPoint &point, const TTrack &track,
+                            bool firstTrack) {
+  if (firstTrack) leftButtonDown(point.position, makeMouseEvent(point, track));
+}
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintTrackMotion(const TTrackPoint &point, const TTrack &track, bool firstTrack)
-  { if (firstTrack) leftButtonDrag(point.position, makeMouseEvent(point, track)); }
+void TTool::paintTrackMotion(const TTrackPoint &point, const TTrack &track,
+                             bool firstTrack) {
+  if (firstTrack) leftButtonDrag(point.position, makeMouseEvent(point, track));
+}
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintTrackEnd(const TTrackPoint &point, const TTrack &track, bool firstTrack)
-  { if (firstTrack) leftButtonUp(point.position, makeMouseEvent(point, track)); }
+void TTool::paintTrackEnd(const TTrackPoint &point, const TTrack &track,
+                          bool firstTrack) {
+  if (firstTrack) leftButtonUp(point.position, makeMouseEvent(point, track));
+}
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool firstTrack) {
+void TTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track,
+                            bool firstTrack) {
   if (track.pointsAdded == track.size())
     paintTrackBegin(point, track, firstTrack);
-  else
-  if (point.final)
+  else if (point.final)
     paintTrackEnd(point, track, firstTrack);
   else
     paintTrackMotion(point, track, firstTrack);
@@ -703,21 +713,24 @@ TTool::paintTrackPoint(const TTrackPoint &point, const TTrack &track, bool first
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintTracks(const TTrackList &tracks) {
+void TTool::paintTracks(const TTrackList &tracks) {
   // paint track points in chronological order
-  while(true) {
+  while (true) {
     TTrackP track;
     TTimerTicks minTicks = 0;
     double minTimeOffset = 0.0;
-    for(TTrackList::const_iterator i = tracks.begin(); i != tracks.end(); ++i) {
+    for (TTrackList::const_iterator i = tracks.begin(); i != tracks.end();
+         ++i) {
       const TTrack &t = **i;
       if (t.pointsAdded > 0) {
         TTimerTicks ticks = t.ticks();
         double timeOffset = t.timeOffset() + t.current().time;
-        if (!track || (ticks - minTicks)*TToolTimer::frequency + timeOffset - minTimeOffset < 0.0) {
-          track = *i;
-          minTicks = ticks;
+        if (!track ||
+            (ticks - minTicks) * TToolTimer::frequency + timeOffset -
+                    minTimeOffset <
+                0.0) {
+          track         = *i;
+          minTicks      = ticks;
           minTimeOffset = timeOffset;
         }
       }
@@ -730,21 +743,17 @@ TTool::paintTracks(const TTrackList &tracks) {
 
 //-----------------------------------------------------------------------------
 
-int
-TTool::paintApply(int count) {
+int TTool::paintApply(int count) {
   if (count <= 0) return 0;
-  for(int i = 0; i < count; ++i)
-    if (!paintApply())
-      return i;
+  for (int i = 0; i < count; ++i)
+    if (!paintApply()) return i;
   return count;
 }
 
 //-----------------------------------------------------------------------------
 
-void
-TTool::paintPop(int count) {
-  for(int i = 0; i < count; ++i)
-    paintPop();
+void TTool::paintPop(int count) {
+  for (int i = 0; i < count; ++i) paintPop();
 }
 
 //-----------------------------------------------------------------------------
@@ -1161,9 +1170,8 @@ QString TTool::updateEnabled() {
             QObject::tr("The current tool cannot be used on a Mesh Level."));
 
       if ((levelType == META_XSHLEVEL) && !(targetType & MetaImage))
-        return (
-            enable(false),
-            QObject::tr("The current tool cannot be used on a Assistants (Meta) Level."));
+        return (enable(false), QObject::tr("The current tool cannot be used on "
+                                           "a Assistants (Meta) Level."));
     }
 
     // Check against impossibly traceable movements on the column

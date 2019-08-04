@@ -53,8 +53,9 @@ ToolOptionControl::ToolOptionControl(TTool *tool, std::string propertyName,
 
 //-----------------------------------------------------------------------------
 
-void ToolOptionControl::notifyTool(bool addToUndo)
-  { m_tool->onPropertyChanged(m_propertyName, addToUndo); }
+void ToolOptionControl::notifyTool(bool addToUndo) {
+  m_tool->onPropertyChanged(m_propertyName, addToUndo);
+}
 
 //-----------------------------------------------------------------------------
 /*! return true if the control is belonging to the visible combo viewer. very

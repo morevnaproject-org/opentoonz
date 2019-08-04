@@ -18,15 +18,18 @@
 
 //=============================================================================
 
-inline double logNormalDistribuitionUnscaled(double x, double x0, double w)
-  { return exp(-0.5*pow(log(x/x0)/w, 2.0))/x; }
+inline double logNormalDistribuitionUnscaled(double x, double x0, double w) {
+  return exp(-0.5 * pow(log(x / x0) / w, 2.0)) / x;
+}
 
-inline double logNormalDistribuition(double x, double x0, double w)
-  { return logNormalDistribuitionUnscaled(x, x0, w)/(w*sqrt(2.0*M_PI)); }
+inline double logNormalDistribuition(double x, double x0, double w) {
+  return logNormalDistribuitionUnscaled(x, x0, w) / (w * sqrt(2.0 * M_PI));
+}
 
 //=============================================================================
 
-template <class T> class TPoint4T;
+template <class T>
+class TPoint4T;
 
 /*
 * This is an example of how to use the TPointT, the TRectT and the TAffine
@@ -73,16 +76,16 @@ template <class T>
 class TPoint4T {
 public:
   union {
-    struct { T x, y, z, w; };
+    struct {
+      T x, y, z, w;
+    };
     T a[4];
   };
 
-  inline TPoint4T():
-    x(), y(), z(), w() { };
-  inline TPoint4T(T x, T y, T z, T w):
-    x(x), y(y), z(z), w(w) { };
-  inline explicit TPoint4T(const TPointT<T> &p, T w = (T)1):
-      x(p.x), y(p.y), z(), w(w) { };
+  inline TPoint4T() : x(), y(), z(), w(){};
+  inline TPoint4T(T x, T y, T z, T w) : x(x), y(y), z(z), w(w){};
+  inline explicit TPoint4T(const TPointT<T> &p, T w = (T)1)
+      : x(p.x), y(p.y), z(), w(w){};
 };
 
 template <class T>
@@ -142,7 +145,7 @@ template <class T>
 inline bool operator==(const TPointT<T> &p0, const TPointT<T> &p1) {
   return p0.x == p1.x && p0.y == p1.y;
 }
-template<class T>
+template <class T>
 inline bool operator!=(const TPointT<T> &p0, const TPointT<T> &p1) {
   return p0.x != p1.x || p0.y != p1.y;
 }
@@ -907,14 +910,15 @@ public:
     //! memory layout represents array of three vectors (TPointD)
     //! which defines a coordinate system (see rowX(), rowY(), rowW())
     struct {
-      double m00, m01; // X-unit vector of a coordinate system
-      double m10, m11; // Y-unit vector of a coordinate system
-      double m20, m21; // origin (W) of a coordinate system
+      double m00, m01;  // X-unit vector of a coordinate system
+      double m10, m11;  // Y-unit vector of a coordinate system
+      double m20, m21;  // origin (W) of a coordinate system
     };
     double m[3][2];
     double a[6];
 
-    //! elements aXX is an transposed version of mXX, for compatibility with previous code
+    //! elements aXX is an transposed version of mXX, for compatibility with
+    //! previous code
     struct {
       double a11, a21;
       double a12, a22;
@@ -924,7 +928,8 @@ public:
 
   //! By default the object is initialized with a null matrix and a null
   //! translation vector.
-  inline TAffine() : m00(1.0), m01(0.0), m10(0.0), m11(1.0), m20(0.0), m21(0.0) { }
+  inline TAffine()
+      : m00(1.0), m01(0.0), m10(0.0), m11(1.0), m20(0.0), m21(0.0) {}
 
   // this constructor is disabled to avoid disambiguation in arguments order,
   // because we have two sets of fields aXX and mXX with different numeration
@@ -938,36 +943,32 @@ public:
   // ): m00(m00), m01(m01), m10(m10), m11(m11), m20(m20), m21(m21) { }
 
   //! Initializes the internal matrix with the user unit vectors.
-  inline TAffine(
-    const TPointD &rowX,
-    const TPointD &rowY,
-    const TPointD &rowW = TPointD()
-  ) {
+  inline TAffine(const TPointD &rowX, const TPointD &rowY,
+                 const TPointD &rowW = TPointD()) {
     this->rowX() = rowX;
     this->rowY() = rowY;
     this->rowW() = rowW;
   }
 
-  inline TPointD& row(int index)
-    { return *(TPointD*)(m[index]); }
-  inline const TPointD& row(int index) const
-    { return *(const TPointD*)(m[index]); }
+  inline TPointD &row(int index) { return *(TPointD *)(m[index]); }
+  inline const TPointD &row(int index) const {
+    return *(const TPointD *)(m[index]);
+  }
 
-  inline TPointD& rowX() { return row(0); }
-  inline TPointD& rowY() { return row(1); }
-  inline TPointD& rowW() { return row(2); }
+  inline TPointD &rowX() { return row(0); }
+  inline TPointD &rowY() { return row(1); }
+  inline TPointD &rowW() { return row(2); }
 
-  inline const TPointD& rowX() const { return row(0); }
-  inline const TPointD& rowY() const { return row(1); }
-  inline const TPointD& rowW() const { return row(2); }
+  inline const TPointD &rowX() const { return row(0); }
+  inline const TPointD &rowY() const { return row(1); }
+  inline const TPointD &rowW() const { return row(2); }
 
   //! Matrix multiplication.
   //! <p>\f$\left(\begin{array}{cc}\bf{A}&\vec{a}\\\vec{0}&1\end{array}\right)
   //! \left(\begin{array}{cc}\bf{B}&\vec{b}\\\vec{0}&1\end{array}\right)\f$</p>
   TAffine operator*(const TAffine &b) const;
 
-  inline TAffine operator*=(const TAffine &b)
-    { return *this = *this * b; }
+  inline TAffine operator*=(const TAffine &b) { return *this = *this * b; }
 
   //! Retruns the inverse tansformation as:
   //! <p>\f$\left(\begin{array}{ccc}\bf{A}^{-1}&-\bf{A}^{-1}&\vec{b}\\\vec{0}&\vec{0}&1\end{array}\right)\f$</p>
@@ -1014,35 +1015,39 @@ public:
   TAffine place(double u, double v, double x, double y) const;
 
   //! See above.
-  inline TAffine place(const TPointD &pIn, const TPointD &pOut) const
-    { return place(pIn.x, pIn.y, pOut.x, pOut.y); }
+  inline TAffine place(const TPointD &pIn, const TPointD &pOut) const {
+    return place(pIn.x, pIn.y, pOut.x, pOut.y);
+  }
 
-  inline static TAffine identity()
-    { return TAffine(); }
-  inline static TAffine zero()
-    { return TAffine(TPointD(), TPointD()); }
+  inline static TAffine identity() { return TAffine(); }
+  inline static TAffine zero() { return TAffine(TPointD(), TPointD()); }
 
-  inline static TAffine translation(double x, double y)
-    { return TAffine(TPointD(1.0, 0.0), TPointD(0.0, 1.0), TPointD(x, y)); }
-  inline static TAffine translation(const TPointD &p)
-    { return translation(p.x, p.y); }
+  inline static TAffine translation(double x, double y) {
+    return TAffine(TPointD(1.0, 0.0), TPointD(0.0, 1.0), TPointD(x, y));
+  }
+  inline static TAffine translation(const TPointD &p) {
+    return translation(p.x, p.y);
+  }
 
-  inline static TAffine scale(double sx, double sy)
-    { return TAffine(TPointD(sx, 0.0), TPointD(0.0, sy)); }
-  inline static TAffine scale(double s)
-    { return scale(s, s); }
-  inline static TAffine scale(const TPointD &center, double sx, double sy)
-    { return translation(center)*scale(sx, sy)*translation(-center); }
-  inline static TAffine scale(const TPointD &center, double s)
-    { return scale(center, s, s); }
+  inline static TAffine scale(double sx, double sy) {
+    return TAffine(TPointD(sx, 0.0), TPointD(0.0, sy));
+  }
+  inline static TAffine scale(double s) { return scale(s, s); }
+  inline static TAffine scale(const TPointD &center, double sx, double sy) {
+    return translation(center) * scale(sx, sy) * translation(-center);
+  }
+  inline static TAffine scale(const TPointD &center, double s) {
+    return scale(center, s, s);
+  }
 
   static TAffine rotation(double angle);
-  inline static TAffine rotation(const TPointD &center, double angle)
-    { return translation(center)*rotation(angle)*translation(-center); }
+  inline static TAffine rotation(const TPointD &center, double angle) {
+    return translation(center) * rotation(angle) * translation(-center);
+  }
 
-  inline static TAffine shear(double sx, double sy)
-    { return TAffine(TPointD(1.0, sy), TPointD(sx, 1.0)); }
-
+  inline static TAffine shear(double sx, double sy) {
+    return TAffine(TPointD(1.0, sy), TPointD(sx, 1.0));
+  }
 };
 
 //-----------------------------------------------------------------------------
@@ -1066,52 +1071,53 @@ const TAffine AffI = TAffine();
 
 class DVAPI TTranslation final : public TAffine {
 public:
-  inline TTranslation() { }
-  inline TTranslation(double x, double y)
-    { *(TAffine*)this = translation(x, y); }
-  inline TTranslation(const TPointD &p)
-    { *(TAffine*)this = translation(p); }
+  inline TTranslation() {}
+  inline TTranslation(double x, double y) {
+    *(TAffine *)this = translation(x, y);
+  }
+  inline TTranslation(const TPointD &p) { *(TAffine *)this = translation(p); }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TRotation final : public TAffine {
 public:
-  inline TRotation() { }
+  inline TRotation() {}
 
   //! makes a rotation matrix of  "degrees" degrees counterclockwise
   //! on the origin
-  inline TRotation(double degrees)
-    { *(TAffine*)this = rotation(degrees*M_PI_180); }
+  inline TRotation(double degrees) {
+    *(TAffine *)this = rotation(degrees * M_PI_180);
+  }
 
   //! makes a rotation matrix of  "degrees" degrees counterclockwise
   //! on the given center
-  inline TRotation(const TPointD &center, double degrees)
-    { *(TAffine*)this = rotation(center, degrees*M_PI_180); }
+  inline TRotation(const TPointD &center, double degrees) {
+    *(TAffine *)this = rotation(center, degrees * M_PI_180);
+  }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TScale final : public TAffine {
 public:
-  inline TScale() { }
-  inline TScale(double sx, double sy)
-    { *(TAffine*)this = scale(sx, sy); }
-  inline TScale(double s)
-    { *(TAffine*)this = scale(s); }
-  inline TScale(const TPointD &center, double sx, double sy)
-    { *(TAffine*)this = scale(center, sx, sy); }
-  inline TScale(const TPointD &center, double s)
-    { *(TAffine*)this = scale(center, s); }
+  inline TScale() {}
+  inline TScale(double sx, double sy) { *(TAffine *)this = scale(sx, sy); }
+  inline TScale(double s) { *(TAffine *)this = scale(s); }
+  inline TScale(const TPointD &center, double sx, double sy) {
+    *(TAffine *)this = scale(center, sx, sy);
+  }
+  inline TScale(const TPointD &center, double s) {
+    *(TAffine *)this = scale(center, s);
+  }
 };
 
 //-----------------------------------------------------------------------------
 
 class DVAPI TShear final : public TAffine {
 public:
-  TShear() { }
-  TShear(double sx, double sy)
-    { *(TAffine*)this = shear(sx, sy); }
+  TShear() {}
+  TShear(double sx, double sy) { *(TAffine *)this = shear(sx, sy); }
 };
 
 //-----------------------------------------------------------------------------
@@ -1129,14 +1135,14 @@ inline TAffine inv(const TAffine &a) { return a.inv(); }
 //-----------------------------------------------------------------------------
 
 inline std::ostream &operator<<(std::ostream &out, const TAffine &a) {
-  return out << "(" << a.m00 << ", " << a.m01 << "; "
-                    << a.m10 << ", " << a.m11 << "; "
-                    << a.m20 << ", " << a.m21 << ")";
+  return out << "(" << a.m00 << ", " << a.m01 << "; " << a.m10 << ", " << a.m11
+             << "; " << a.m20 << ", " << a.m21 << ")";
 }
 
 //=============================================================================
 
-//! This class performs basic manipulations of affine transformations in 3D space.
+//! This class performs basic manipulations of affine transformations in 3D
+//! space.
 //! the matrix is transposed to TAffine and equal to OpenGL
 
 class DVAPI TAffine4 {
@@ -1152,44 +1158,64 @@ public:
     double a[16];
   };
 
-  inline TAffine4():
-    m00(1.0), m01(0.0), m02(0.0), m03(0.0),
-    m10(0.0), m11(1.0), m12(0.0), m13(0.0),
-    m20(0.0), m21(0.0), m22(1.0), m23(0.0),
-    m30(0.0), m31(0.0), m32(0.0), m33(1.0) { }
+  inline TAffine4()
+      : m00(1.0)
+      , m01(0.0)
+      , m02(0.0)
+      , m03(0.0)
+      , m10(0.0)
+      , m11(1.0)
+      , m12(0.0)
+      , m13(0.0)
+      , m20(0.0)
+      , m21(0.0)
+      , m22(1.0)
+      , m23(0.0)
+      , m30(0.0)
+      , m31(0.0)
+      , m32(0.0)
+      , m33(1.0) {}
 
-  inline explicit TAffine4(const TAffine &a):
-    m00(a.m00), m01(a.m01), m02(0.0), m03(0.0),
-    m10(a.m10), m11(a.m11), m12(0.0), m13(0.0),
-    m20( 0.0 ), m21( 0.0 ), m22(1.0), m23(0.0),
-    m30(a.m20), m31(a.m21), m32(0.0), m33(1.0) { }
+  inline explicit TAffine4(const TAffine &a)
+      : m00(a.m00)
+      , m01(a.m01)
+      , m02(0.0)
+      , m03(0.0)
+      , m10(a.m10)
+      , m11(a.m11)
+      , m12(0.0)
+      , m13(0.0)
+      , m20(0.0)
+      , m21(0.0)
+      , m22(1.0)
+      , m23(0.0)
+      , m30(a.m20)
+      , m31(a.m21)
+      , m32(0.0)
+      , m33(1.0) {}
 
-  inline TAffine4(
-    const TPoint4D &rowX,
-    const TPoint4D &rowY,
-    const TPoint4D &rowZ,
-    const TPoint4D &rowW
-  ) {
+  inline TAffine4(const TPoint4D &rowX, const TPoint4D &rowY,
+                  const TPoint4D &rowZ, const TPoint4D &rowW) {
     this->rowX() = rowX;
     this->rowY() = rowY;
     this->rowZ() = rowZ;
     this->rowW() = rowW;
   }
 
-  inline TPoint4D& row(int index)
-    { return *(TPoint4D*)(m[index]); }
-  inline const TPoint4D& row(int index) const
-    { return *(const TPoint4D*)(m[index]); }
+  inline TPoint4D &row(int index) { return *(TPoint4D *)(m[index]); }
+  inline const TPoint4D &row(int index) const {
+    return *(const TPoint4D *)(m[index]);
+  }
 
-  inline TPoint4D& rowX() { return row(0); }
-  inline TPoint4D& rowY() { return row(1); }
-  inline TPoint4D& rowZ() { return row(2); }
-  inline TPoint4D& rowW() { return row(3); }
+  inline TPoint4D &rowX() { return row(0); }
+  inline TPoint4D &rowY() { return row(1); }
+  inline TPoint4D &rowZ() { return row(2); }
+  inline TPoint4D &rowW() { return row(3); }
 
-  inline const TPoint4D& rowX() const { return row(0); }
-  inline const TPoint4D& rowY() const { return row(1); }
-  inline const TPoint4D& rowZ() const { return row(2); }
-  inline const TPoint4D& rowW() const { return row(3); }
+  inline const TPoint4D &rowX() const { return row(0); }
+  inline const TPoint4D &rowY() const { return row(1); }
+  inline const TPoint4D &rowZ() const { return row(2); }
+  inline const TPoint4D &rowW() const { return row(3); }
 
   TPoint4D operator*(const TPoint4D &b) const;
   TAffine4 operator*(const TAffine4 &b) const;
@@ -1200,7 +1226,9 @@ public:
   TAffine get2d(double z = 0.0) const;
 
   inline static TAffine4 identity() { return TAffine4(); }
-  inline static TAffine4 zero() { return TAffine4(TPoint4D(), TPoint4D(), TPoint4D(), TPoint4D()); }
+  inline static TAffine4 zero() {
+    return TAffine4(TPoint4D(), TPoint4D(), TPoint4D(), TPoint4D());
+  }
   static TAffine4 translation(double x, double y, double z);
   static TAffine4 scale(double x, double y, double z);
   static TAffine4 rotation(double x, double y, double z, double angle);
@@ -1209,7 +1237,6 @@ public:
   static TAffine4 rotationZ(double angle);
   static TAffine4 perspective(double near, double far, double tangent);
 };
-
 
 //=============================================================================
 
@@ -1222,19 +1249,21 @@ public:
   typedef TAngleI Type;
   typedef std::vector<Type> List;
 
-  static const Type min = Type();
-  static const Type max = Type() - Type(1);
+  static const Type min  = Type();
+  static const Type max  = Type() - Type(1);
   static const Type half = ((Type() - Type(1)) >> 1) + Type(1);
 
-  static Type fromDouble(double a)
-    { return Type(round((a/M_2PI + 0.5)*max)); }
-  static double toDouble(Type a)
-    { return ((double)a/(double)max - 0.5)*M_2PI; }
+  static Type fromDouble(double a) {
+    return Type(round((a / M_2PI + 0.5) * max));
+  }
+  static double toDouble(Type a) {
+    return ((double)a / (double)max - 0.5) * M_2PI;
+  }
 
   struct Range {
     Type a0, a1;
-    Range(): a0(), a1() { }
-    Range(Type a0, Type a1): a0(a0), a1(a1) { }
+    Range() : a0(), a1() {}
+    Range(Type a0, Type a1) : a0(a0), a1(a1) {}
     inline bool isEmpty() const { return a0 == a1; }
     inline Range flip() const { return Range(a1, a0); }
   };
@@ -1249,124 +1278,152 @@ public:
     bool m_lapped;
 
   public:
-    inline Iterator(): m_flip(), m_lapped(true)
-      { reset(); }
-    inline explicit Iterator(const List &list, bool flip = false, bool reverse = false)
-      { set(list, flip, reverse); }
-    inline explicit Iterator(const TAngleRangeSet &ranges, bool flip = false, bool reverse = false)
-      { set(ranges, flip, reverse); }
+    inline Iterator() : m_flip(), m_lapped(true) { reset(); }
+    inline explicit Iterator(const List &list, bool flip = false,
+                             bool reverse = false) {
+      set(list, flip, reverse);
+    }
+    inline explicit Iterator(const TAngleRangeSet &ranges, bool flip = false,
+                             bool reverse = false) {
+      set(ranges, flip, reverse);
+    }
 
-    inline Iterator& set(bool full) {
-      m_flip = full; m_lapped = !m_flip;
+    inline Iterator &set(bool full) {
+      m_flip    = full;
+      m_lapped  = !m_flip;
       m_current = m_prebegin = m_begin = m_end = List::const_iterator();
       return *this;
     }
 
-    inline Iterator& reset()
-      { return set(false); }
+    inline Iterator &reset() { return set(false); }
 
-    inline Iterator& set(const List &list, bool flip = false, bool reverse = false) {
-      assert(list.size()%2 == 0);
+    inline Iterator &set(const List &list, bool flip = false,
+                         bool reverse = false) {
+      assert(list.size() % 2 == 0);
       if (list.empty()) {
         set(flip);
       } else {
-        m_flip = flip;
+        m_flip   = flip;
         m_lapped = false;
         if (flip) {
           m_prebegin = list.end() - 1;
-          m_begin = list.begin();
-          m_end = m_prebegin - 1;
+          m_begin    = list.begin();
+          m_end      = m_prebegin - 1;
         } else {
           m_prebegin = list.begin();
-          m_begin = m_prebegin + 1;
-          m_end = list.end() - 1;
+          m_begin    = m_prebegin + 1;
+          m_end      = list.end() - 1;
         }
       }
       m_current = reverse ? m_end : m_begin;
       return *this;
     }
 
-    inline Iterator& set(const TAngleRangeSet &ranges, bool flip = false, bool reverse = false)
-      { return set(ranges.angles(), ranges.isFlipped() != flip, reverse); }
+    inline Iterator &set(const TAngleRangeSet &ranges, bool flip = false,
+                         bool reverse = false) {
+      return set(ranges.angles(), ranges.isFlipped() != flip, reverse);
+    }
 
-    inline const Type a0() const
-      { return valid() ? *(m_current == m_begin ? m_prebegin : m_current - 1) : Type(); }
-    inline const Type a1() const
-      { return valid() ? *m_current : Type(); }
-    inline double d0() const
-      { return toDouble(a0()); }
-    inline double d1() const
-      { return toDouble(a1()); }
+    inline const Type a0() const {
+      return valid() ? *(m_current == m_begin ? m_prebegin : m_current - 1)
+                     : Type();
+    }
+    inline const Type a1() const { return valid() ? *m_current : Type(); }
+    inline double d0() const { return toDouble(a0()); }
+    inline double d1() const { return toDouble(a1()); }
     inline double d1greater() const {
       return !valid() ? (m_flip ? M_PI : -M_PI)
-           : m_current == m_begin && m_prebegin > m_begin
-           ? toDouble(*m_current) + M_2PI : toDouble(*m_current);
+                      : m_current == m_begin && m_prebegin > m_begin
+                            ? toDouble(*m_current) + M_2PI
+                            : toDouble(*m_current);
     }
-    inline Range range() const
-      { return Range(a0(), a1()); }
-    inline int size() const
-      { return (m_end - m_begin)/2 + 1; }
-    inline int index() const
-      { return (m_current - m_begin)/2; }
-    inline int reverseIndex() const
-      { int i = index(); return i == 0 ? 0 : size() - i; }
-    inline bool lapped() const
-      { return m_lapped; }
-    inline bool valid() const
-      { return m_prebegin != m_begin; }
-    inline bool isFull() const
-      { return !valid() && m_flip; }
-    inline bool isEmpty() const
-      { return !valid() && !m_flip; }
+    inline Range range() const { return Range(a0(), a1()); }
+    inline int size() const { return (m_end - m_begin) / 2 + 1; }
+    inline int index() const { return (m_current - m_begin) / 2; }
+    inline int reverseIndex() const {
+      int i = index();
+      return i == 0 ? 0 : size() - i;
+    }
+    inline bool lapped() const { return m_lapped; }
+    inline bool valid() const { return m_prebegin != m_begin; }
+    inline bool isFull() const { return !valid() && m_flip; }
+    inline bool isEmpty() const { return !valid() && !m_flip; }
 
-    inline operator bool() const
-      { return !m_lapped; }
+    inline operator bool() const { return !m_lapped; }
 
-    inline Iterator& operator++() {
-      if (!valid()) { m_lapped = true; return *this; }
+    inline Iterator &operator++() {
+      if (!valid()) {
+        m_lapped = true;
+        return *this;
+      }
       m_lapped = (m_current == m_end);
-      if (m_lapped) m_current = m_begin; else m_current += 2;
+      if (m_lapped)
+        m_current = m_begin;
+      else
+        m_current += 2;
       return *this;
     }
 
-    inline Iterator& operator--() {
-      if (!valid()) { m_lapped = true; return *this; }
+    inline Iterator &operator--() {
+      if (!valid()) {
+        m_lapped = true;
+        return *this;
+      }
       m_lapped = (m_current == m_end);
-      if (m_lapped) m_current = m_end; else m_current -= 2;
+      if (m_lapped)
+        m_current = m_end;
+      else
+        m_current -= 2;
       return *this;
     }
 
-    inline Iterator& operator += (int i) {
-      if (i == 0) { m_lapped = isEmpty(); return *this; }
-      if (!valid()) { m_lapped = true; return *this; }
+    inline Iterator &operator+=(int i) {
+      if (i == 0) {
+        m_lapped = isEmpty();
+        return *this;
+      }
+      if (!valid()) {
+        m_lapped = true;
+        return *this;
+      }
       int ii = index();
-      int s = size();
+      int s  = size();
       if (ii + i >= 0 && ii + i < s) {
-        m_current += i*2;
+        m_current += i * 2;
         m_lapped = false;
       } else {
-        m_current = m_begin + ((ii + s + i%s)%s)*2;
-        m_lapped = true;
+        m_current = m_begin + ((ii + s + i % s) % s) * 2;
+        m_lapped  = true;
       }
       return *this;
     }
 
     inline int operator-(const Iterator &i) const {
-      assert(m_flip == i.m_flip && m_begin == i.m_begin && m_end == i.m_end && m_prebegin == i.m_prebegin);
+      assert(m_flip == i.m_flip && m_begin == i.m_begin && m_end == i.m_end &&
+             m_prebegin == i.m_prebegin);
       int ii = m_current - i.m_current;
       return ii < 0 ? ii + size() : ii;
     }
 
-    inline Iterator operator++() const
-      { Iterator copy(*this); ++(*this); return copy; }
-    inline Iterator operator--() const
-      { Iterator copy(*this); --(*this); return copy; }
-    inline Iterator& operator -= (int i)
-      { return (*this) += -i; }
-    inline Iterator operator+(int i) const
-      { Iterator ii(*this); return ii += i; }
-    inline Iterator operator-(int i) const
-      { Iterator ii(*this); return ii -= i; }
+    inline Iterator operator++() const {
+      Iterator copy(*this);
+      ++(*this);
+      return copy;
+    }
+    inline Iterator operator--() const {
+      Iterator copy(*this);
+      --(*this);
+      return copy;
+    }
+    inline Iterator &operator-=(int i) { return (*this) += -i; }
+    inline Iterator operator+(int i) const {
+      Iterator ii(*this);
+      return ii += i;
+    }
+    inline Iterator operator-(int i) const {
+      Iterator ii(*this);
+      return ii -= i;
+    }
   };
 
 private:
@@ -1378,11 +1435,11 @@ private:
   bool doAdd(Type a0, Type a1);
 
 public:
-  inline explicit TAngleRangeSet(bool fill = false): m_flip(fill) { }
-  inline TAngleRangeSet(const TAngleRangeSet &x, bool flip = false):
-      m_flip(x.isFlipped() != flip), m_angles(x.angles()) { }
+  inline explicit TAngleRangeSet(bool fill = false) : m_flip(fill) {}
+  inline TAngleRangeSet(const TAngleRangeSet &x, bool flip = false)
+      : m_flip(x.isFlipped() != flip), m_angles(x.angles()) {}
 
-  inline const List& angles() const { return m_angles; }
+  inline const List &angles() const { return m_angles; }
   inline bool isFlipped() const { return m_flip; }
   inline bool isEmpty() const { return !m_flip && m_angles.empty(); }
   inline bool isFull() const { return m_flip && m_angles.empty(); }
@@ -1390,8 +1447,14 @@ public:
   bool contains(Type a) const;
   bool check() const;
 
-  inline void clear() { m_flip = false; m_angles.clear(); }
-  inline void fill() { m_flip = true; m_angles.clear(); }
+  inline void clear() {
+    m_flip = false;
+    m_angles.clear();
+  }
+  inline void fill() {
+    m_flip = true;
+    m_angles.clear();
+  }
   inline void invert() { m_flip = !m_flip; }
 
   void set(Type a0, Type a1);
@@ -1414,6 +1477,5 @@ public:
   inline void intersect(const Range &x) { intersect(x.a0, x.a1); }
   void intersect(const TAngleRangeSet &x);
 };
-
 
 #endif  //  __T_GEOMETRY_INCLUDED__

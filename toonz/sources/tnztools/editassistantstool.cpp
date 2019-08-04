@@ -108,20 +108,19 @@ public:
   class Selection final : public TSelection {
   private:
     EditAssistantsTool &tool;
-  public:
-    explicit Selection(EditAssistantsTool &tool):
-      tool(tool) { }
-    void deleteSelection() 
-      { tool.removeSelected(); }
 
-    void enableCommands() override
-      { if (!isEmpty()) enableCommand(this, MI_Clear, &Selection::deleteSelection); }
-    bool isEmpty() const override
-      { return !tool.isSelected(); }
-    void selectNone() override
-      { tool.deselect(); }
+  public:
+    explicit Selection(EditAssistantsTool &tool) : tool(tool) {}
+    void deleteSelection() { tool.removeSelected(); }
+
+    void enableCommands() override {
+      if (!isEmpty())
+        enableCommand(this, MI_Clear, &Selection::deleteSelection);
+    }
+    bool isEmpty() const override { return !tool.isSelected(); }
+    void selectNone() override { tool.deselect(); }
   };
-  
+
 protected:
   enum Mode { ModeImage, ModeAssistant, ModePoint };
 
@@ -151,7 +150,7 @@ protected:
   TMetaImage *m_writeImage;
   TMetaObjectP m_writeObject;
   TAssistant *m_writeAssistant;
-  
+
   Selection *selection;
 
 public:
@@ -168,8 +167,7 @@ public:
       , m_readAssistant()
       , m_writer()
       , m_writeImage()
-      , m_writeAssistant()
-  {
+      , m_writeAssistant() {
     selection = new Selection(*this);
     bind(MetaImage | EmptyTarget);
     m_toolProperties.bind(m_assistantType);
@@ -248,10 +246,9 @@ public:
     }
     return true;
   }
-  
-  TSelection* getSelection() override
-    { return isSelected() ? selection : 0; }
-  
+
+  TSelection *getSelection() override { return isSelected() ? selection : 0; }
+
 protected:
   void close() {
     m_readAssistant = 0;
@@ -450,20 +447,19 @@ protected:
     if (success) {
       notifyImageChanged();
       getApplication()->getCurrentTool()->notifyToolChanged();
-      TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
+      TTool::getApplication()->getCurrentSelection()->setSelection(
+          getSelection());
       getViewer()->GLInvalidateAll();
     }
 
     return success;
   }
-  
+
 public:
-  void deselect()
-    { resetCurrentPoint(); }
-  
-  bool isSelected()
-    { return read(ModeAssistant); }
-  
+  void deselect() { resetCurrentPoint(); }
+
+  bool isSelected() { return read(ModeAssistant); }
+
   bool removeSelected() {
     apply();
     bool success = false;
@@ -484,14 +480,16 @@ public:
 
     resetCurrentPoint();
     getApplication()->getCurrentTool()->notifyToolChanged();
-    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
+    TTool::getApplication()->getCurrentSelection()->setSelection(
+        getSelection());
     getViewer()->GLInvalidateAll();
     return success;
   }
-  
+
   bool preLeftButtonDown() override {
     if (m_assistantType.getIndex() != 0) touchImage();
-    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
+    TTool::getApplication()->getCurrentSelection()->setSelection(
+        getSelection());
     return true;
   }
 
@@ -552,7 +550,8 @@ public:
           touch();
     } else {
       if (Closer closer = write(ModePoint))
-        if (m_writeAssistant->movePoint(m_currentPointName, point.position + m_currentPointOffset))
+        if (m_writeAssistant->movePoint(m_currentPointName,
+                                        point.position + m_currentPointOffset))
           touch();
     }
     m_currentPosition = point.position;
@@ -568,14 +567,16 @@ public:
           touch();
     } else {
       if (Closer closer = write(ModePoint))
-        if (m_writeAssistant->movePoint(m_currentPointName, point.position + m_currentPointOffset))
+        if (m_writeAssistant->movePoint(m_currentPointName,
+                                        point.position + m_currentPointOffset))
           touch();
     }
 
     apply();
     m_assistantType.setIndex(0);
     getApplication()->getCurrentTool()->notifyToolChanged();
-    TTool::getApplication()->getCurrentSelection()->setSelection( getSelection() );
+    TTool::getApplication()->getCurrentSelection()->setSelection(
+        getSelection());
     m_currentPosition = point.position;
     getViewer()->GLInvalidateAll();
     m_dragAllPoints = false;

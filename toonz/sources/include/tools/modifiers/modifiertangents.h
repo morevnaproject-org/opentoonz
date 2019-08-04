@@ -6,7 +6,6 @@
 // TnzTools includes
 #include <tools/inputmanager.h>
 
-
 #undef DVAPI
 #undef DVVAR
 #ifdef TNZTOOLS_EXPORTS
@@ -17,19 +16,17 @@
 #define DVVAR DV_IMPORT_VAR
 #endif
 
-
 //===================================================================
 
 //*****************************************************************************************
 //    TModifierTangents definition
 //*****************************************************************************************
 
-class DVAPI TModifierTangents: public TInputModifier {
+class DVAPI TModifierTangents : public TInputModifier {
 public:
-  class DVAPI Modifier: public TTrackModifier {
+  class DVAPI Modifier : public TTrackModifier {
   public:
-    explicit Modifier(TTrackHandler &handler):
-      TTrackModifier(handler) { }
+    explicit Modifier(TTrackHandler &handler) : TTrackModifier(handler) {}
 
     TInputSavePoint::Holder savePoint;
     TTrackTangentList tangents;
@@ -39,10 +36,9 @@ public:
 
   TTrackTangent calcLastTangent(const TTrack &track) const;
 
-  void modifyTrack(
-    const TTrack &track,
-    const TInputSavePoint::Holder &savePoint,
-    TTrackList &outTracks ) override;
+  void modifyTrack(const TTrack &track,
+                   const TInputSavePoint::Holder &savePoint,
+                   TTrackList &outTracks) override;
 };
 
 #endif

@@ -1239,7 +1239,7 @@ public:
     bool sound_changed = false;
     TTool *tool        = TApp::instance()->getCurrentTool()->getTool();
     TToolViewer *viewer = tool ? tool->getViewer() : nullptr;
-    bool viewer_changed   = false;
+    bool viewer_changed = false;
 
     for (int i = 0; i < xsh->getColumnCount(); i++) {
       /*- 空のカラムの場合は飛ばす -*/
