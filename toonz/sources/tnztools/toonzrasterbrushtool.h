@@ -174,7 +174,7 @@ public:
   bool isMyPaintStyleSelected() { return m_isMyPaintStyleSelected; }
 
 protected:
-  TPropertyGroup m_prop[2];
+  TPropertyGroup m_prop;
 
   TDoublePairProperty m_rasThickness;
   TDoubleProperty m_smooth;

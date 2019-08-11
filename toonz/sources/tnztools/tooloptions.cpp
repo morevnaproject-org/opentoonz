@@ -1859,14 +1859,15 @@ BrushToolOptionsBox::BrushToolOptionsBox(QWidget *parent, TTool *tool,
           SLOT(onRemovePreset()));
 
   if (tool->getTargetType() & TTool::ToonzImage) {
-    assert(m_pencilMode);
-    bool ret = connect(m_pencilMode, SIGNAL(toggled(bool)), this,
-                       SLOT(onPencilModeToggled(bool)));
-    assert(ret);
+    if (m_pencilMode) {
+      bool ret = connect(m_pencilMode, SIGNAL(toggled(bool)), this,
+                         SLOT(onPencilModeToggled(bool)));
+      assert(ret);
 
-    if (m_pencilMode->isChecked()) {
-      m_hardnessLabel->setEnabled(false);
-      m_hardnessField->setEnabled(false);
+      if (m_pencilMode->isChecked()) {
+        m_hardnessLabel->setEnabled(false);
+        m_hardnessField->setEnabled(false);
+      }
     }
   } else if (tool->getTargetType() & TTool::Vectors) {
     // Further vector options
