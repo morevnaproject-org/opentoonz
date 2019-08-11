@@ -847,12 +847,6 @@ ToonzRasterBrushTool::ToonzRasterBrushTool(std::string name, int targetType)
     , m_notifier(0) {
   bind(targetType);
 
-  m_prop[0].bind(m_rasThickness);
-  m_prop[0].bind(m_hardness);
-  m_prop[0].bind(m_smooth);
-  m_prop[0].bind(m_drawOrder);
-  m_prop[0].bind(m_modifierSize);
-  m_prop[0].bind(m_pencil);
   m_pencil.setId("PencilMode");
 
   m_drawOrder.addValue(L"Over All");
@@ -860,10 +854,6 @@ ToonzRasterBrushTool::ToonzRasterBrushTool(std::string name, int targetType)
   m_drawOrder.addValue(L"Palette Order");
   m_drawOrder.setId("DrawOrder");
 
-  m_prop[0].bind(m_pressure);
-  m_prop[0].bind(m_assistants);
-
-  m_prop[0].bind(m_preset);
   m_preset.setId("BrushPreset");
   m_preset.addValue(CUSTOM_WSTR);
   m_pressure.setId("PressureSensitivity");
@@ -1117,6 +1107,8 @@ void ToonzRasterBrushTool::updateWorkAndBackupRasters(const TRect &rect) {
 void ToonzRasterBrushTool::onActivate() {
   if (!m_notifier) m_notifier = new ToonzRasterBrushToolNotifier(this);
 
+  updateCurrentStyle();
+
   if (m_firstTime) {
     m_rasThickness.setValue(
         TDoublePairProperty::Value(RasterBrushMinSize, RasterBrushMaxSize));
@@ -1134,6 +1126,7 @@ void ToonzRasterBrushTool::onActivate() {
   m_brushPad = ToolUtils::getBrushPad(m_rasThickness.getValue().second,
                                       m_hardness.getValue() * 0.01);
   setWorkAndBackupImages();
+  onColorStyleChanged();
 
   m_brushTimer.start();
   // TODO:app->editImageOrSpline();
@@ -1879,7 +1872,26 @@ void ToonzRasterBrushTool::onLeave() {
 TPropertyGroup *ToonzRasterBrushTool::getProperties(int idx) {
   if (!m_presetsLoaded) initPresets();
 
-  return &m_prop[idx];
+  TMyPaintBrushStyle *mypaintStyle = 0;
+  if (TTool::Application *app = getApplication())
+    mypaintStyle =
+        dynamic_cast<TMyPaintBrushStyle *>(app->getCurrentLevelStyle());
+
+  m_prop.clear();
+  if (!mypaintStyle) {
+    m_prop.bind(m_rasThickness);
+    m_prop.bind(m_hardness);
+    m_prop.bind(m_smooth);
+    m_prop.bind(m_drawOrder);
+    m_prop.bind(m_pencil);
+  } else {
+    m_prop.bind(m_modifierSize);
+  }
+  m_prop.bind(m_pressure);
+  m_prop.bind(m_assistants);
+  m_prop.bind(m_preset);
+
+  return &m_prop;
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -2082,6 +2094,7 @@ void ToonzRasterBrushTool::onColorStyleChanged() {
       dynamic_cast<TMyPaintBrushStyle *>(app->getCurrentLevelStyle());
   m_isMyPaintStyleSelected = (mpbs) ? true : false;
   setWorkAndBackupImages();
+  getApplication()->getCurrentTool()->notifyToolOptionsBoxChanged();
   getApplication()->getCurrentTool()->notifyToolChanged();
 }
 
