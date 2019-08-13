@@ -872,6 +872,9 @@ FullColorBrushToolNotifier::FullColorBrushToolNotifier(FullColorBrushTool *tool)
       ret = connect(paletteHandle, SIGNAL(colorStyleSwitched()), this,
                     SLOT(onColorStyleChanged()));
       assert(ret);
+      ret = connect(paletteHandle, SIGNAL(paletteSwitched()), this,
+                    SLOT(onColorStyleChanged()));
+      assert(ret);
     }
   }
 }
