@@ -7,6 +7,12 @@
 #include <limits>
 #include <cassert>
 
+#ifdef MACOSX
+const double line_width_scale = 1.5;
+#else
+const double line_width_scale = 1.0;
+#endif
+
 //************************************************************************
 //    TGuideline implementation
 //************************************************************************
@@ -24,11 +30,11 @@ void TGuideline::drawSegment(const TPointD &p0, const TPointD &p1,
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
-  tglEnableLineSmooth(true, 1.0);
+  tglEnableLineSmooth(true, 1.0 * line_width_scale);
   TPointD d = p1 - p0;
-  double k  = norm2(d);
+  double k = norm2(d);
   if (k > TConsts::epsilon * TConsts::epsilon) {
-    k = 0.5 * pixelSize / sqrt(k);
+    k = 0.5 * pixelSize * line_width_scale / sqrt(k);
     d = TPointD(-k * d.y, k * d.x);
     glColor4dv(colorWhite);
     tglDrawSegment(p0 - d, p1 - d);
@@ -110,7 +116,7 @@ TAssistantPoint::TAssistantPoint(const TStringId &name,
     : name(name)
     , defPosition(defPosition)
     , type(Circle)
-    , position(position)
+    , position(defPosition)
     , radius(10.0)
     , visible(true)
     , selected() {}
@@ -379,11 +385,11 @@ void TAssistant::drawSegment(const TPointD &p0, const TPointD &p1,
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   tglEnableBlending();
-  tglEnableLineSmooth(true, 0.5);
+  tglEnableLineSmooth(true, 1.0 * line_width_scale);
   TPointD d = p1 - p0;
-  double k  = norm2(d);
+  double k = norm2(d);
   if (k > TConsts::epsilon * TConsts::epsilon) {
-    k = 0.5 * pixelSize / sqrt(k);
+    k = 0.5 * pixelSize * line_width_scale / sqrt(k);
     d = TPointD(-k * d.y, k * d.x);
     glColor4dv(colorWhite);
     tglDrawSegment(p0 - d, p1 - d);
@@ -430,7 +436,7 @@ void TAssistant::drawPoint(const TAssistantPoint &point,
   double colorBlack[4] = {0.0, 0.0, 0.0, alpha};
   double colorGray[4]  = {0.5, 0.5, 0.5, alpha};
   double colorWhite[4] = {1.0, 1.0, 1.0, alpha};
-  double width         = 0.5;
+  double width         = 1.0;
 
   if (point.selected) {
     colorBlack[2] = 1.0;
@@ -453,16 +459,16 @@ void TAssistant::drawPoint(const TAssistantPoint &point,
   TPointD gridDy(0.0, pixelSize * radius);
 
   // back line
-  tglEnableLineSmooth(true, 2.0 * std::max(1.0, width));
+  tglEnableLineSmooth(true, 2.0 * width * line_width_scale);
   glColor4dv(colorWhite);
   if (point.type == TAssistantPoint::CircleCross) {
     tglDrawSegment(point.position - crossDx, point.position + crossDx);
     tglDrawSegment(point.position - crossDy, point.position + crossDy);
-  } else
-    tglDrawCircle(point.position, radius * pixelSize);
+  }
+  tglDrawCircle(point.position, radius * pixelSize);
 
   // front line
-  glLineWidth(width);
+  glLineWidth(width * line_width_scale);
   glColor4dv(colorBlack);
   if (point.type == TAssistantPoint::CircleCross) {
     tglDrawSegment(point.position - crossDx, point.position + crossDx);
