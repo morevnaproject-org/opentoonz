@@ -208,6 +208,10 @@ elseif(BUILD_ENV_UNIXLIKE)
     if (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++")
     endif()
+
+    if(BUILD_TARGET_WIN)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+    endif()
 endif()
 
 add_definitions(
