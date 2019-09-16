@@ -204,6 +204,9 @@ elseif(BUILD_ENV_UNIXLIKE)
     find_package(Qt5Widgets)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++ -std=c++11")
+    if(BUILD_TARGET_WIN)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+    endif()
 endif()
 
 add_definitions(
