@@ -15,6 +15,10 @@
 // TnzCore includes
 #include <tgl.h>
 
+// Qt includes
+
+#include <QTimer>
+
 //*****************************************************************************************
 //    static members
 //*****************************************************************************************
@@ -378,6 +382,25 @@ void TInputManager::touchTracks(bool finish) {
     touchTrack(*i, finish);
 }
 
+void TInputManager::tryTouchTrack(TInputState::DeviceId deviceId,
+                                  TInputState::TouchId touchId,
+                                  TPointD last_position) {
+  if (isActive()) {
+    const TTrackP &track = getTrack(deviceId, touchId);
+    if (track && !track->finished() && !track->empty()) {
+      // check if track was already touched - position changed or prev and prevprev positions are equal
+      const TTrackPoint &p = track->back();
+      if (p.position == last_position) {
+        if (track->size() < 2 || track->point(track->size() - 2).position != p.position) {
+          touchTrack(track);
+          processTracks();
+        }
+      }
+    }
+  }
+}
+
+
 void TInputManager::modifierActivate(const TInputModifierP &modifier) {
   modifier->setManager(this);
   modifier->activate();
@@ -523,6 +546,11 @@ void TInputManager::trackEvent(TInputState::DeviceId deviceId,
       addTrackPoint(track, position, pressure ? *pressure : 0.5,
                     tilt ? *tilt : TPointD(), worldPosition, screenPosition,
                     time, final);
+      if (!final && !track->empty()) {
+        // auto repeat last point if user hold cursor at place, to make sharp corner
+        TPointD last_position = track->back().position;
+        QTimer::singleShot(500, this, [=] { tryTouchTrack(deviceId, touchId, last_position); });
+      }
     }
   }
 }

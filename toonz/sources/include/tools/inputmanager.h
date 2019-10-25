@@ -228,6 +228,10 @@ private:
                      const TPointD &screenPosition, double time, bool final);
   void touchTrack(const TTrackP &track, bool finish = false);
   void touchTracks(bool finish = false);
+  
+  void tryTouchTrack(TInputState::DeviceId deviceId,
+                     TInputState::TouchId touchId,
+                     TPointD last_position);
 
   void modifierActivate(const TInputModifierP &modifier);
   void modifierDeactivate(const TInputModifierP &modifier);
