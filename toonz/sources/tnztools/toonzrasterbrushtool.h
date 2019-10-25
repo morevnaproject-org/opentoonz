@@ -126,8 +126,7 @@ public:
 
   ToolType getToolType() const override { return TTool::LevelWriteTool; }
   ToolModifiers getToolModifiers() const override {
-    return ModifierTangents | ModifierAssistants | ModifierCustom |
-           ModifierSegmentation;
+    return ModifierAssistants | ModifierCustom;
   }
   bool isAssistantsEnabled() const override;
   bool isCustomModifiersEnabled() const override { return true; }
