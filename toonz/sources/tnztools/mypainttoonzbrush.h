@@ -92,14 +92,58 @@ public:
 
 class MyPaintToonzBrush {
 private:
+  struct Params {
+    enum { Count = 6 };
+    union {
+      struct { double x, y, pressure, tilt_x, tilt_y, time; };
+      struct { double values[Count]; };
+    };
+
+    inline explicit Params(double x = 0.0, double y = 0.0,
+                           double pressure = 0.0,
+                           double tilt_x = 0.0, double tilt_y = 0.0,
+                           double time = 0.0)
+        : x(x), y(y), pressure(pressure), tilt_x(tilt_x), tilt_y(tilt_y), time(time) {}
+        
+    double& operator[](int i) { return values[i]; }
+    const double& operator[](int i) const { return values[i]; }
+
+    Params& operator+=(const Params &x)
+      { for (int i = 0; i < Count; ++i) values[i] += x[i]; return *this; }
+    Params& operator-=(const Params &x)
+      { for (int i = 0; i < Count; ++i) values[i] -= x[i]; return *this; }
+    Params& operator*=(double x)
+      { for (int i = 0; i < Count; ++i) values[i] *= x; return *this; }
+    Params& operator/=(double x)
+      { return *this *= 1/x; }
+
+    Params operator+(const Params &x) const
+      { Params p(*this); return p += x; }
+    Params operator-(const Params &x) const
+      { Params p(*this); return p -= x; }
+    Params operator*(double x) const
+      { Params p(*this); return p *= x; }
+    Params operator/(double x) const
+      { Params p(*this); return p /= x; }
+  };
+
   TRaster32P ras;
   Raster32PMyPaintSurface mypaintSurface;
   mypaint::Brush brush;
+  bool interpolation;
   bool reset;
+  
+  Params prevprev, prev, current;
 
+  void strokeTo(const Params &p, double prevtime);
+  void strokeBezierSegment(const Params &p0, const Params &p1,
+                           const Params &p2, const Params &p3, int level);
+  
 public:
-  MyPaintToonzBrush(const TRaster32P &ras, RasterController &controller,
-                    const mypaint::Brush &brush);
+  MyPaintToonzBrush(const TRaster32P &ras,
+                    RasterController &controller,
+                    const mypaint::Brush &brush,
+                    bool interpolation = false);
 
   void beginStroke();
   void strokeTo(const TPointD &position, double pressure, const TPointD &tilt,

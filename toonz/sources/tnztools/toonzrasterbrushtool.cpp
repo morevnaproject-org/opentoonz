@@ -1269,7 +1269,7 @@ void ToonzRasterBrushTool::leftButtonDown(const TPointD &pos,
         mypaintBrush.setBaseValue(MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC,
                                   baseSize + modifierSize);
       }
-      m_toonz_brush = new MyPaintToonzBrush(m_workRas, *this, mypaintBrush);
+      m_toonz_brush = new MyPaintToonzBrush(m_workRas, *this, mypaintBrush, true);
       m_strokeRect.empty();
       m_strokeSegmentRect.empty();
       m_toonz_brush->beginStroke();
