@@ -116,17 +116,26 @@ public:
     return chain ? chain : Pointer(new TKeyStateT());
   }
 
-  bool isEmpty() {
-    return value == none() && (!previous || previous->isEmpty());
-  }
-  bool isPressed(const Type &value) { return find(value); }
+  Pointer released_all(TTimerTicks)
+    { return isEmpty() ? Pointer(this) : Pointer(new TKeyStateT()); }
+  
+  bool isEmpty()
+    { return value == none() && (!previous || previous->isEmpty()); }
+  bool isPressed(const Type &value)
+    { return find(value); }
 
-  Pointer pressed(const Type &value, long ticks) {
-    return change(true, value, ticks);
-  }
-  Pointer released(const Type &value, long ticks) {
-    return change(false, value, ticks);
-  }
+  Pointer pressed(const Type &value, TTimerTicks ticks)
+    { return change(true, value, ticks); }
+  Pointer released(const Type &value, TTimerTicks ticks)
+    { return change(false, value, ticks); }
+
+  // low-level functions for debug
+  const Type& get_last_pressed_value() const
+    { return value; }
+  const TTimerTicks& get_last_pressed_ticks() const
+    { return ticks; }
+  const Pointer& get_previous_pressed_state() const
+    { return previous; }
 };
 
 //*****************************************************************************************
@@ -141,6 +150,9 @@ public:
   typedef TKeyStateT<Type> State;
   typedef typename TKeyStateT<Type>::Pointer StatePointer;
   typedef typename TKeyStateT<Type>::Holder StateHolder;
+  
+  typedef std::map<TTimerTicks, StatePointer> StateMap;
+  typedef std::multiset<TTimerTicks> LockSet;
 
   class Holder {
   private:
@@ -197,8 +209,8 @@ public:
   };
 
 private:
-  std::map<TTimerTicks, StatePointer> m_states;
-  std::multiset<TTimerTicks> m_locks;
+  StateMap m_states;
+  LockSet m_locks;
 
   void autoRemove() {
     TTimerTicks ticks =
@@ -239,14 +251,25 @@ public:
     autoRemove();
     return current();
   }
-
-  StatePointer pressed(Type value, TTimerTicks ticks) {
-    return change(true, value, ticks);
+  
+  StatePointer released_all(TTimerTicks ticks) {
+    StatePointer state = current()->released_all(ticks);
+    if (state != current() && ticks > m_states.rbegin()->first)
+      m_states[ticks] = state;
+    autoRemove();
+    return current();
   }
 
-  StatePointer released(Type value, TTimerTicks ticks) {
-    return change(false, value, ticks);
-  }
+  StatePointer pressed(Type value, TTimerTicks ticks)
+    { return change(true, value, ticks); }
+  StatePointer released(Type value, TTimerTicks ticks)
+    { return change(false, value, ticks); }
+  
+  // low-level functions for debug
+  const StateMap& get_stored_states() const
+    { return m_states; }
+  const LockSet& get_locks() const
+    { return m_locks; }
 };
 
 #endif

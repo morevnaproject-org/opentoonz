@@ -1361,14 +1361,15 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
   if (m_freezedStatus != NO_FREEZED) return;
 
   TTool *tool = TApp::instance()->getCurrentTool()->getTool();
-  if (!tool || !tool->isEnabled()) return;
-  tool->setViewer(this);
+  if (tool && tool->isEnabled())
+    tool->setViewer(this);
 
   TKey key = TKey((Qt::Key)event->key(), false,
                   (bool)(event->modifiers() & Qt::KeypadModifier));
-
   getInputManager()->keyEvent(false, key, TToolTimer::ticks(), event);
 
+  if (!tool || !tool->isEnabled()) return;
+  
   if (key.isModifier()) {
     // quando l'utente preme shift/ctrl ecc. alcuni tool (es. pinch) devono
     // cambiare subito la forma del cursore, senza aspettare il prossimo move
@@ -1399,6 +1400,13 @@ void SceneViewer::keyReleaseEvent(QKeyEvent *event) {
     event->accept();
   else
     event->ignore();
+}
+
+//-----------------------------------------------------------------------------
+
+void SceneViewer::focusOutEvent(QFocusEvent* event) {
+  getInputManager()->releaseAllEvent(TToolTimer::ticks());
+  QWidget::focusOutEvent(event);
 }
 
 //-----------------------------------------------------------------------------

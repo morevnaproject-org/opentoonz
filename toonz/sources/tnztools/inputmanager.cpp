@@ -19,12 +19,68 @@
 
 #include <QTimer>
 
+#include <iostream>
+
 //*****************************************************************************************
 //    static members
 //*****************************************************************************************
 
-static const bool debugInputManager               = false;
-TInputState::TouchId TInputManager::m_lastTouchId = 0;
+constexpr static const bool debugInputManagerTracks = false;
+constexpr static const bool debugInputManagerKeys   = false;
+TInputState::TouchId TInputManager::m_lastTouchId   = 0;
+
+namespace {
+  void printKey(const TInputState::Key &key)
+    { std::cout << key.key << "-" << (int)key.generic << "-" << (int)key.numPad; }
+  void printKey(const TInputState::Button &key)
+    { std::cout << key; }
+
+
+  template<typename T>
+  void printKeyStateT(const TKeyStateT<T> &state, const std::string &prefix = std::string()) {
+    if (state.get_previous_pressed_state())
+      printKeyStateT(*state.get_previous_pressed_state(), prefix);
+    std::cout << prefix << state.get_last_pressed_ticks() << " : ";
+    printKey( state.get_last_pressed_value() );
+    std::cout << std::endl;
+  }
+
+  template<typename T>
+  void printKeyHistoryT(const TKeyHistoryT<T> &history, const std::string &prefix = std::string()) {
+    typedef typename TKeyHistoryT<T>::LockSet LockSet;
+    typedef typename TKeyHistoryT<T>::StateMap StateMap;
+    
+    std::cout << prefix << "states:" << std::endl;
+    const StateMap &states = history.get_stored_states();
+    for(typename StateMap::const_iterator i = states.begin(); i != states.end(); ++i) {
+      std::cout << prefix << "  ticks: " << i->first << std::endl;
+      printKeyStateT(*i->second, prefix + "    ");
+    }
+    
+    std::cout << prefix << "locks: ";
+    const LockSet &locks = history.get_locks();
+    for(typename LockSet::const_iterator i = locks.begin(); i != locks.end(); ++i)
+      std::cout << *i;
+    std::cout << std::endl;
+  }
+  
+  void printInputState(const TInputState &state, const TTimerTicks &ticks, const std::string &prefix = std::string()) {
+    std::cout << prefix << "input state at " << ticks << ":" << std::endl;
+
+    std::cout << prefix << "  ticks:" << state.ticks() << std::endl;
+
+    std::cout << prefix << "  key history:" << std::endl;
+    printKeyHistoryT(*state.keyHistory(), prefix + "    ");
+
+    const TInputState::ButtonHistoryMap &button_histories = state.buttonHistories();
+    for(TInputState::ButtonHistoryMap::const_iterator i = button_histories.begin(); i != button_histories.end(); ++i) {
+      std::cout << prefix << "  button history, device " << i->first << ":" << std::endl;
+      printKeyHistoryT(*i->second, prefix + "    ");
+    }
+    
+    std::cout.flush();
+  }
+}
 
 //*****************************************************************************************
 //    TInputModifier implementation
@@ -529,7 +585,10 @@ void TInputManager::trackEvent(TInputState::DeviceId deviceId,
                                TInputState::TouchId touchId,
                                const TPointD &screenPosition,
                                const double *pressure, const TPointD *tilt,
-                               bool final, TTimerTicks ticks) {
+                               bool final, TTimerTicks ticks)
+{
+  if (debugInputManagerKeys) printInputState(state, ticks);
+
   if (isActive() && getInputTracks().empty()) {
     TToolViewer *viewer = getTool()->getViewer();
     updateDpiScale();
@@ -565,6 +624,7 @@ bool TInputManager::keyEvent(bool press, TInputState::Key key,
   bool result     = false;
   bool wasPressed = state.isKeyPressed(key);
   state.keyEvent(press, key, ticks);
+  if (debugInputManagerKeys) printInputState(state, ticks);
   if (isActive()) {
     processTracks();
     result = getTool()->keyEvent(press, key, event, *this);
@@ -581,6 +641,7 @@ void TInputManager::buttonEvent(bool press, TInputState::DeviceId deviceId,
                                 TInputState::Button button, TTimerTicks ticks) {
   bool wasPressed = state.isButtonPressed(deviceId, button);
   state.buttonEvent(press, deviceId, button, ticks);
+  if (debugInputManagerKeys) printInputState(state, ticks);
   if (isActive()) {
     processTracks();
     getTool()->buttonEvent(press, deviceId, button, *this);
@@ -590,6 +651,35 @@ void TInputManager::buttonEvent(bool press, TInputState::DeviceId deviceId,
       // hoverEvent(getInputHovers());
     }
   }
+}
+
+void TInputManager::releaseAllEvent(TTimerTicks ticks) {
+  // finish all tracks
+  finishTracks();
+  
+  // release all buttons
+  const TInputState::ButtonHistoryMap button_histories;
+  typedef std::map<TInputState::DeviceId, TInputState::ButtonState::Pointer> StateMap;
+  StateMap button_states;
+  for(TInputState::ButtonHistoryMap::const_iterator i = button_histories.begin(); i != button_histories.end(); ++i)
+    button_states[i->first] = i->second->current();
+  for(StateMap::const_iterator i = button_states.begin(); i != button_states.end(); ++i) {
+    for(TInputState::ButtonState::Pointer ks = i->second; ks; ks = ks->get_previous_pressed_state()) {
+      TInputState::DeviceId device_id = i->first;
+      TInputState::Button button = ks->get_last_pressed_value();
+      buttonEvent(false, device_id, button, ticks);
+    }
+  }
+  
+  // release all keys
+  for(TInputState::KeyState::Pointer ks = state.keyState(); ks; ks = ks->get_previous_pressed_state()) {
+    TInputState::Key key = ks->get_last_pressed_value();
+    QKeyEvent event(QEvent::KeyRelease, key.key, 0);
+    keyEvent(false, key, ticks, &event);
+  }
+
+  // just to be sure
+  state.releaseAll(ticks);
 }
 
 void TInputManager::hoverEvent(const THoverList &hovers) {
@@ -622,7 +712,7 @@ void TInputManager::textEvent(const std::wstring &preedit,
     getTool()->onInputText(preedit, commit, replacementStart, replacementLen);
 }
 
-void TInputManager::enverEvent() {
+void TInputManager::enterEvent() {
   if (isActive()) getTool()->onEnter();
 }
 
@@ -631,7 +721,7 @@ void TInputManager::leaveEvent() {
 }
 
 TRectD TInputManager::calcDrawBounds() {
-  if (debugInputManager) return TConsts::infiniteRectD;
+  if (debugInputManagerTracks) return TConsts::infiniteRectD;
 
   TRectD bounds;
   if (isActive()) {
@@ -667,7 +757,7 @@ void TInputManager::draw() {
   TToolViewer *viewer = getViewer();
 
   // paint not sent sub-tracks
-  if (debugInputManager || m_savePointsSent < (int)m_savePoints.size()) {
+  if (debugInputManagerTracks || m_savePointsSent < (int)m_savePoints.size()) {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     tglEnableBlending();
     tglEnableLineSmooth(true, 0.5);
@@ -680,7 +770,7 @@ void TInputManager::draw() {
       if (TrackHandler *handler =
               dynamic_cast<TrackHandler *>(track.handler.getPointer())) {
         int start =
-            debugInputManager ? 0 : handler->saves[m_savePointsSent] - 1;
+            debugInputManagerTracks ? 0 : handler->saves[m_savePointsSent] - 1;
         if (start < 0) start = 0;
         if (start + 1 < track.size()) {
           int level     = m_savePointsSent;
@@ -708,7 +798,7 @@ void TInputManager::draw() {
               radius += 2.0;
             }
 
-            if (debugInputManager) {
+            if (debugInputManagerTracks) {
               glColor4d(0.0, 0.0, 0.0, 0.25);
               tglDrawCircle(b, radius * pixelSize);
             }

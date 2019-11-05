@@ -276,6 +276,7 @@ public:
   TRectD getGeometry() const override;
 
   void setFocus(Qt::FocusReason reason) { QWidget::setFocus(reason); };
+  void focusOutEvent(QFocusEvent* event) override;
 
   void setIsLocator() { m_isLocator = true; }
   void setIsStyleShortcutSwitchable() { m_isStyleShortcutSwitchable = true; }
