@@ -93,7 +93,7 @@ bool parseFrame(const std::wstring &str, int &frame, char &letter,
       str[i] >= L'a' && str[i] <= L'z'
           ? str[i++] + ('a' - L'a')
           : str[i] >= L'A' && str[i] <= L'Z' ? str[i++] + ('A' - L'A') : '\0';
-  if (number == 0 || i < (int)str.size()) return false;
+  if (digits <= 0 || i < (int)str.size()) return false;
 
   frame   = number;
   letter  = l;
