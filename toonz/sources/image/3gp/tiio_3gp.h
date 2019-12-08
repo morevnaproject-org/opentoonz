@@ -7,10 +7,13 @@
 #include "tiio_3gp_proxy.h"
 #else
 
-#include <windows.h>
-
+// Toonz includes
 #include "tlevel_io.h"
 #include "tthreadmessage.h"
+#include "tcommon.h"
+
+// Windows include
+#include <windows.h>
 
 namespace QuickTime {
 #define list List

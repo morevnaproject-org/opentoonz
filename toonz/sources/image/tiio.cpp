@@ -17,12 +17,32 @@
 // why (it would be included anyway though)
 #include <math.h>
 
+// Common includes
+#include "./quantel/tiio_quantel.h"
+#include "./sgi/tiio_sgi.h"
+#include "./tga/tiio_tga.h"
+#include "./png/tiio_png.h"
+#include "./tif/tiio_tif.h"
+#include "./tzp/tiio_tzp.h"
+#include "./tzp/tiio_plt.h"
+#include "./psd/tiio_psd.h"
+#include "./avi/tiio_avi.h"
+#include "./pli/tiio_pli.h"
+#include "./tzl/tiio_tzl.h"
+#include "./tzm/tiio_tzm.h"
+#include "./svg/tiio_svg.h"
+#include "./ffmpeg/tiio_gif.h"
+#include "./ffmpeg/tiio_webm.h"
+#include "./ffmpeg/tiio_mp4.h"
+#include "./mesh/tiio_mesh.h"
+#include "./sprite/tiio_sprite.h"
+
 // Platform-specific includes
 #if defined(_WIN32)
 
+#include "./zcc/tiio_zcc.h"
 #include "./mov/tiio_mov.h"
 #include "./3gp/tiio_3gp.h"
-#include "./zcc/tiio_zcc.h"
 
 #if !defined(x64) && !defined(__GNUC__)
 
@@ -58,26 +78,6 @@
 #include "./mov/tiio_mov_proxy.h"
 #include "./3gp/tiio_3gp_proxy.h"
 #endif
-
-// Common includes
-#include "./quantel/tiio_quantel.h"
-#include "./sgi/tiio_sgi.h"
-#include "./tga/tiio_tga.h"
-#include "./png/tiio_png.h"
-#include "./tif/tiio_tif.h"
-#include "./tzp/tiio_tzp.h"
-#include "./tzp/tiio_plt.h"
-#include "./psd/tiio_psd.h"
-#include "./avi/tiio_avi.h"
-#include "./pli/tiio_pli.h"
-#include "./tzl/tiio_tzl.h"
-#include "./tzm/tiio_tzm.h"
-#include "./svg/tiio_svg.h"
-#include "./ffmpeg/tiio_gif.h"
-#include "./ffmpeg/tiio_webm.h"
-#include "./ffmpeg/tiio_mp4.h"
-#include "./mesh/tiio_mesh.h"
-#include "./sprite/tiio_sprite.h"
 
 //-------------------------------------------------------------------
 

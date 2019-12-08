@@ -9,6 +9,7 @@
 
 #include "tlevel_io.h"
 #include "tthread.h"
+#include "tthreadmessage.h"
 
 #include <Carbon/Carbon.h>
 #include <QuickTime/Movies.h>
@@ -16,7 +17,6 @@
 #include <QuickTime/QuickTimeComponents.h>
 
 #include "tquicktime.h"
-#include "tthreadmessage.h"
 
 class TImageWriter3gp;
 class TImageReader3gp;

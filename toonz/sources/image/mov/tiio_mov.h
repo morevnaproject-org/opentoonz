@@ -7,13 +7,13 @@
 #include "tiio_mov_proxy.h"
 #else
 
-// Windows include
-#include <windows.h>
-
 // Toonz includes
 #include "tlevel_io.h"
 #include "tthreadmessage.h"
 #include "tcommon.h"
+
+// Windows include
+#include <windows.h>
 
 // QuickTime includes
 namespace QuickTime {
