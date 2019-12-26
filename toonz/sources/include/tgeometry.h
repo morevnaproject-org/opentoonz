@@ -1432,7 +1432,7 @@ private:
 
   int find(Type a) const;
   void insert(Type a);
-  bool doAdd(Type a0, Type a1);
+  void doAdd(Type a0, Type a1);
 
 public:
   inline explicit TAngleRangeSet(bool fill = false) : m_flip(fill) {}
