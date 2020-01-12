@@ -1277,6 +1277,8 @@ public:
     List::const_iterator m_current;
     bool m_lapped;
 
+    static List::const_iterator empty_iterator();
+
   public:
     inline Iterator() : m_flip(), m_lapped(true) { reset(); }
     inline explicit Iterator(const List &list, bool flip = false,
@@ -1291,7 +1293,7 @@ public:
     inline Iterator &set(bool full) {
       m_flip    = full;
       m_lapped  = !m_flip;
-      m_current = m_prebegin = m_begin = m_end = List::const_iterator();
+      m_current = m_prebegin = m_begin = m_end = empty_iterator();
       return *this;
     }
 
