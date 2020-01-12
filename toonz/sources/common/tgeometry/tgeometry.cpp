@@ -288,11 +288,6 @@ TAffine4 TAffine4::rotationZ(double angle) {
 
 //==================================================================================================
 
-TAngleRangeSet::List::const_iterator TAngleRangeSet::Iterator::empty_iterator() {
-  static List list;
-  return list.end();
-}
-
 int TAngleRangeSet::find(Type a) const {
   assert(!m_angles.empty());
   int i0 = 0, i1 = m_angles.size() - 1;

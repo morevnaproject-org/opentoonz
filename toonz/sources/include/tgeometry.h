@@ -1259,7 +1259,12 @@ public:
   static double toDouble(Type a) {
     return ((double)a / (double)max - 0.5) * M_2PI;
   }
+  static List::const_iterator empty_iterator() {
+    static List list;
+    return list.end();
+  }
 
+  
   struct Range {
     Type a0, a1;
     Range() : a0(), a1() {}
@@ -1276,8 +1281,6 @@ public:
     List::const_iterator m_end;
     List::const_iterator m_current;
     bool m_lapped;
-
-    static List::const_iterator empty_iterator();
 
   public:
     inline Iterator() : m_flip(), m_lapped(true) { reset(); }
