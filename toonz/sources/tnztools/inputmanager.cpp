@@ -122,6 +122,7 @@ TInputManager::TInputManager():
   m_viewer(),
   m_tracks(1),
   m_hovers(1),
+  m_started(),
   m_savePointsSent()
 {
   // assign onToolSwitched
@@ -222,6 +223,13 @@ TInputManager::paintTracks() {
     }
     TTrackList &subTracks = m_tracks.back();
 
+    // is paint started?
+    if (!m_started && !subTracks.empty()) {
+      m_started = true;
+      TTool::getApplication()->getCurrentTool()->setToolBusy(true);
+      tool->paintBegin();
+    }
+
     // create handlers
     for(TTrackList::const_iterator i = subTracks.begin(); i != subTracks.end(); ++i)
       if (!(*i)->handler)
@@ -262,7 +270,11 @@ TInputManager::paintTracks() {
         paintApply((int)m_savePoints.size(), subTracks);
         for(std::vector<TTrackList>::iterator i = m_tracks.begin(); i != m_tracks.end(); ++i)
           i->clear();
-        TTool::getApplication()->getCurrentTool()->setToolBusy(false);
+        if (m_started) {
+          tool->paintEnd();
+          TTool::getApplication()->getCurrentTool()->setToolBusy(false);
+          m_started = false;
+        }
       }
       break;
     }
@@ -418,6 +430,7 @@ void
 TInputManager::reset() {
   // forget about tool paint stack
   // assuime it was already reset by outside
+  m_started = false;
   m_savePointsSent = 0;
 
   // reset save point
@@ -518,9 +531,6 @@ TInputManager::trackEvent(
   }
 
   if (isActive()) {
-    if (getInputTracks().empty())
-      TTool::getApplication()->getCurrentTool()->setToolBusy(true);
-
     TTrackP track = getTrack(deviceId, touchId, ticks, (bool)pressure, (bool)tilt);
     if (!track->finished()) {
       double time = (double)(ticks - track->ticks())*TToolTimer::step - track->timeOffset();
