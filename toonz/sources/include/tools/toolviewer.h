@@ -22,6 +22,12 @@
 #endif
 
 
+//====================================================
+
+//  Forward declarations
+
+class TInputManager;
+
 //===================================================================
 
 //*****************************************************************************************
@@ -43,6 +49,8 @@ protected:
 public:
   TToolViewer() {}
   virtual ~TToolViewer() {}
+
+  virtual TInputManager* getInputManager() const = 0;
 
   const ImagePainter::VisualSettings &visualSettings() const {
     return m_visualSettings;

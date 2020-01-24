@@ -15,6 +15,7 @@ set(MOC_HEADERS
     stylepickertool.h
 	viewtools.h
     toonzrasterbrushtool.h
+    ../include/tools/inputmanager.h
 )
 
 set(HEADERS ${MOC_HEADERS}
@@ -43,7 +44,6 @@ set(HEADERS ${MOC_HEADERS}
     ../include/tools/keyhistory.h
     ../include/tools/inputstate.h
     ../include/tools/track.h
-    ../include/tools/inputmanager.h
 )
 
 set(SOURCES

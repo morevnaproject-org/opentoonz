@@ -603,6 +603,25 @@ TTool::paintTracks(const TTrackList &tracks) {
 
 //-----------------------------------------------------------------------------
 
+int
+TTool::paintApply(int count) {
+  if (count <= 0) return 0;
+  for(int i = 0; i < count; ++i)
+    if (!paintApply())
+      return i;
+  return count;
+}
+
+//-----------------------------------------------------------------------------
+
+void
+TTool::paintPop(int count) {
+  for(int i = 0; i < count; ++i)
+    paintPop();
+}
+
+//-----------------------------------------------------------------------------
+
 TXsheet *TTool::getXsheet() const {
   if (!m_application) return 0;
   return m_application->getCurrentXsheet()->getXsheet();
