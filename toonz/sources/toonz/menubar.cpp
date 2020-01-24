@@ -1342,6 +1342,7 @@ QMenuBar *StackedMenuBar::createFullMenuBar() {
   addMenuItem(windowsMenu, MI_OpenBatchServers);
   addMenuItem(windowsMenu, MI_OpenCleanupSettings);
   addMenuItem(windowsMenu, MI_OpenColorModel);
+  addMenuItem(windowsMenu, MI_OpenAdvancedColorSelector);
 #ifdef LINETEST
   addMenuItem(windowsMenu, MI_OpenExport);
 #endif
