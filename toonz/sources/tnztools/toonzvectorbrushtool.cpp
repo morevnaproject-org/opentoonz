@@ -707,7 +707,7 @@ void ToonzVectorBrushTool::leftButtonDown(const TPointD &pos,
   if (m_pressure.getValue() && e.m_pressure == 1.0)
     thickness     = m_thickness.getValue().first * 0.5;
   m_currThickness = thickness;
-  m_smoothStroke.beginStroke(m_smooth.getValue());
+  m_smoothStroke.beginStroke(4*m_smooth.getValue());
 
   if (m_foundFirstSnap) {
     addTrackPoint(TThickPoint(m_firstSnapPoint, thickness),
@@ -763,7 +763,7 @@ void ToonzVectorBrushTool::leftButtonDrag(const TPointD &pos,
         TRectD(m_lastSnapPoint - snapThick, m_lastSnapPoint + snapThick);
 
   if (e.isShiftPressed()) {
-    m_smoothStroke.clearPoints();
+    m_smoothStroke.endStroke();
     m_track.add(TThickPoint(m_brushPos, thickness),
                 getPixelSize() * getPixelSize());
     m_track.removeMiddlePoints();
@@ -1085,23 +1085,21 @@ bool ToonzVectorBrushTool::doFrameRangeStrokes(TFrameId firstFrameId,
 void ToonzVectorBrushTool::addTrackPoint(const TThickPoint &point,
                                          double pixelSize2) {
   m_smoothStroke.addPoint(point);
-  std::vector<TThickPoint> pts;
-  m_smoothStroke.getSmoothPoints(pts);
-  for (size_t i = 0; i < pts.size(); ++i) {
+  std::vector<TThickPoint> &pts = m_smoothStroke.points();
+  for (size_t i = 0; i < pts.size(); ++i)
     m_track.add(pts[i], pixelSize2);
-  }
+  pts.clear();
 }
 
 //--------------------------------------------------------------------------------------------------
 
 void ToonzVectorBrushTool::flushTrackPoint() {
   m_smoothStroke.endStroke();
-  std::vector<TThickPoint> pts;
-  m_smoothStroke.getSmoothPoints(pts);
+  std::vector<TThickPoint> &pts = m_smoothStroke.points();
   double pixelSize2 = getPixelSize() * getPixelSize();
-  for (size_t i = 0; i < pts.size(); ++i) {
+  for (size_t i = 0; i < pts.size(); ++i)
     m_track.add(pts[i], pixelSize2);
-  }
+  pts.clear();
 }
 
 //---------------------------------------------------------------------------------------------------------------
