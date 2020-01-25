@@ -10,6 +10,11 @@
 // Windows include
 #include <windows.h>
 
+// Toonz includes
+#include "tlevel_io.h"
+#include "tthreadmessage.h"
+#include "tcommon.h"
+
 // QuickTime includes
 namespace QuickTime {
 #define list QuickTime_list
@@ -39,11 +44,6 @@ namespace QuickTime {
 
 #include "tquicktime.h"
 }  // namespace QuickTime
-
-// Toonz includes
-#include "tlevel_io.h"
-#include "tthreadmessage.h"
-#include "tcommon.h"
 
 #undef DVAPI
 #undef DVVAR

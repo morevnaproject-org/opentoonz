@@ -9,6 +9,9 @@
 
 #include <windows.h>
 
+#include "tlevel_io.h"
+#include "tthreadmessage.h"
+
 namespace QuickTime {
 #define list List
 #define map Map
@@ -35,9 +38,6 @@ namespace QuickTime {
 #undef QT_int_fast16_t
 #undef QT_uint_fast16_t
 }
-
-#include "tlevel_io.h"
-#include "tthreadmessage.h"
 
 using namespace QuickTime;
 

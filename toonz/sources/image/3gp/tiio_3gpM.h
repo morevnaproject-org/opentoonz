@@ -7,6 +7,9 @@
 #include "tiio_3gp_proxy.h"
 #else
 
+#include "tlevel_io.h"
+#include "tthread.h"
+
 #include <Carbon/Carbon.h>
 #include <QuickTime/Movies.h>
 #include <QuickTime/ImageCompression.h>
@@ -14,9 +17,6 @@
 
 #include "tquicktime.h"
 #include "tthreadmessage.h"
-
-#include "tlevel_io.h"
-#include "tthread.h"
 
 class TImageWriter3gp;
 class TImageReader3gp;
