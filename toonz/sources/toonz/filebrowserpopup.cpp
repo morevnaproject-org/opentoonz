@@ -1651,8 +1651,7 @@ bool SaveLevelAsPopup::execute() {
     DvDirModel::instance()->refreshFolder(fp.getParentDir());
 
     // reset undo memory!!
-    if (Preferences::instance()->getBoolValue(resetUndoOnSavingLevel))
-      TUndoManager::manager()->reset();
+    TUndoManager::manager()->reset();
   }
 
   if (ret)

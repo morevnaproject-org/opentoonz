@@ -432,8 +432,6 @@ void Preferences::definePreferenceItems() {
   // Saving
   define(rasterBackgroundColor, "rasterBackgroundColor", QMetaType::QColor,
          QColor(Qt::white));
-  define(resetUndoOnSavingLevel, "resetUndoOnSavingLevel", QMetaType::Bool,
-         true);
 
   setCallBack(rasterBackgroundColor, &Preferences::setRasterBackgroundColor);
 
