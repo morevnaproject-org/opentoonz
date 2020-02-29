@@ -1,7 +1,7 @@
 
 #include "viewtools.h"
 
-#include "tools/cursors.h"
+#include "toonzqt/cursors.h"
 #include "tgeometry.h"
 
 #include <math.h>

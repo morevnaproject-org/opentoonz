@@ -28,12 +28,12 @@
 #include "toonz/stageobjectutil.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/selection.h"
 #include "toonzqt/selectioncommandids.h"
 
 // TnzTools includes
 #include "tools/tool.h"
-#include "tools/cursors.h"
 #include "tools/toolutils.h"
 
 // Qt includes

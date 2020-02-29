@@ -6,8 +6,9 @@
 #include "tstrokeutil.h"
 #include "tstrokedeformations.h"
 #include "tmathutil.h"
-#include "tools/cursors.h"
 #include "drawutil.h"
+
+#include "toonzqt/cursors.h"
 
 #include "toonz/tobjecthandle.h"
 #include "toonz/txshlevelhandle.h"

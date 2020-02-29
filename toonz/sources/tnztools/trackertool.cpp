@@ -2,11 +2,11 @@
 
 #include "tools/tool.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 
 #include "toonz/tframehandle.h"
 #include "toonz/txshlevelhandle.h"
 #include "toonz/tscenehandle.h"
+#include "toonzqt/cursors.h"
 #include "toonzqt/selectioncommandids.h"
 
 #include "toonzqt/selection.h"

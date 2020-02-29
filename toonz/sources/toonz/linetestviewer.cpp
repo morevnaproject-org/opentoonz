@@ -24,8 +24,8 @@
 #include "toonz/sceneproperties.h"
 #include "toonz/tcamera.h"
 #include "tools/toolhandle.h"
-#include "tools/cursormanager.h"
 #include "tools/toolcommandids.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/menubarcommand.h"
 #include "toonzqt/imageutils.h"
 

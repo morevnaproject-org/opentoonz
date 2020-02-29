@@ -13,6 +13,8 @@
 #include "toonzqt/gutil.h"
 #include "toonzqt/imageutils.h"
 #include "toonzqt/dvscrollwidget.h"
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 
 // TnzLib includes
 #include "toonz/txsheethandle.h"
@@ -30,9 +32,6 @@
 #include "toonz/txshleveltypes.h"
 
 #include "../toonz/menubarcommandids.h"
-
-#include "tools/cursormanager.h"
-#include "tools/cursors.h"
 
 // Qt includes
 #include <QGraphicsSceneMouseEvent>

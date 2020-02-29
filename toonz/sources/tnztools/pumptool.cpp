@@ -21,7 +21,9 @@
 // TnzTools includes
 #include "tools/tool.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
+
+// TnzQt includes
+#include "toonzqt/cursors.h"
 
 // Qt includes
 #include <QCoreApplication>  // For Qt translation support

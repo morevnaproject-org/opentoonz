@@ -19,10 +19,10 @@
 #include "orientation.h"
 
 // TnzTools includes
-#include "tools/cursormanager.h"
 #include "tools/toolhandle.h"
 
 // TnzQt includes
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/gutil.h"
 #include "toonzqt/tselectionhandle.h"
 #include "historytypes.h"

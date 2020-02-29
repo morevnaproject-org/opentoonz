@@ -16,7 +16,6 @@
 #include "tvectorimage.h"
 #include "ttoonzimage.h"
 #include "toonz/toonzimageutils.h"
-#include "tools/cursors.h"
 #include "tundo.h"
 #include "tvectorgl.h"
 #include "tgl.h"
@@ -24,6 +23,7 @@
 #include "tvectorrenderdata.h"
 #include "toonz/tpalettehandle.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/selection.h"
 #include "toonzqt/imageutils.h"
 #include "trop.h"

@@ -11,11 +11,11 @@
 
 #include "tmathutil.h"
 #include "tstroke.h"
-#include "tools/cursors.h"
 #include "tundo.h"
 #include "tvectorimage.h"
 #include "tthreadmessage.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/imageutils.h"
 #include "toonzqt/tselectionhandle.h"
 

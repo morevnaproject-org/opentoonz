@@ -11,7 +11,7 @@
 #include "toonz/strokegenerator.h"
 
 #include "tools/tool.h"
-#include "tools/cursors.h"
+#include "toonzqt/cursors.h"
 #include "mypainttoonzbrush.h"
 
 #include <QCoreApplication>

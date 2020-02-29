@@ -3,8 +3,8 @@
 #ifndef TOOLVIEWER_INCLUDED
 #define TOOLVIEWER_INCLUDED
 
-// TnzTools includes
-#include "tools/cursors.h"
+// TnzQt includes
+#include "toonzqt/cursors.h"
 
 // TnzLib includes
 #include "toonz/imagepainter.h"

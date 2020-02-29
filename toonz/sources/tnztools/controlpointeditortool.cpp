@@ -10,8 +10,9 @@
 
 #include "tools/tool.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 #include "tools/toolhandle.h"
+
+#include "toonzqt/cursors.h"
 
 #include "toonz/tframehandle.h"
 #include "toonz/tcolumnhandle.h"
