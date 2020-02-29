@@ -7,9 +7,9 @@
 #include "tstroke.h"
 #include "tvectorimage.h"
 #include "tmathutil.h"
-#include "tools/cursors.h"
 #include "tproperty.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/imageutils.h"
 
 #include "toonz/tframehandle.h"

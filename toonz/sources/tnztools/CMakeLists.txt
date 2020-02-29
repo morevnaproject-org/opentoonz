@@ -34,8 +34,6 @@ set(HEADERS
     toonzvectorbrushtool.h
     vectorselectiontool.h
     ../include/tools/RGBpicker.h
-    ../include/tools/cursormanager.h
-    ../include/tools/cursors.h
     ../include/tools/levelselection.h
     ../include/tools/rasterselection.h
     ../include/tools/strokeselection.h
@@ -48,7 +46,6 @@ set(HEADERS
 set(SOURCES
     autofillpli.cpp
     autofilltlv.cpp
-    cursormanager.cpp
     stylepicker.cpp
     tool.cpp
     toolhandle.cpp

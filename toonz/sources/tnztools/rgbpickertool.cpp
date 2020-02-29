@@ -4,7 +4,6 @@
 
 #include "tvectorimage.h"
 #include "ttoonzimage.h"
-#include "tools/cursors.h"
 #include "tcolorstyles.h"
 #include "toonz/cleanupcolorstyles.h"
 #include "trasterimage.h"
@@ -20,6 +19,7 @@
 #include "toonz/txshsimplelevel.h"
 #include "toonz/preferences.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/icongenerator.h"
 #include "toonzqt/dvdialog.h"
 #include "toonzqt/lutcalibrator.h"

@@ -2,13 +2,13 @@
 
 // TnzTools includes
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 #include "tools/tool.h"
 #include "tools/toolhandle.h"
 
 #include "bluredbrush.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/icongenerator.h"
 
 // TnzLib includes

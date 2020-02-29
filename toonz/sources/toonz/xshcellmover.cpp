@@ -9,11 +9,9 @@
 #include "columncommand.h"
 #include "columnselection.h"
 
-// TnzTools includes
-#include "tools/cursors.h"
-#include "tools/cursormanager.h"
-
 // TnzQt includes
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/tselectionhandle.h"
 #include "toonzqt/selection.h"
 #include "toonzqt/stageobjectsdata.h"

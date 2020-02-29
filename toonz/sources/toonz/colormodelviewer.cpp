@@ -9,8 +9,6 @@
 #include "colormodelbehaviorpopup.h"
 
 // TnzTools includes
-#include "tools/cursormanager.h"
-#include "tools/cursors.h"
 #include "tools/stylepicker.h"
 #include "tools/toolcommandids.h"
 #include "tools/tool.h"
@@ -18,6 +16,8 @@
 #include "../tnztools/stylepickertool.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/menubarcommand.h"
 #include "toonzqt/viewcommandids.h"
 #include "toonzqt/dvdialog.h"

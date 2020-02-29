@@ -18,11 +18,11 @@
 
 // TnzTools includes
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 #include "tools/toolhandle.h"
 #include "tools/toolcommandids.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/icongenerator.h"
 #include "historytypes.h"
 
