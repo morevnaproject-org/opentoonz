@@ -24,14 +24,14 @@
 // TnzQt includes
 #include "toonzqt/tselectionhandle.h"
 #include "toonzqt/styleselection.h"
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
+#include "toonzqt/viewcommandids.h"
 
 // TnzTools includes
 #include "tools/inputmanager.h"
-#include "tools/cursors.h"
 #include "tools/toolhandle.h"
-#include "tools/cursormanager.h"
 #include "tools/toolcommandids.h"
-#include "toonzqt/viewcommandids.h"
 
 // TnzLib includes
 #include "toonz/toonzscene.h"

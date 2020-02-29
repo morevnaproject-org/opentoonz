@@ -2,12 +2,14 @@
 
 // TnzTools includes
 #include "tools/tool.h"
-#include "tools/cursors.h"
 #include "tools/toolcommandids.h"
 #include "tools/toolutils.h"
 #include "tools/toolhandle.h"
 
 #include "historytypes.h"
+
+// TnzQt includes
+#include "toonzqt/cursors.h"
 
 // TnzLib includes
 #include "toonz/txsheethandle.h"

@@ -24,7 +24,6 @@
 
 #include "tools/toolutils.h"
 #include "tools/toolhandle.h"
-#include "tools/cursors.h"
 #include "tdebugmessage.h"
 #include "tgeometry.h"
 #include "tgl.h"
@@ -33,6 +32,8 @@
 #include "tstrokeutil.h"
 #include "tthreadmessage.h"
 #include "tools/pinchtool.h"
+
+#include "toonzqt/cursors.h"
 
 #include "toonz/tobjecthandle.h"
 #include "toonz/txshlevelhandle.h"

@@ -12,11 +12,11 @@
 
 // TnzTools includes
 #include "tools/toolcommandids.h"
-#include "tools/cursors.h"
-#include "tools/cursormanager.h"
 #include "tools/stylepicker.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/menubarcommand.h"
 #include "toonzqt/viewcommandids.h"
 #include "toonzqt/imageutils.h"

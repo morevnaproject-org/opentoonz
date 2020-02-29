@@ -28,8 +28,8 @@
 #include "toonz/tcleanupper.h"
 
 #include "tools/toolhandle.h"
-#include "tools/cursors.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/menubarcommand.h"
 #include "toonzqt/doublefield.h"
 #include "toonzqt/checkbox.h"

@@ -5,10 +5,10 @@
 #include "toonzqt/pickrgbutils.h"
 #include "toonzqt/screenboard.h"
 #include "toonzqt/menubarcommand.h"
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 
 #include "tools/RGBpicker.h"
-#include "tools/cursors.h"
-#include "tools/cursormanager.h"
 
 #include <QMouseEvent>
 #include <QPaintEvent>

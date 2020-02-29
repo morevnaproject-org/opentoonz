@@ -7,7 +7,7 @@
 #include "tenv.h"
 #include "drawutil.h"
 #include "tools/toolhandle.h"
-#include "tools/cursors.h"
+#include "toonzqt/cursors.h"
 #include "toonz/stage2.h"
 #include "toonz/tobjecthandle.h"
 

@@ -1,12 +1,12 @@
 
 
 #include "tools/tool.h"
-#include "tools/cursors.h"
 #include "tproperty.h"
 #include "toonz/stageobjectutil.h"
 #include "tstroke.h"
 #include "tgl.h"
 #include "tenv.h"
+#include "toonzqt/cursors.h"
 #include "toonzqt/gutil.h"
 
 #include "toonz/tstageobjecttree.h"

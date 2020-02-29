@@ -3,13 +3,14 @@
 #include "tools/tool.h"
 #include "tundo.h"
 #include "tproperty.h"
-#include "tools/cursors.h"
 #include "toonz/autoclose.h"
 #include "ttoonzimage.h"
 #include "toonz/toonzimageutils.h"
 #include "tenv.h"
 #include "tools/toolutils.h"
 #include "toonz/txshsimplelevel.h"
+
+#include "toonzqt/cursors.h"
 
 #include "toonz/ttileset.h"
 #include "toonz/levelproperties.h"

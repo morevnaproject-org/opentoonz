@@ -2,11 +2,11 @@
 
 // TnzTools includes
 #include "tools/tool.h"
-#include "tools/cursors.h"
 #include "tools/stylepicker.h"
 #include "tools/toolhandle.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/tselectionhandle.h"
 #include "toonzqt/styleselection.h"
 

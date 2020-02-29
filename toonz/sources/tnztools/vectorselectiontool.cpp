@@ -5,9 +5,9 @@
 // TnzTools includes
 #include "tools/toolhandle.h"
 #include "tools/imagegrouping.h"
-#include "tools/cursors.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/selectioncommandids.h"
 #include "toonzqt/tselectionhandle.h"
 #include "toonzqt/imageutils.h"

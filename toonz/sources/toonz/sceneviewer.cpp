@@ -14,8 +14,6 @@
 #include "../stopmotion/stopmotion.h"
 
 // TnzTools includes
-#include "tools/cursors.h"
-#include "tools/cursormanager.h"
 #include "tools/toolhandle.h"
 #include "tools/toolcommandids.h"
 #include "tools/toolutils.h"
@@ -26,6 +24,8 @@
 #include "tools/modifiers/modifiersegmentation.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/icongenerator.h"
 #include "toonzqt/gutil.h"
 #include "toonzqt/imageutils.h"

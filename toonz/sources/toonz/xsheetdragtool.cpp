@@ -17,11 +17,9 @@
 #include "keyframemover.h"
 #include "xshcellmover.h"
 
-// TnzTools includes
-#include "tools/cursors.h"
-#include "tools/cursormanager.h"
-
 // TnzQt includes
+#include "toonzqt/cursors.h"
+#include "toonzqt/cursormanager.h"
 #include "toonzqt/tselectionhandle.h"
 #include "historytypes.h"
 

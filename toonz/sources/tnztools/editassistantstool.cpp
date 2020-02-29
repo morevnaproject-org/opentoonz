@@ -3,9 +3,11 @@
 #include <tools/tool.h>
 #include <tools/toolutils.h>
 #include <tools/toolhandle.h>
-#include <tools/cursors.h>
 #include <tools/assistant.h>
 #include <tools/inputmanager.h>
+
+// TnzQt includes
+#include <toonzqt/cursors.h>
 
 // TnzLib includes
 #include <toonz/tapplication.h>

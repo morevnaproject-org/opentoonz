@@ -8,7 +8,9 @@
 // TnzTools includes
 #include "tools/strokeselection.h"
 #include "tools/levelselection.h"
-#include "tools/cursors.h"
+
+// TnzQt includes
+#include "toonzqt/cursors.h"
 
 // TnzCore includes
 #include "tstroke.h"
