@@ -19,7 +19,7 @@ public:
 private:
   const char *applicationName     = "OpenToonz";
   const float applicationVersion  = 1.4;
-  const float applicationRevision = 0;
+  const float applicationRevision  = 1;
   const char *applicationNote     = "(Morevna Edition)";
 };
 
