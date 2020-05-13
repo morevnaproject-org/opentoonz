@@ -89,7 +89,7 @@ $ cd ..
 ### Cloning the GIT Tree
 
 ```
-$ git clone https://github.com/opentoonz/opentoonz
+$ git clone https://github.com/morevnaproject-org/opentoonz
 ```
 
 ### Copying the 'stuff' Directory
