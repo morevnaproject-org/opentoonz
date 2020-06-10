@@ -516,12 +516,14 @@ ArrowToolOptionsBox::ArrowToolOptionsBox(
   m_nsCenterLabel = new ClickableLabel(tr("Y:"), this);
 
   // Lock X Center
-  lockProp = dynamic_cast<TBoolProperty *>(m_pg->getProperty("Lock Center X"));
+  lockProp =
+      dynamic_cast<TBoolProperty *>(m_pg->getProperty("Lock Center X"));
   if (lockProp)
     m_lockEWCenterCheckbox =
         new ToolOptionCheckbox(m_tool, lockProp, toolHandle, this);
   // Lock Y Center
-  lockProp = dynamic_cast<TBoolProperty *>(m_pg->getProperty("Lock Center Y"));
+  lockProp =
+      dynamic_cast<TBoolProperty *>(m_pg->getProperty("Lock Center Y"));
   if (lockProp)
     m_lockNSCenterCheckbox =
         new ToolOptionCheckbox(m_tool, lockProp, toolHandle, this);
