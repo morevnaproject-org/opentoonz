@@ -2080,6 +2080,7 @@ void MainWindow::defineActions() {
   //createMenuWindowsAction(MI_OpenExport, tr("&Export"), "");
 
   createMenuWindowsAction(MI_OpenFileBrowser, tr("&File Browser"), "");
+  createMenuWindowsAction(MI_OpenPreproductionBoard, tr("&Preproduction Board"), "");
   createMenuWindowsAction(MI_OpenFileViewer, tr("&Flipbook"), "");
   createMenuWindowsAction(MI_OpenFunctionEditor, tr("&Function Editor"), "");
   createMenuWindowsAction(MI_OpenFilmStrip, tr("&Level Strip"), "");

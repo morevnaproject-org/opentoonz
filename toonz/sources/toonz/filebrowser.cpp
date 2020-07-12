@@ -2413,3 +2413,6 @@ void FrameCountTask::onCanceled(TThread::RunnableP thisTask) {
 
 OpenFloatingPanel openBrowserPane(MI_OpenFileBrowser, "Browser",
                                   QObject::tr("File Browser"));
+
+OpenFloatingPanel openPreproductionBoardPane(MI_OpenPreproductionBoard, "PreproductionBoard",
+                                  QObject::tr("Preproduction Board"));
