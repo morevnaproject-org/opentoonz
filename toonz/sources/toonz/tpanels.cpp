@@ -1080,7 +1080,7 @@ public:
     TFilePath scenesFolder =
         TProjectManager::instance()->getCurrentProject()->getScenesPath();
     browser->setFolder(scenesFolder, true);
-    browser->enableDoubleClickToOpenScenes();
+    browser->enableSingleClickToOpenScenes();
   }
 } PreproductionBoardFactory;
 
