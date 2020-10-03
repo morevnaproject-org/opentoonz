@@ -4,8 +4,12 @@ echo ">>> Cloning opencv"
 git clone https://github.com/opencv/opencv.git
 
 cd opencv
+echo "*" >| .gitignore
 
-mkdir build
+if [ ! -d build ]
+then
+   mkdir build
+fi
 cd build
 
 echo ">>> Cmaking openv"

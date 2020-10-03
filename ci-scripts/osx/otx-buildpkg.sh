@@ -3,6 +3,11 @@ export QTDIR=/usr/local/opt/qt
 export TOONZDIR=toonz/build/toonz
 
 echo ">>> Copying stuff to $TOONZDIR/OpenToonz.app/portablestuff"
+if [ -d $TOONZDIR/OpenToonz.app/portablestuff ]
+then
+   # In case of prior builds, replace stuff folder
+   rm -rf $TOONZDIR/OpenToonz.app/portablestuff
+fi
 cp -R stuff $TOONZDIR/OpenToonz.app/portablestuff
 
 echo ">>> Configuring OpenToonz.app for deployment"

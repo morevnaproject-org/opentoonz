@@ -43,23 +43,23 @@ before_cache:
 # Cache only .git files under "/usr/local/Homebrew" so "brew update" does not take 5min every build
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then find /usr/local/Homebrew \! -regex ".*\.git.*" -delete; fi
 
-#before_deploy:
-#  # Set up git user name and tag this commit
-#  - git config --local user.name "$GITNAME"
-#  - git config --local user.email "$GITEMAIL"
-#  - export TRAVIS_TAG="OTX-"$(date +'%Y-%m-%d')
-#  - git tag -f $TRAVIS_TAG
-#  - bash ci-scripts/$TRAVIS_OS_NAME/otx-buildpkg.sh
-#
-#deploy:
-#  provider: releases
-#  api_key:
-#       secure: "UdU4krTpLqJC1nDYbGEKYfi5cRF877J60wS5UGilpqK2yI4PgW+GUVHE9IKwiTeoh6hF1gMovh6HdCawbjvSq++XEqabL6ax8zrX80YqAERJXFgQQruFGR0wHEgnVnkvd6kPo9ZuGQhVa4bHZ8+7pjtadr4noowNkY7nrtOnMfdRnNSfLbkL5XG0AABshPDVXaAY5/TWIhgyx37EyLvg6rxSLLkdiXbGvN0WSqqqhCAAWgxeGkD+GoiHz2CUAQ0Cj6EEeHoqSFKjBoFSKvYdDDjx2qc7uoJKvZQAHyv3O6P8KI/Ok3pmcGs6v1rIJlrnDMkdUNpdiNjyI3aqZSoE+yxyBV8iFRnDWQtq5R4JG4nE2XSI9vfRDfSaQBKLGgP6n3WFyOswEbKSRAXpLQrXPlmlHEiFQhoy2V4EkHgwaZqUN6Vdu0A27HoGv2dNTXCbTDnRQmwUShz1mnXW1XTLPOC9DtWhpqtGezAL/qIFjRR2TzHBwtGbhX1C0+K29LXSA89IHDvk60STF03YrV4d5kzG/9pC/+xQx305+Crdq1DyUxUd3xmlo2MpTCbOuoa1dNrGfRD2p05EOqH6d2Bw0rf09MChWiQJTMJIfHX66CAXCSyNdZUK/aJu5c4mceybYGYoFW38l+Yf+pdIwEvNxxiXSWyzAWEKq9d6Dz6zIX8="
-#  file_glob: true
-#  file:
-#    - toonz/build/OpenToonz-OTX-$TRAVIS_OS_NAME.*
-#    - ci-scripts/README.txt
-#  skip_cleanup: true
-#  overwrite: true
-#  on:
-#    branch: master
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "$GITNAME"
+  - git config --local user.email "$GITEMAIL"
+  - export TRAVIS_TAG="OTX-"$(date +'%Y-%m-%d')
+  - git tag -f $TRAVIS_TAG
+  - bash ci-scripts/$TRAVIS_OS_NAME/otx-buildpkg.sh
+
+deploy:
+  provider: releases
+  api_key:
+       secure: "UdU4krTpLqJC1nDYbGEKYfi5cRF877J60wS5UGilpqK2yI4PgW+GUVHE9IKwiTeoh6hF1gMovh6HdCawbjvSq++XEqabL6ax8zrX80YqAERJXFgQQruFGR0wHEgnVnkvd6kPo9ZuGQhVa4bHZ8+7pjtadr4noowNkY7nrtOnMfdRnNSfLbkL5XG0AABshPDVXaAY5/TWIhgyx37EyLvg6rxSLLkdiXbGvN0WSqqqhCAAWgxeGkD+GoiHz2CUAQ0Cj6EEeHoqSFKjBoFSKvYdDDjx2qc7uoJKvZQAHyv3O6P8KI/Ok3pmcGs6v1rIJlrnDMkdUNpdiNjyI3aqZSoE+yxyBV8iFRnDWQtq5R4JG4nE2XSI9vfRDfSaQBKLGgP6n3WFyOswEbKSRAXpLQrXPlmlHEiFQhoy2V4EkHgwaZqUN6Vdu0A27HoGv2dNTXCbTDnRQmwUShz1mnXW1XTLPOC9DtWhpqtGezAL/qIFjRR2TzHBwtGbhX1C0+K29LXSA89IHDvk60STF03YrV4d5kzG/9pC/+xQx305+Crdq1DyUxUd3xmlo2MpTCbOuoa1dNrGfRD2p05EOqH6d2Bw0rf09MChWiQJTMJIfHX66CAXCSyNdZUK/aJu5c4mceybYGYoFW38l+Yf+pdIwEvNxxiXSWyzAWEKq9d6Dz6zIX8="
+  file_glob: true
+  file:
+    - toonz/build/OpenToonz-OTX-$TRAVIS_OS_NAME.*
+    - ci-scripts/README.txt
+  skip_cleanup: true
+  overwrite: true
+  on:
+    branch: master

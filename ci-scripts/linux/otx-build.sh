@@ -5,7 +5,10 @@ popd
 
 cd toonz
 
-mkdir build
+if [ ! -d build ]
+then
+   mkdir build
+fi
 cd build
 
 source /opt/qt59/bin/qt59-env.sh

@@ -4,6 +4,7 @@ echo ">>> Cloning ffmpeg"
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 
 cd ffmpeg
+echo "*" >| .gitignore
 
 echo ">>> Configuring to build ffmpeg"
 export PKG_CONFIG_PATH=/usr/local/lib/pkconfig
@@ -45,4 +46,4 @@ echo ">>> Building ffmpeg"
 make -j7 # runs 7 jobs in parallel
 
 echo ">>> Installing ffmpeg"
-make install
+sudo make install

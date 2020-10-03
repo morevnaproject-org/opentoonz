@@ -5,7 +5,10 @@ popd
 
 cd toonz
 
-mkdir build
+if [ ! -d build ]
+then
+   mkdir build
+fi
 cd build
 
 QTVERSION=`ls /usr/local/Cellar/qt`

@@ -9,7 +9,10 @@ sudo make install
 sudo ldconfig
 
 echo ">>> Creating appDir"
-rm -rf appdir
+if [ -d appdir ]
+then
+   rm -rf appdir
+fi
 mkdir -p appdir/usr
 
 echo ">>> Copy and configure OpenToonz installation in appDir"
@@ -21,6 +24,10 @@ rmdir appdir/usr/lib/opentoonz
 
 echo ">>> Creating OpenToonzPortable directory"
 rm -rf OpenToonzPortable
+if [ -d OpenToonzPortable ]
+then
+   rm -rf OpenToonzPortable
+fi
 mkdir OpenToonzPortable
 
 echo ">>> Copying stuff to OpenToonzPortable/portablestuff"

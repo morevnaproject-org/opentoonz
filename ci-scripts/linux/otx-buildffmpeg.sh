@@ -4,6 +4,7 @@ echo ">>> Cloning openH254"
 git clone https://github.com/cisco/openh264.git openh264
 
 cd openh264
+echo "*" >| .gitignore
 
 echo ">>> Making openh264"
 make
@@ -17,6 +18,7 @@ echo ">>> Cloning ffmpeg"
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 
 cd ffmpeg
+echo "*" >| .gitignore
 
 echo ">>> Configuring to build ffmpeg"
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
