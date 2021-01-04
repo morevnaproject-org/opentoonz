@@ -19,22 +19,12 @@ echo ">>> Copy and configure OpenToonz installation in appDir"
 cp -r /opt/opentoonz/* appdir/usr
 cp appdir/usr/share/applications/*.desktop appdir
 cp appdir/usr/share/icons/hicolor/*/apps/*.png appdir
-mv appdir/usr/lib/opentoonz/* appdir/usr/lib
-rmdir appdir/usr/lib/opentoonz
 
 echo ">>> Creating OpenToonzPortable directory"
-rm -rf OpenToonzPortable
 if [ -d OpenToonzPortable ]
 then
    rm -rf OpenToonzPortable
 fi
-mkdir OpenToonzPortable
-
-echo ">>> Copying stuff to OpenToonzPortable/portablestuff"
-
-mv appdir/usr/share/opentoonz/stuff OpenToonzPortable/portablestuff
-chmod -R 777 OpenToonzPortable/portablestuff
-rmdir appdir/usr/share/opentoonz
 
 echo ">>> Creating OpenToonzPortable/OpenToonz.AppImage"
 
@@ -42,6 +32,12 @@ if [ ! -f linuxdeployqt*.AppImage ]
 then
    wget -c "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
    chmod a+x linuxdeployqt*.AppImage
+fi
+
+if [ ! -f appimagetool*.AppImage ]
+then
+   wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+   chmod a+x appimagetool*.AppImage
 fi
 
 export LD_LIBRARY_PATH=appdir/usr/lib/opentoonz
@@ -52,11 +48,18 @@ export LD_LIBRARY_PATH=appdir/usr/lib/opentoonz
    -executable=appdir/usr/bin/tcomposer \
    -executable=appdir/usr/bin/tconverter \
    -executable=appdir/usr/bin/tfarmcontroller \
-   -executable=appdir/usr/bin/tfarmserver 
-./linuxdeployqt*.AppImage appdir/usr/bin/OpenToonz -appimage
+   -executable=appdir/usr/bin/tfarmserver
 
-mv OpenToonz*.AppImage OpenToonzPortable/OpenToonz.AppImage
+rm appdir/AppRun
 
-echo ">>> Creating OpenToonz-OTX Linux package"
+cat << EOF >> appdir/AppRun
+#!/bin/bash
 
-tar zcf OpenToonz-OTX-linux.tar.gz OpenToonzPortable
+SCRIPT_FILE=\`realpath "\$0"\`
+SCRIPT_DIR=\`dirname "\$SCRIPT_FILE"\`
+export LD_LIBRARY_PATH=\${SCRIPT_DIR}/usr/lib/:\${LD_LIBRARY_PATH}
+\${SCRIPT_DIR}/usr/bin/opentoonz "\$@"
+EOF
+
+chmod +x appdir/AppRun
+./appimagetool*.AppImage appdir
