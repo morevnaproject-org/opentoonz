@@ -7,14 +7,10 @@ sudo: required
 dist: trusty
 
 install:
-    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install ccache; fi
-    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
-    - bash ci-scripts/$TRAVIS_OS_NAME/otx-install.sh
+    - bash ci-scripts/$TRAVIS_OS_NAME/travis-install.sh
 
 script:
-    - bash ci-scripts/$TRAVIS_OS_NAME/otx-buildffmpeg.sh
-    - bash ci-scripts/$TRAVIS_OS_NAME/otx-buildopencv.sh
-    - bash ci-scripts/$TRAVIS_OS_NAME/otx-build.sh
+    - bash ci-scripts/$TRAVIS_OS_NAME/travis-build.sh
 
 matrix:
     include:
@@ -23,19 +19,8 @@ matrix:
           cache: ccache
         - os: linux
           compiler: clang
-          cache:
-            directories:
-              - $HOME/build/manongjohn/OTX/thirdparty/openh264
-              - $HOME/build/manongjohn/OTX/thirdparty/ffmpeg
-              - $HOME/build/manongjohn/OTX/thirdparty/opencv
         - os: osx
           osx_image: xcode10.1
-          cache:
-            directories:
-              - $HOME/Library/Caches/Homebrew
-              - /usr/local/Homebrew
-              - $HOME/build/manongjohn/OTX/thirdparty/ffmpeg
-              - $HOME/build/manongjohn/OTX/thirdparty/opencv
 
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
@@ -47,7 +32,7 @@ before_deploy:
   # Set up git user name and tag this commit
   - git config --local user.name "$GITNAME"
   - git config --local user.email "$GITEMAIL"
-  - export TRAVIS_TAG="OTX-"$(date +'%Y-%m-%d')
+  - export TRAVIS_TAG="current"
   - git tag -f $TRAVIS_TAG
   - bash ci-scripts/$TRAVIS_OS_NAME/otx-buildpkg.sh
 
