@@ -14,13 +14,17 @@ script:
 
 matrix:
     include:
-        - os: linux
-          compiler: gcc
-          cache: ccache
-        - os: linux
-          compiler: clang
+#        - os: linux
+#          compiler: gcc
+#          cache: ccache
+#        - os: linux
+#          compiler: clang
         - os: osx
           osx_image: xcode10.1
+          env:
+            - HOMEBREW_NO_AUTO_UPDATE=1
+            - HOMEBREW_NO_ANALYTICS=1
+          cache: ccache
 
 before_deploy:
   # Set up git user name and tag this commit
