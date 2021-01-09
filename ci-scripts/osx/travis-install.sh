@@ -1,5 +1,7 @@
 #!/bin/bash
-brew update
+
+pwd
+#brew update
 brew install glew lz4 lzo libusb libmypaint
 brew tap tcr/tcr
 brew install clang-format
