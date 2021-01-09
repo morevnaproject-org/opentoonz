@@ -24,7 +24,15 @@ matrix:
           env:
             - HOMEBREW_NO_AUTO_UPDATE=1
             - HOMEBREW_NO_ANALYTICS=1
-          cache: ccache
+          cache:
+            directories:
+              - $HOME/Library/Caches/Homebrew
+              - /usr/local/Homebrew
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
+# Credit https://discourse.brew.sh/t/best-practice-for-homebrew-on-travis-brew-update-is-5min-to-build-time/5215/9
+# Cache only .git files under "/usr/local/Homebrew" so "brew update" does not take 5min every build
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then find /usr/local/Homebrew \! -regex ".*\.git.*" -delete; fi
 
 before_deploy:
   # Set up git user name and tag this commit
@@ -46,3 +54,8 @@ deploy:
   overwrite: true
   on:
     branch: master
+    
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous.*)$/
