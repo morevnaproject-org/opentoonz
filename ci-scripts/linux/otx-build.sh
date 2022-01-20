@@ -14,6 +14,7 @@ cd build
 source /opt/qt59/bin/qt59-env.sh
 
 cmake ../sources \
+    -DCMAKE_INSTALL_PREFIX=/opt/opentoonz \
     -DWITH_SYSTEM_SUPERLU:BOOL=OFF
 
 make -j7

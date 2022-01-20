@@ -63,3 +63,4 @@ EOF
 
 chmod +x appdir/AppRun
 ./appimagetool*.AppImage appdir
+mv OpenToonz*.AppImage OpenToonz-ME-$(date +'%Y-%m-%d').AppImage
