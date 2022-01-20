@@ -2,11 +2,19 @@
 pushd thirdparty/tiff-4.0.3
 CFLAGS="-fPIC" CXXFLAGS="-fPIC" ./configure --disable-jbig && make
 popd
-cd toonz && mkdir build && cd build
+
+cd toonz
+
+if [ ! -d build ]
+then
+   mkdir build
+fi
+cd build
+
 source /opt/qt59/bin/qt59-env.sh
+
 cmake ../sources \
     -DCMAKE_INSTALL_PREFIX=/opt/opentoonz \
     -DWITH_SYSTEM_SUPERLU:BOOL=OFF
-# according to https://docs.travis-ci.com/user/ci-environment/#Virtualization-environments
-# travis can offer up to 2 cores in burst, try using that
-make -j 3
+
+make -j7

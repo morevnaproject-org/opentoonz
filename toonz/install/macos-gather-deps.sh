@@ -11,7 +11,7 @@ BASE_DIR=$(cd "$BASE_DIR"; pwd)
 BASE_FILE="$BASE_DIR/$BASE_NAME"
 
 XCODE_PATH=`xcode-select -p`
-DYLDINFO="$XCODE_PATH/usr/bin/dyldinfo"
+DYLDINFO="/Library/Developer/CommandLineTools/usr/bin/dyldinfo"
 
 
 function process_lib() {
