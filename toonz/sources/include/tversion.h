@@ -19,8 +19,8 @@ public:
 private:
   const char *applicationName     = "OpenToonz";
   const float applicationVersion  = 1.7f;
-  const float applicationRevision = 1;
-  const char *applicationNote     = "";
+  const float applicationRevision = 1.0f;
+  const char *applicationNote     = "(Morevna Edition)";
 };
 
 std::string ToonzVersion::getAppName(void) {
@@ -48,7 +48,7 @@ std::string ToonzVersion::getAppVersionString(void) {
 }
 std::string ToonzVersion::getAppRevisionString(void) {
   char buffer[50];
-  snprintf(buffer, sizeof(buffer), "%g", applicationRevision);
+  snprintf(buffer, sizeof(buffer), "%.1f", applicationRevision);
   std::string apprev = std::string(buffer);
   return apprev;
 }
