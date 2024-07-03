@@ -1014,7 +1014,7 @@ int DVGui::MsgBox(MsgType type, const QString &text,
     buttonGroup->addButton(button, i + 1);
   }
 
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), &dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), &dialog,
                    SLOT(done(int)));
 
   dialog.raise();
@@ -1064,7 +1064,7 @@ void DVGui::MsgBoxInPopup(MsgType type, const QString &text) {
   button->setDefault(true);
   dialog.addButtonBarWidget(button);
   buttonGroup->addButton(button, 1);
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), &dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), &dialog,
                    SLOT(done(int)));
 
   while (!messageQueue.empty()) {
@@ -1138,7 +1138,7 @@ int DVGui::MsgBox(const QString &text, const QString &button1Text,
   dialog.addButtonBarWidget(button3);
   buttonGroup->addButton(button3, 3);
 
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), &dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), &dialog,
                    SLOT(done(int)));
   dialog.raise();
   return dialog.exec();
@@ -1197,7 +1197,7 @@ int DVGui::MsgBox(const QString &text, const QString &button1Text,
   dialog.addButtonBarWidget(button4);
   buttonGroup->addButton(button4, 4);
 
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), &dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), &dialog,
                    SLOT(done(int)));
   dialog.raise();
   return dialog.exec();
@@ -1258,7 +1258,7 @@ Dialog *DVGui::createMsgBox(MsgType type, const QString &text,
     buttonGroup->addButton(button, i + 1);
   }
 
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), dialog,
                    SLOT(done(int)));
 
   return dialog;
@@ -1317,7 +1317,7 @@ MessageAndCheckboxDialog *DVGui::createMsgandCheckbox(
 
   QObject::connect(dialogCheckBox, SIGNAL(stateChanged(int)), dialog,
                    SLOT(onCheckboxChanged(int)));
-  QObject::connect(buttonGroup, SIGNAL(idClicked(int)), dialog,
+  QObject::connect(buttonGroup, SIGNAL(buttonClicked(int)), dialog,
                    SLOT(onButtonClicked(int)));
 
   return dialog;
