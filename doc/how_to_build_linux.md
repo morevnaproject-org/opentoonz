@@ -114,6 +114,27 @@ $ cp -r opentoonz/stuff $HOME/.config/OpenToonz/
 
 *Currently this is required to run OpenToonz.*
 
+### Creating SystemVar.ini
+
+TODO: fix the code to discover it automatically
+
+```
+$ cat << EOF > $HOME/.config/OpenToonz/SystemVar.ini
+[General]
+OPENTOONZROOT="$HOME/.config/OpenToonz/stuff"
+OpenToonzPROFILES="$HOME/.config/OpenToonz/stuff/profiles"
+TOONZCACHEROOT="$HOME/.config/OpenToonz/stuff/cache"
+TOONZCONFIG="$HOME/.config/OpenToonz/stuff/config"
+TOONZFXPRESETS="$HOME/.config/OpenToonz/stuff/fxs"
+TOONZLIBRARY="$HOME/.config/OpenToonz/stuff/library"
+TOONZPROFILES="$HOME/.config/OpenToonz/stuff/profiles"
+TOONZPROJECTS="$HOME/.config/OpenToonz/stuff/projects"
+TOONZROOT="$HOME/.config/OpenToonz/stuff"
+TOONZSTUDIOPALETTE="$HOME/.config/OpenToonz/stuff/studiopalette"
+EOF
+```
+Note the generated file must not actually contain `$HOME`, this expands to an absolute path in the generated file.
+
 ### Building LibTIFF
 
 TODO: make sure we can use the system libtiff instead and remove this section.
