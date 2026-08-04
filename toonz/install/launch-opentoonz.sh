@@ -43,13 +43,6 @@ TOONZSTUDIOPALETTE="$STUFF_DIR/projects/studiopalette"
 EOF
 
 else
-    # add mypaint brushes if need
-    if [ ! -d "$STUFF_DIR/library/mypaint brushes" ]; then
-        echo "fix config: copy mypaint brushes" 
-        mkdir -p "$STUFF_DIR/library"
-        cp -r "$STUFF_DIST_DIR/library/mypaint brushes" "$STUFF_DIR/library/" 
-    fi
-
     # fix paths
     INI="$CONFIG_DIR/SystemVar.ini"
     if [ -e "$INI" ]; then
@@ -85,6 +78,20 @@ else
             rm -f "$INI.out"
         fi
     fi
+
+    echo "update stuff"
+    if rsync --help; then 
+        CP_COMMAND="rsync"
+    else
+        CP_COMMAND="cp"
+    fi
+    mkdir -p "$STUFF_DIR/config"
+    mkdir -p "$STUFF_DIR/profiles"
+    $CP_COMMAND -ur "$STUFF_DIST_DIR/library" "$STUFF_DIR/" 
+    $CP_COMMAND -ur "$STUFF_DIST_DIR/config/qss" "$STUFF_DIR/config/" 
+    $CP_COMMAND -ur "$STUFF_DIST_DIR/config/loc" "$STUFF_DIR/config/" 
+    $CP_COMMAND -ur "$STUFF_DIST_DIR/profiles/layouts" "$STUFF_DIR/profiles/" 
+    $CP_COMMAND -ur "$STUFF_DIST_DIR/config/current.txt" "$STUFF_DIR/config/" 
 fi
 
 cd "$BIN_DIR"
