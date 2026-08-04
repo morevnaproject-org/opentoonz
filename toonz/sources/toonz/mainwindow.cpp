@@ -1276,7 +1276,8 @@ extern const char *applicationVersion;
 void MainWindow::checkForUpdates() {
   // Since there is only a single version of Opentoonz, we can do a simple check
   // against a string
-  QString updateUrl("http://opentoonz.github.io/opentoonz-version.txt");
+  QString updateUrl(
+      "https://morevnaproject.org/opentoonz/opentoonz-version.txt");
 
   m_updateChecker = new UpdateChecker(updateUrl);
   connect(m_updateChecker, SIGNAL(done(bool)), this,
@@ -1310,7 +1311,8 @@ void MainWindow::onUpdateCheckerDone(bool error) {
     dialog->deleteLater();
     if (ret == 1) {
       // Write the new last date to file
-      QDesktopServices::openUrl(QObject::tr("https://opentoonz.github.io/e/"));
+      QDesktopServices::openUrl(
+          QObject::tr("https://morevnaproject.org/opentoonz/download/"));
     }
   }
 
