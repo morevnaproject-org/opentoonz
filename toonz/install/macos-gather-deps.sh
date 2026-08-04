@@ -10,6 +10,10 @@ BASE_DIR=$(dirname "$BASE_FILE")
 BASE_DIR=$(cd "$BASE_DIR"; pwd)
 BASE_FILE="$BASE_DIR/$BASE_NAME"
 
+XCODE_PATH=`xcode-select -p`
+DYLDINFO="$XCODE_PATH/usr/bin/dyldinfo"
+
+
 function process_lib() {
     local OWNER="$1"
     local FILE="$2"
@@ -57,7 +61,7 @@ function scan() {
     local SUB_SCAN="$2"
     local FIRST=true
     local LINE=
-    dyldinfo -dylibs "$1" | while read -r LINE; do
+    $DYLDINFO -dylibs "$1" | while read -r LINE; do
         set -e
         if $FIRST; then
             FIRST=false
