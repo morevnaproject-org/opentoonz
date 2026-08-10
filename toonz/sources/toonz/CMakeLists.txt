@@ -209,6 +209,7 @@ set(HEADERS
 
 set(SOURCES
     floatingpanelcommand.cpp
+    advanced_color_selector.cpp
     canvassizepopup.cpp
     commandbar.cpp
     commandbarpopup.cpp
