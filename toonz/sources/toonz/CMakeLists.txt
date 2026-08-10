@@ -495,6 +495,8 @@ if(BUILD_TARGET_WIN)
     endif()
 endif()
 
+target_link_libraries(OpenToonz ColorWidgets-qt5)
+
 if(BUILD_ENV_MSVC)
     set(EXTRA_LIBS)
     if(PLATFORM EQUAL 64)
