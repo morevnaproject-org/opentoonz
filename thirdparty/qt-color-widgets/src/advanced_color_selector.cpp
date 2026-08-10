@@ -205,10 +205,10 @@ public:
         color_history->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
         auto config_menu_button = new QToolButton();
-        config_menu_button->setDefaultAction(new QAction(QIcon::fromTheme("configure"), "Configure"));
+        config_menu_button->setDefaultAction(new QAction(QIcon::fromTheme("configure"), "Configure", nullptr));
         config_menu_button->setPopupMode(QToolButton::InstantPopup);
         auto config_menu = new QMenu();
-        auto enable_rgb_action = new QAction("RGB sliders");
+        auto enable_rgb_action = new QAction("RGB sliders", nullptr);
         enable_rgb_action->setCheckable(true);
         connect(enable_rgb_action, &QAction::toggled, [this](bool show) {
             rgb_chooser->setVisible(show);
