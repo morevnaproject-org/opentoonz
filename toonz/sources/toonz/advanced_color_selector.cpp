@@ -6,6 +6,7 @@
 #include <toonz/palettecontroller.h>
 #include "tpalette.h"
 #include <toonz/tpalettehandle.h>
+#include <toonz/imagestyles.h>
 
 #include <QDebug>
 // #include "advanced_color_selector.h"
@@ -31,28 +32,11 @@ public:
       wheel,
       &AdvancedColorSelector::colorChanged,
       [palette_handle](QColor c){
-        auto palette = palette_handle->getPalette();
-        auto styleIndex = palette_handle->getStyleIndex();
-        if (!palette || styleIndex < 0)
-          return;
-        if (palette->getStyle(styleIndex)->getMainColor() == qColorToTPixel(c))
-            return;
-        palette->setStyle(styleIndex, qColorToTPixel(c)); 
-//             if (palette->getPaletteName() != L"EmptyColorFieldPalette")
-//               TUndoManager::manager()->add(new UndoPaletteChange(
-//                   m_paletteHandle, styleIndex, *m_oldStyle, *m_editedStyle));
-//           }
-// 
-//           setOldStyleToStyle(m_editedStyle.getPointer());
-// 
-//           // In case the frame is a keyframe, update it
-//           if (palette->isKeyframe(styleIndex, palette->getFrame()))  // here
-//             palette->setKeyframe(styleIndex, palette->getFrame());   //
-// 
-//           palette->setDirtyFlag(true);
-//         }
-
-        palette_handle->notifyColorStyleChanged(true);
+        auto style = palette_handle->getStyle();
+        if (style && style->getMainColor() != qColorToTPixel(c)) {
+          style->setMainColor(qColorToTPixel(c));
+          palette_handle->notifyColorStyleChanged(true);
+        }
       }
     );
     auto update_wheel = [palette_handle, wheel]() {
