@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/color_widgets">
+        <file>alphaback.png</file>
+        <file>harmony/analogus.png</file>
+        <file>harmony/complementary.png</file>
+        <file>harmony/none.png</file>
+        <file>harmony/rectangle.png</file>
+        <file>harmony/tetradic.png</file>
+        <file>harmony/triad.png</file>
+        <file>harmony/triangle.png</file>
+    </qresource>
+</RCC>
