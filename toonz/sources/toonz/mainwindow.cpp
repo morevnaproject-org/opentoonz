@@ -2214,6 +2214,8 @@ void MainWindow::defineActions() {
                           "comboviewer");
   createMenuWindowsAction(MI_OpenHistoryPanel, QT_TR_NOOP("&History"), "Ctrl+H",
                           "history");
+  createMenuWindowsAction(MI_OpenAdvancedColorSelector,
+                          QT_TR_NOOP("Advanced Color Selector"), "");
   createMenuWindowsAction(MI_AudioRecording, QT_TR_NOOP("Record Audio"),
                           "Alt+A", "recordaudio");
   createMenuWindowsAction(MI_ResetRoomLayout,
