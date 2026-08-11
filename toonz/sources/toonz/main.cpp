@@ -784,7 +784,13 @@ int main(int argc, char *argv[]) {
         QString("Loading file '") + loadFilePath.getQString() + "'...",
         Qt::AlignCenter, Qt::white);
     loadFilePath = loadFilePath.withType("tnz");
-    if (TFileStatus(loadFilePath).doesExist()) IoCmd::loadScene(loadFilePath);
+    if (TFileStatus(loadFilePath).doesExist()) {
+      TProjectManager *pm    = TProjectManager::instance();
+      TProjectP sceneProject = pm->loadSceneProject(loadFilePath);
+      if (sceneProject && !sceneProject->isCurrent())
+        pm->setCurrentProjectPath(sceneProject->getProjectPath());
+      IoCmd::loadScene(loadFilePath);
+    }
   }
 
   QFont *myFont;
