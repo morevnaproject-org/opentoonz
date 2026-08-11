@@ -4,9 +4,9 @@
 #include "tools/toolhandle.h"
 #include "tools/toolutils.h"
 #include "tools/tool.h"
-#include "tools/cursors.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/imageutils.h"
 
 // TnzLib includes

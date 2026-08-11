@@ -3,7 +3,6 @@
 #include "shifttracetool.h"
 #include "toonz/onionskinmask.h"
 #include "toonz/tonionskinmaskhandle.h"
-#include "tools/cursors.h"
 #include "timage.h"
 #include "trasterimage.h"
 #include "ttoonzimage.h"
@@ -19,6 +18,7 @@
 #include "toonz/dpiscale.h"
 #include "toonz/stage.h"
 #include "tpixel.h"
+#include "toonzqt/cursors.h"
 #include "toonzqt/menubarcommand.h"
 
 #include "toonz/preferences.h"

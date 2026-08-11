@@ -17,11 +17,11 @@
 #include "ext/plasticvisualsettings.h"
 
 // TnzQt includes
+#include "toonzqt/cursors.h"
 #include "toonzqt/plasticvertexselection.h"
 
 // TnzTools includes
 #include "tools/tool.h"
-#include "tools/cursors.h"
 #include "tools/tooloptions.h"
 
 // STD includes

@@ -10,8 +10,8 @@
 #include "toonz/ttileset.h"
 #include "toonz/txshsimplelevel.h"
 #include "toonz/preferences.h"
+#include "toonzqt/cursors.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 
 using namespace ToolUtils;
 

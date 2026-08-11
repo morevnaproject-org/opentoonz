@@ -7,11 +7,11 @@
 
 #include "tvectorimage.h"
 #include "ttoonzimage.h"
-#include "tools/cursors.h"
 #include "trasterimage.h"
 #include "tgl.h"
 #include "toonz/stage2.h"
 #include "toonz/txshsimplelevel.h"
+#include "toonzqt/cursors.h"
 #include "toonzqt/icongenerator.h"
 #include "tenv.h"
 

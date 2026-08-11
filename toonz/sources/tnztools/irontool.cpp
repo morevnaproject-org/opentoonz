@@ -2,7 +2,8 @@
 
 #include "tools/tool.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
+
+#include "toonzqt/cursors.h"
 
 #include "tstrokeutil.h"
 #include "tmathutil.h"

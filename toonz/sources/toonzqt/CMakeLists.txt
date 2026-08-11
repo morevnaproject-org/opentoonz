@@ -75,7 +75,6 @@ set(MOC_HEADERS
 
 set(HEADERS
     ${MOC_HEADERS}
-    ../include/tools/cursormanager.h
     docklayout.h
     functionpaneltools.h
     fxdata.h
@@ -87,6 +86,8 @@ set(HEADERS
     toonz_hostif.h
     toonz_plugin.h
     ../include/historytypes.h
+    ../include/toonzqt/cursormanager.h
+    ../include/toonzqt/cursors.h
     ../include/toonzqt/dvmimedata.h
     ../include/toonzqt/flipconsoleowner.h
     ../include/toonzqt/freelayout.h
@@ -106,7 +107,7 @@ set(HEADERS
 )
 
 set(SOURCES
-    ../tnztools/cursormanager.cpp
+    cursormanager.cpp
     checkbox.cpp
     colorfield.cpp
     docklayout.cpp

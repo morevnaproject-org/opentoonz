@@ -2,7 +2,6 @@
 
 #include "tools/tool.h"
 #include "tools/toolutils.h"
-#include "tools/cursors.h"
 #include "tproperty.h"
 #include "tdata.h"
 #include "tconvert.h"
@@ -12,6 +11,7 @@
 #include "hookselection.h"
 #include "tools/toolhandle.h"
 
+#include "toonzqt/cursors.h"
 #include "toonzqt/selection.h"
 
 #include "toonz/tframehandle.h"

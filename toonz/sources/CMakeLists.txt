@@ -211,6 +211,10 @@ elseif(BUILD_ENV_UNIXLIKE)
     if (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++")
     endif()
+
+    if(BUILD_TARGET_WIN)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+    endif()
 endif()
 
 add_definitions(
@@ -626,6 +630,9 @@ add_subdirectory(toonzqt)
 add_subdirectory(tnztools)
 
 add_subdirectory(${SDKROOT}/lzo/driver lzodriver)
+
+add_subdirectory(${SDKROOT}/qt-color-widgets qt-color-widgets)
+include_directories(${SDKROOT}/qt-color-widgets/include)
 
 add_subdirectory(toonz)
 add_subdirectory(tcleanupper)

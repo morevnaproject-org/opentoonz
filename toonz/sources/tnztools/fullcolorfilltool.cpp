@@ -1,7 +1,6 @@
 #include "fullcolorfilltool.h"
 
 #include "toonz/stage2.h"
-#include "tools/cursors.h"
 #include "toonz/txshlevelhandle.h"
 #include "toonz/trasterimageutils.h"
 #include "toonz/ttileset.h"
@@ -9,6 +8,8 @@
 #include "toonz/levelproperties.h"
 #include "toonz/preferences.h"
 #include "toonz/txsheethandle.h"
+
+#include "toonzqt/cursors.h"
 
 #include "tools/toolhandle.h"
 #include "tools/toolutils.h"

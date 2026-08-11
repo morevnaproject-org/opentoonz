@@ -6,7 +6,7 @@
 #include "tgeometry.h"
 #include "tproperty.h"
 #include "tools/tool.h"
-#include "tools/cursors.h"
+#include "toonzqt/cursors.h"
 #include "mypainttoonzbrush.h"
 #include "trasterimage.h"
 #include <QObject>

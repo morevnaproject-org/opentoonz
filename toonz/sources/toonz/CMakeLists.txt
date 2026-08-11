@@ -209,6 +209,7 @@ set(HEADERS
 
 set(SOURCES
     floatingpanelcommand.cpp
+    advanced_color_selector.cpp
     canvassizepopup.cpp
     commandbar.cpp
     commandbarpopup.cpp
@@ -495,6 +496,8 @@ if(BUILD_TARGET_WIN)
     endif()
 endif()
 
+target_link_libraries(OpenToonz ColorWidgets-qt5)
+
 if(BUILD_ENV_MSVC)
     set(EXTRA_LIBS)
     if(PLATFORM EQUAL 64)
@@ -524,6 +527,8 @@ elseif(BUILD_ENV_APPLE)
             set(X64ONLY_LIBS ${X64ONLY_LIBS} ${CANON_LIB})
         endif()
     endif()
+
+    set(EXTRA_LIBS ${EXTRA_LIBS} ${CMAKE_CURRENT_BINARY_DIR}/../qt-color-widgets/libColorWidgets-qt5.dylib)
 
     add_dependencies(OpenToonz tnzcore tnzbase toonzlib colorfx tnzext image sound toonzqt tnztools tnzstdfx tfarm)
 
@@ -574,8 +579,19 @@ endif()
 
 if(BUILD_ENV_APPLE)
     get_target_property(loc OpenToonz MACOSX_BUNDLE_NAME)
+
+    # make own plist with replaced executable
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION}")
+    set(MACOSX_BUNDLE_EXECUTABLE_NAME "launch-opentoonz.sh")
+    set(MACOSX_BUNDLE_BUNDLE_NAME "OpenToonz")
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/../install/MacOS.Info.plist.in
+        Info.plist
+    )
+
     message(" ==> App Bundle: " ${loc})
     message(" ==> Mach-o: " ${bin})
+
     foreach(lib ${EXTRA_LIBS})
         message(" copy:" ${lib} "==>" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
         add_custom_command(TARGET OpenToonz POST_BUILD COMMAND cp ${lib} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -601,6 +617,57 @@ if(BUILD_ENV_APPLE)
         ${CMAKE_INSTALL_NAME_TOOL} -add_rpath ${CMAKE_INSTALL_RPATH} ${bin} || true
     )
 
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_CURRENT_BINARY_DIR}/OpenToonz.app/Contents/Resources
+    )
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/qss
+    )
+
+    # copy Qt
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -rf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Qt*.framework)
+    foreach(qtfw QtCore QtGui QtMultimedia QtNetwork QtOpenGL QtPrintSupport QtScript QtSvg QtWidgets QtMultimediaWidgets QtXml)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND cp -RPf ${Qt5_DIR}/../../${qtfw}.framework ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    endforeach()
+    # uncomment to copy whole Qt:
+    # add_custom_command(TARGET OpenToonz POST_BUILD COMMAND cp -RP ${Qt5_DIR}/../../*.framework ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND cp -RP ${Qt5_DIR}/../../../plugins/* ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -rf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework/Versions/*/Headers)
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -rf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework/Headers)
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -rf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*/*.dSYM)
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -f ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework/Versions/*/*_debug)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -f ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework/*_debug)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -f ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework/*_debug.prl)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND rm -f ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*/*_debug.dylib)
+    endif()
+
+    # replace plist
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/../install/launch-opentoonz.sh
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E copy
+        Info.plist
+        ${CMAKE_CURRENT_BINARY_DIR}/OpenToonz.app/Contents/Info.plist
+    )
+
+    # copy stuff
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/../../stuff
+        ${CMAKE_CURRENT_BINARY_DIR}/OpenToonz.app/Contents/stuff
+    )
+
+    # gather other deps
+    add_custom_command(TARGET OpenToonz POST_BUILD COMMAND ${CMAKE_SOURCE_DIR}/../install/macos-gather-deps.sh "${bin}")
+    if(LZODRIVER_FOUND)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND ${CMAKE_SOURCE_DIR}/../install/macos-gather-deps.sh "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lzocompress" DEPENDS lzocompress)
+        add_custom_command(TARGET OpenToonz POST_BUILD COMMAND ${CMAKE_SOURCE_DIR}/../install/macos-gather-deps.sh "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lzodecompress" DEPENDS lzodecompress)
+    endif()
 elseif(BUILD_ENV_UNIXLIKE AND BUILD_TARGET_WIN)
     # Setup files on Windows platform while cross compilation.
     install(
@@ -641,6 +708,7 @@ elseif(BUILD_ENV_UNIXLIKE AND BUILD_TARGET_WIN)
             "$<TARGET_FILE:tnztools>"
             "$<TARGET_FILE:tnzstdfx>"
             "$<TARGET_FILE:tfarm>"
+            "$<TARGET_FILE:ColorWidgets-qt5>"
         DESTINATION bin
     )
     
@@ -741,6 +809,7 @@ exec \$OPENTOONZ_BASE/bin/OpenToonz \"\$@\"
             "$<TARGET_FILE:tnztools>"
             "$<TARGET_FILE:tnzstdfx>"
             "$<TARGET_FILE:tfarm>"
+            "$<TARGET_FILE:ColorWidgets-qt5>"
         DESTINATION lib/opentoonz
     )
 
