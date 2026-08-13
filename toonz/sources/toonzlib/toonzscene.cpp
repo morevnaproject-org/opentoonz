@@ -49,6 +49,8 @@
 TOfflineGL *currentOfflineGL = 0;
 
 #include <QProgressDialog>
+#include <QDir>
+#include <QFileInfo>
 
 #ifdef MACOSX
 #include <QSurfaceFormat>
@@ -1339,9 +1341,70 @@ TFilePath ToonzScene::decodeFilePath(const TFilePath &path) const {
 
 //-----------------------------------------------------------------------------
 
+namespace {
+
+bool sameResource(const TFilePath &a, const TFilePath &b) {
+  QFileInfo fa(a.getQString()), fb(b.getQString());
+  if (fa.exists() || fb.exists())
+    return fa.exists() && fb.exists() && fa.size() == fb.size();
+
+  if (!TSystem::doesExistFileOrLevel(a) || !TSystem::doesExistFileOrLevel(b))
+    return false;
+  if (!a.isLevelName()) return true;
+
+  auto framesOf = [](const TFilePath &fp, qint64 &totalSize) {
+    int count = 0;
+    totalSize = 0;
+    for (const TFilePath &f :
+         TSystem::readDirectory(fp.getParentDir(), false, true, true))
+      if (f.getLevelNameW() == fp.getLevelNameW())
+        ++count, totalSize += QFileInfo(f.getQString()).size();
+    return count;
+  };
+  qint64 sa, sb;
+  int ca = framesOf(a, sa), cb = framesOf(b, sb);
+  return ca > 0 && ca == cb && sa == sb;
+}
+
+TFilePath rebaseOnProjectFolder(const TFilePath &fp,
+                                const TFilePath &projectFolder) {
+  QString proj = QDir::fromNativeSeparators(projectFolder.getQString());
+  QString file = fp.getQString();
+  if (proj.isEmpty() || file.startsWith(proj + "/")) return fp;
+
+  QStringList projComps = proj.split('/', Qt::SkipEmptyParts);
+  QStringList fileComps =
+      QDir::fromNativeSeparators(file).split('/', Qt::SkipEmptyParts);
+  int n = projComps.size(), m = fileComps.size();
+
+  // the longest common run of components anchors the mount-point boundary;
+  // verification filters out coincidental matches of short runs
+  for (int L = qMin(n, m - 1); L >= 1; --L) {
+    for (int j = n - L; j >= 0; --j) {
+      for (int i = m - 1 - L; i >= 0; --i) {
+        if (fileComps.mid(i, L) != projComps.mid(j, L)) continue;
+        QString prefix = proj;
+        for (int u = 0; u < n - (j + L); ++u)
+          prefix = prefix.left(prefix.lastIndexOf('/'));
+        TFilePath candidate(
+            (prefix + '/' + fileComps.mid(i + L).join('/')).toStdWString());
+        if (sameResource(fp, candidate)) return candidate;
+      }
+    }
+  }
+  return fp;
+}
+
+}  // namespace
+
+//-----------------------------------------------------------------------------
+
 TFilePath ToonzScene::codeFilePath(const TFilePath &path) const {
   TFilePath fp(path);
   TProject *project = getProject();
+
+  if (project && fp.isAbsolute())
+    fp = rebaseOnProjectFolder(fp, project->getProjectFolder());
 
   Preferences::PathAliasPriority priority =
       Preferences::instance()->getPathAliasPriority();
@@ -1362,6 +1425,18 @@ TFilePath ToonzScene::codeFilePath(const TFilePath &path) const {
 
   if (priority == Preferences::ProjectFolderAliases)
     codeFilePathWithSceneFolder(fp);
+
+  if (fp.isAbsolute() && project) {
+    QString proj = project->getProjectFolder().getQString();
+    QString rel  = QDir(proj).relativeFilePath(fp.getQString());
+    int projDepth = QDir::fromNativeSeparators(proj)
+                        .split('/', Qt::SkipEmptyParts)
+                        .size();
+    bool escapesToRoot =
+        projDepth > 0 && rel.startsWith(QString("../").repeated(projDepth));
+    if (QDir::isRelativePath(rel) && !escapesToRoot)
+      fp = TFilePath(rel.toStdWString());
+  }
 
   return fp;
 }
