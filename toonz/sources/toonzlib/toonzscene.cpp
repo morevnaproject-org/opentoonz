@@ -49,6 +49,7 @@
 TOfflineGL *currentOfflineGL = 0;
 
 #include <QProgressDialog>
+#include <QDir>
 
 #ifdef MACOSX
 #include <QSurfaceFormat>
@@ -1362,6 +1363,12 @@ TFilePath ToonzScene::codeFilePath(const TFilePath &path) const {
 
   if (priority == Preferences::ProjectFolderAliases)
     codeFilePathWithSceneFolder(fp);
+
+  if (fp.isAbsolute() && project) {
+    QString rel = QDir(project->getProjectFolder().getQString())
+                      .relativeFilePath(fp.getQString());
+    if (QDir::isRelativePath(rel)) fp = TFilePath(rel.toStdWString());
+  }
 
   return fp;
 }
