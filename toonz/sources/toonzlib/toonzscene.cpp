@@ -1372,9 +1372,15 @@ TFilePath rebaseOnProjectFolder(const TFilePath &fp,
   QString file = fp.getQString();
   if (proj.isEmpty() || file.startsWith(proj + "/")) return fp;
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
   QStringList projComps = proj.split('/', Qt::SkipEmptyParts);
   QStringList fileComps =
       QDir::fromNativeSeparators(file).split('/', Qt::SkipEmptyParts);
+#else
+  QStringList projComps = proj.split('/', QString::SkipEmptyParts);
+  QStringList fileComps =
+      QDir::fromNativeSeparators(file).split('/', QString::SkipEmptyParts);
+#endif
   int n = projComps.size(), m = fileComps.size();
 
   // the longest common run of components anchors the mount-point boundary;
@@ -1429,9 +1435,15 @@ TFilePath ToonzScene::codeFilePath(const TFilePath &path) const {
   if (fp.isAbsolute() && project) {
     QString proj = project->getProjectFolder().getQString();
     QString rel  = QDir(proj).relativeFilePath(fp.getQString());
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     int projDepth = QDir::fromNativeSeparators(proj)
                         .split('/', Qt::SkipEmptyParts)
                         .size();
+#else
+    int projDepth = QDir::fromNativeSeparators(proj)
+                        .split('/', QString::SkipEmptyParts)
+                        .size();
+#endif
     bool escapesToRoot =
         projDepth > 0 && rel.startsWith(QString("../").repeated(projDepth));
     if (QDir::isRelativePath(rel) && !escapesToRoot)
