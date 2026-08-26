@@ -62,7 +62,7 @@ TEnv::IntVar ShowGlobalScale("EditToolShowGlobalScale", 1);
 TEnv::IntVar ShowHVscale("EditToolShowHVscale", 1);
 TEnv::IntVar ShowShear("EditToolShowShear", 0);
 TEnv::IntVar ShowCenterPosition("EditToolShowCenterPosition", 0);
-TEnv::StringVar Active("EditToolActiveAxis", "Position");
+TEnv::StringVar Active("EditToolActiveAxis", "All");
 
 //=============================================================================
 namespace {
@@ -709,13 +709,13 @@ EditTool::EditTool()
   m_autoSelect.setId("AutoSelect");
 
   m_prop.bind(m_activeAxis);
+  m_activeAxis.addValue(L"All", "edit_all");
   m_activeAxis.addValue(L"Position", "edit_position");
   m_activeAxis.addValue(L"Rotation", "edit_rotation");
   m_activeAxis.addValue(L"Scale", "edit_scale");
   m_activeAxis.addValue(L"Shear", "edit_shear");
   m_activeAxis.addValue(L"Center", "edit_center");
-  m_activeAxis.addValue(L"All", "edit_all");
-  m_activeAxis.setValue(L"Position");
+  m_activeAxis.setValue(L"All");
 
   m_activeAxis.setId("EditToolActiveAxis");
 }
