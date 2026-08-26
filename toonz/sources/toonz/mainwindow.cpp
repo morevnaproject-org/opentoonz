@@ -2480,6 +2480,8 @@ void MainWindow::defineActions() {
   /*-- Animate tool + mode switching shortcuts --*/
   createAction(MI_EditNextMode, QT_TR_NOOP("Animate Tool - Next Mode"), "",
                ToolCommandType);
+  createAction(MI_EditAll, QT_TR_NOOP("Animate Tool - All"), "",
+               ToolCommandType, "edit_all");
   createAction(MI_EditPosition, QT_TR_NOOP("Animate Tool - Position"), "",
                ToolCommandType, "edit_position");
   createAction(MI_EditRotation, QT_TR_NOOP("Animate Tool - Rotation"), "",
@@ -2490,8 +2492,6 @@ void MainWindow::defineActions() {
                ToolCommandType, "edit_shear");
   createAction(MI_EditCenter, QT_TR_NOOP("Animate Tool - Center"), "",
                ToolCommandType, "edit_center");
-  createAction(MI_EditAll, QT_TR_NOOP("Animate Tool - All"), "",
-               ToolCommandType, "edit_all");
 
   /*-- Selection tool + type switching shortcuts --*/
   createAction(MI_SelectionNextType, QT_TR_NOOP("Selection Tool - Next Type"),
