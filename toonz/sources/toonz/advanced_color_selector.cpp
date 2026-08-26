@@ -72,19 +72,24 @@ public:
       wheel->setColor(tPixelToQColor(getStyleColor(palette_handle, palette->getStyle(styleIndex))));
       wheel->saveToHistory();
     };
+    // palette_handle outlives the panel: pass wheel as context so Qt
+    // disconnects when the wheel is destroyed (e.g. on room deletion)
     QObject::connect(
       palette_handle,
       &TPaletteHandle::colorStyleSwitched,
+      wheel,
       update_wheel
     );
     QObject::connect(
       palette_handle,
       &TPaletteHandle::colorStyleChanged,
+      wheel,
       update_wheel
     );
     QObject::connect(
       palette_handle,
       &TPaletteHandle::paletteSwitched,
+      wheel,
       update_wheel
     );
     // initialize with the current style color (no signal has fired yet)
