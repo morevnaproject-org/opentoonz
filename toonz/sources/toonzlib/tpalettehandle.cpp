@@ -160,7 +160,11 @@ void TPaletteHandle::setPalette(TPalette *palette, int styleIndex) {
 // Also see the function StylePickerTool::pick() in stylepickertool.cpp
 
 void TPaletteHandle::setStyleIndex(int index, bool forceEmit) {
-  if (m_styleIndex != index || m_styleParamIndex != 0 || forceEmit) {
+  // Note: m_styleParamIndex must not be reset when the style index is
+  // unchanged - otherwise re-entrant calls (e.g. from
+  // PaletteController::setCurrentPalette) would instantly reset the color
+  // param selected in the Style Editor back to 0.
+  if (m_styleIndex != index || forceEmit) {
     if (m_palette) m_palette->setCurrentStyleId(index);
     m_styleIndex      = index;
     m_styleParamIndex = 0;
