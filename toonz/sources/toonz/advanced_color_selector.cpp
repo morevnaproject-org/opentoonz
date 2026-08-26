@@ -90,6 +90,8 @@ public:
     // initialize with the current style color (no signal has fired yet)
     update_wheel();
     panel->setWidget(wheel);
+    panel->setMinimumWidth(200);
+    panel->resize(340, 630);  // same default size as Style Editor
     panel->setIsMaximizable(false);
   }
 } advancedColorSelectorFactory;
