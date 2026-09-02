@@ -30,6 +30,7 @@
 #include "toonz/levelproperties.h"
 #include "toonz/tonionskinmaskhandle.h"
 #include "toonz/stage.h"
+#include "thirdparty.h"
 
 // TnzCore includes
 #include "tsystem.h"
@@ -1839,12 +1840,16 @@ QWidget* PreferencesPopup::createImportExportPage() {
   QGridLayout* lay = new QGridLayout();
   setupLayout(lay);
 
-  putLabel(tr("OpenToonz can use FFmpeg for additional file formats.\n") +
-               tr("FFmpeg is not bundled with OpenToonz.\n") +
-               tr("Please provide the path where FFmpeg is located on your "
-                  "computer."),
-           lay);
-  insertUI(ffmpegPath, lay);
+  // When FFmpeg is bundled next to the OpenToonz binary there is no need
+  // to ask the user for its location.
+  if (!ThirdParty::findFFmpeg(".")) {
+    putLabel(tr("OpenToonz can use FFmpeg for additional file formats.\n") +
+                 tr("FFmpeg is not bundled with OpenToonz.\n") +
+                 tr("Please provide the path where FFmpeg is located on your "
+                    "computer."),
+             lay);
+    insertUI(ffmpegPath, lay);
+  }
 
   putLabel(tr("Number of seconds to wait for FFmpeg to complete processing the "
               "output:"),
