@@ -2,6 +2,9 @@
 #include <streambuf>
 
 #include <QStandardPaths>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "tfilepath_io.h"
 #include "timage_io.h"
@@ -283,6 +286,55 @@ static std::string mybToVersion3(std::string origStr) {
   return outStr;
 }
 
+//-----------------------------------------------------------------------------
+// libmypaint aborts via assert (not a recoverable error) on input names it
+// does not know and on mappings with more than 8 points. Sanitize brush JSON
+// before parsing so a bad brush file cannot crash the whole application.
+// Bump maxPoints if libmypaint is upgraded (1.6+ allows 64 points).
+static std::string sanitizeBrushJson(const std::string &str) {
+  QJsonParseError err;
+  QJsonDocument doc =
+      QJsonDocument::fromJson(QByteArray(str.data(), (int)str.size()), &err);
+  if (err.error != QJsonParseError::NoError || !doc.isObject()) return str;
+
+  const int maxPoints = 8;
+  QJsonObject root     = doc.object();
+  QJsonObject settings = root[QStringLiteral("settings")].toObject();
+  bool changed         = false;
+
+  for (const QString &skey : settings.keys()) {
+    QJsonObject setting = settings[skey].toObject();
+    QJsonObject inputs  = setting[QStringLiteral("inputs")].toObject();
+    if (inputs.isEmpty()) continue;
+    QJsonObject fixed;
+    for (QJsonObject::iterator i = inputs.begin(); i != inputs.end(); ++i) {
+      QJsonArray points = i.value().toArray();
+      if (!mypaint::Input::findByKey(i.key().toStdString())) {
+        changed = true;
+        continue;  // unknown input name, drop the mapping
+      }
+      if (points.size() > maxPoints) {
+        QJsonArray reduced;
+        for (int k = 0; k < maxPoints; ++k)
+          reduced.append(points[qRound(k * (points.size() - 1) /
+                                       (double)(maxPoints - 1))]);
+        points  = reduced;
+        changed = true;
+      }
+      fixed.insert(i.key(), points);
+    }
+    if (fixed != inputs) {
+      setting[QStringLiteral("inputs")] = fixed;
+      settings[skey]                    = setting;
+    }
+  }
+
+  if (!changed) return str;
+  root[QStringLiteral("settings")] = settings;
+  doc.setObject(root);
+  return doc.toJson(QJsonDocument::Compact).toStdString();
+}
+
 void TMyPaintBrushStyle::loadBrush(const TFilePath &path) {
   m_path     = path;
   m_fullpath = decodePath(path);
@@ -294,6 +346,7 @@ void TMyPaintBrushStyle::loadBrush(const TFilePath &path) {
     str.assign(std::istreambuf_iterator<char>(is),
                std::istreambuf_iterator<char>());
     if (str.find("version 2") != std::string::npos) str = mybToVersion3(str);
+    str = sanitizeBrushJson(str);
     m_brushOriginal.fromString(str);
   }
 
