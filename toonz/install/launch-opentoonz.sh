@@ -87,7 +87,6 @@ else
     fi
     mkdir -p "$STUFF_DIR/config"
     mkdir -p "$STUFF_DIR/profiles"
-    $CP_COMMAND -ur "$STUFF_DIST_DIR/library" "$STUFF_DIR/" 
     $CP_COMMAND -ur "$STUFF_DIST_DIR/config/qss" "$STUFF_DIR/config/" 
     $CP_COMMAND -ur "$STUFF_DIST_DIR/config/loc" "$STUFF_DIR/config/" 
     $CP_COMMAND -ur "$STUFF_DIST_DIR/profiles/layouts" "$STUFF_DIR/profiles/" 
