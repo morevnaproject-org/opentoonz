@@ -770,7 +770,8 @@ int main(int argc, char *argv[]) {
 
   a.setQuitOnLastWindowClosed(false);
   // a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
-  if (Preferences::instance()->isLatestVersionCheckEnabled())
+  if (Preferences::instance()->isLatestVersionCheckEnabled() &&
+      qgetenv("OPENTOONZ_SKIP_UPDATE_CHECK") != "1")
     w.checkForUpdates();
 
   w.show();
