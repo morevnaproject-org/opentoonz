@@ -95,9 +95,10 @@ ColorLineEdit::ColorLineEdit(QWidget* parent)
         {
             setText(color_widgets::stringFromColor(p->color, p->show_alpha));
             Q_EMIT colorEditingFinished(p->color);
-            Q_EMIT colorChanged(color);
+            Q_EMIT colorChanged(p->color);
         }
         p->setPalette(p->color, this);
+        setModified(false); // commit the edit: external sync may resume
     });
 }
 
@@ -160,6 +161,7 @@ void ColorLineEdit::dropEvent(QDropEvent *event)
     if ( event->mimeData()->hasColor() )
     {
         setColor(event->mimeData()->colorData().value<QColor>());
+        Q_EMIT colorEdited(p->color);
         event->accept();
     }
     else if ( event->mimeData()->hasText() )
@@ -168,6 +170,7 @@ void ColorLineEdit::dropEvent(QDropEvent *event)
         if ( col.isValid() )
         {
             setColor(col);
+            Q_EMIT colorEdited(col);
             event->accept();
         }
     }
