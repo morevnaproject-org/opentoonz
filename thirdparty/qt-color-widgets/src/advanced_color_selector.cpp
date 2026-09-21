@@ -60,12 +60,22 @@ public:
         layout->setSpacing(0);
         setLayout(layout);
         widget->installEventFilter(this);
+        // react to user edits only: colorChanged also fires on programmatic
+        // setColor() during updateColors(), re-entering the wheel mid-update
+        auto applyEdit = [this, parent, n](const QColor& c) {
+            parent->setHarmony(n);
+            applying_edit = true;
+            parent->setColor(c);
+            applying_edit = false;
+        };
+        connect(widget, &ColorLineEdit::colorEdited, this, applyEdit);
+        connect(widget, &ColorLineEdit::colorEditingFinished, this, applyEdit);
     }
     inline void setColor(const QColor& color) {
-        widget->setColor(color);
-    }
-    inline void setReadOnly(bool ro) {
-        widget->setReadOnly(ro);
+        // skip only the write-back of our own live edit (which would clobber
+        // the text being typed); external changes always update the field
+        if (!applying_edit)
+            widget->setColor(color);
     }
     void setSelected(bool active) {
         setStyleSheet(active ? "font-weight: bold" : "");
@@ -84,6 +94,7 @@ private:
     AdvancedColorSelector* parent;
     unsigned n;
     ColorLineEdit* widget;
+    bool applying_edit = false; // our own edit is being applied (sync guard)
 };
 
 class AdvancedColorSelector::Private : public QObject
@@ -312,7 +323,6 @@ public:
         for (auto widget : harmony_colors_widgets)
         {
             widget->setColor(colors[i]);
-            widget->setReadOnly(true);
             widget->setSelected((int)i == selected_harmony);
             ++i;
         }
